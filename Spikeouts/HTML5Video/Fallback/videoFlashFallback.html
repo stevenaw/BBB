@@ -1,0 +1,87 @@
+<html>
+	<head>
+	
+	
+	<script type='text/javascript'>
+	var isIe = false;
+	var videoSupported = false;
+	
+	function onceLoaded() {
+		var div = document.getElementById('player');
+		var output = makePlayer('Escape.swf');
+		div.appendChild(output);
+	}
+	
+    function makePlayer(sToPlay, iWidth, iHeight) {
+	/*<object classid='clsid:D27CDB6E-AE6D-11cf-96B8-444553540000' width="550" height="400">
+<param name="movie" value="Escape.swf">
+<embed src="Escape.swf" width="550" height="400">
+</embed>
+</object>*/
+
+      var obj  = document.createElement('object');
+      var param  = document.createElement('param');
+      var embed  = document.createElement('embed');
+	  
+	  param.setAttribute("name", "movie");
+	  param.setAttribute("value", sToPlay);
+	  
+	  obj.setAttribute("width", iWidth);
+	  obj.setAttribute("height", iHeight);
+	  obj.setAttribute("classid", "clsid:d27cdb6e-ae6d-11cf-96b8-444553540000");
+	  obj.appendChild(param);
+	  //obj.width="550";
+	  //obj.height="400";
+	  //obj.classid="clsid:d27cdb6e-ae6d-11cf-96b8-444553540000";
+	  //obj.codebase="http://download.macromedia.com/pub/shockwave/cabs/flash/swflash.cab#version=7,0,19,0";
+	  
+	  if (!isIe) {
+		embed.setAttribute("src", sToPlay);
+		embed.setAttribute("width", iWidth);
+		embed.setAttribute("height", iHeight);
+		embed.setAttribute("pluginspage", "http://get2.adobe.com/flashplayer/");
+		obj.appendChild(embed);
+	  }
+	  
+	  return obj;
+    }
+  </script>
+  </head>
+	<body onload="" >
+
+	
+		<div id="player" name="player">
+			<video id="vid1" name="vid1" width="480" height="267"  onplay="alert('starting')" onpause="alert('pause')" controls >
+				<!-- Default video and encoding -->
+				<source src="http://upload.wikimedia.org/wikipedia/commons/7/79/Big_Buck_Bunny_small.ogv" type="video/ogg">
+				<!-- "Fallback" codec, will play when Ogg isn't supported (Safari) -->
+				<source src="http://mirrors.creativecommons.org/movingimages/Building_on_the_Past.mp4" type="video/mp4">
+				<!-- "Fallback" to using Flash if video is not supported -->
+				<!-- Required for Mozilla < 3.0, Opera < 10.5 -->
+				<object classid="clsid:D27CDB6E-AE6D-11cf-96B8-444553540000" width="550" height="400">
+					<param name="movie" value="../Escape.swf">
+					<!-- Required by IE browsers -->
+					<embed src="../Escape.swf" width="550" height="400" ></embed>
+				</object>
+			</video>
+		</div>
+				
+				<!--
+				<object classid='clsid:D27CDB6E-AE6D-11cf-96B8-444553540000' width='300' height='300' id='player1' name='player1'>
+				<param name='movie' value='player.swf'>
+				<param name='allowfullscreen' value='true'>
+				<param name='allowscriptaccess' value='always'>
+				<param name='flashvars' value='file=playlist.xml'>
+				<embed id='player1'
+					name='player1'
+					src='player.swf'
+					width='300'
+					height='300'
+					allowscriptaccess='always'
+					allowfullscreen='true'
+					flashvars="file=playlist.xml"
+			   />
+			   
+			</object>-->
+	</body>
+</html>

@@ -1,0 +1,124 @@
+<html>
+	<head>
+		<script type="text/javascript" src="./json_sans_eval.js" ></script>
+		<script type="text/javascript">
+			function Bookmark(src, title, startTime, endTime) {
+				this.title = title;
+				this.src = src;
+				
+				if (startTime < endTime) {
+					this.startTime = startTime;
+					this.endTime = endTime;
+				} else {
+					this.endTime = startTime;
+					this.startTime = endTime;
+				}
+			}
+			
+			Bookmark.prototype.title = "";
+			Bookmark.prototype.src = "";
+			Bookmark.prototype.startTime = 0;
+			Bookmark.prototype.endTime = 0;
+			Bookmark.prototype.toString = function() {
+				return "Source: "+this.src+"\nTitle: "+this.title+"\nStart Time: "+this.startTime+"\nEnd Time: "+this.endTime;
+			}
+			
+			Bookmark.prototype.toJSON = function() {
+				return '{ "src": "'+this.src+'", "title": "'+this.title+'", "startTime": '+this.startTime+', "endTime": '+this.endTime+' }';
+			}
+			
+			Bookmark.prototype.fromJSON = function(str) {
+				var obj = jsonParse(str);
+				return new Bookmark(obj.src, obj.title, obj.startTime, obj.endTime);
+			}
+			
+			function setCookie (name, value, expDays) {
+				var sDate="";
+				
+				if (!name.length)
+					throw "name can't be empty";
+				else {
+					if (expDays) {
+						var oDate = new Date();
+						oDate.setTime(oDate.getTime()+(days*24*60*60*1000));
+						sDate="; expires="+date.toGMTString();
+					}
+					
+					document.cookie=name+"="+value+sDate;
+				}
+			}
+			
+			// return string
+			function getCookie(name) {
+				if (document.cookie.length>0) {
+					var start=document.cookie.indexOf(name + "=");
+					if (start!==-1) {
+						start += name.length+1;
+						var end=document.cookie.indexOf(";",start);
+						if (end===-1) end=document.cookie.length;
+						return unescape(document.cookie.substring(start,end));
+					}
+				}
+				return "";
+			}
+			
+			// return string
+			/*function serializeCSV(s) {
+				return s.title.length+","+s.title+","+s.startTime+","+s.endTime;
+			}
+			
+			// return Bookmark
+			function deserializeCSV(str) {
+				var ret = 0;
+				var startIdx = str.indexOf(",");
+				
+				if (startIdx > 0) {
+					var titleLen = parseInt(str.substring(0, startIdx));
+					var title = "";
+					var startTime = -1;
+					var endTime = -1;
+					
+					if(!isNaN(titleLen) && titleLen > 0) {
+						var endIdx = startIdx+1+titleLen;
+						title = str.substring(startIdx+1, endIdx);
+						
+						startIdx = endIdx;
+						endIdx = str.indexOf(",", startIdx+1);
+						
+						if(endIdx > 0) {
+							startTime = parseInt(str.substring(startIdx+1, endIdx));
+							
+							if(!isNaN(startTime) && startTime >= 0) {
+								endTime = parseInt(str.substring(endIdx+1)); // Ignore non-numeric data after
+								if(!isNaN(titleLen) || titleLen <= 0)
+									endTime = -1; // Nothing specified, defaults to -1 for end of video
+									
+								return new Bookmark(title, startTime, endTime);
+							}
+						}
+					}
+				} else
+					throw "Invalid string!";
+			}*/
+			
+			function test() {
+				var book = new Bookmark("localhost", "Test1", 0, 500);
+				var book2 = new Bookmark("google", "Test 2", 603, 1220);
+				var ser = book.toJSON();
+				var book3 = Bookmark.prototype.fromJSON(ser);
+				
+				setCookie("testBookmark", book2.toJSON());
+				var book4 = getCookie("testBookmark");
+				book4 = Bookmark.prototype.fromJSON(book4);
+				
+				alert(ser);
+				alert(book3.toString());
+				
+				alert("Before cookie:\n"+book2.toString());
+				alert("After cookie:\n"+book4.toString());
+			}
+		</script>
+	</head>
+	<body onload="test()">
+	</body>
+</html>

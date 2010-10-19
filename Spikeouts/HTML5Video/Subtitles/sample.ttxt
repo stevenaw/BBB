@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- GPAC 3GPP Text Stream -->
+
+<TextStream version="1.0">
+<TextStreamHeader width="0" height="0" layer="0" translation_x="0" translation_y="0">
+<TextSampleDescription horizontalJustification="center" verticalJustification="bottom" backColor="0 0 0 0" verticalText="no" fillTextRegion="no" continuousKaraoke="no" scroll="None">
+
+<FontTable>
+<FontTableEntry fontName="Georgia" fontID="1"/>
+</FontTable>
+
+<TextBox top="0" left="0" bottom="0" right="0"/>
+<Style styles="Normal" fontID="1" fontSize="36" color="ff ff ff ff"/>
+</TextSampleDescription>
+</TextStreamHeader>
+
+<TextSample sampleTime="00:00:00.000" text="'???? ?“??? ²????''?? ?“????? ??'">
+</TextSample>
+<TextSample sampleTime="00:00:09.000" text="">
+</TextSample>
+<TextSample sampleTime="00:00:10.000" text="'??·??  ??? ????????''?????? ?????'">
+</TextSample>
+<TextSample sampleTime="00:00:19.000" text="">
+</TextSample>
+<TextSample sampleTime="00:00:20.000" text="'?? S? ??? ?? ????????'">
+</TextSample>
+<TextSample sampleTime="00:00:29.000" text="">
+</TextSample>
+<TextSample sampleTime="00:00:30.000" text="'?????  ?“??????Çê ?????…'">
+</TextSample>
+<TextSample sampleTime="00:00:39.000" text="">
+</TextSample>
+<TextSample sampleTime="00:00:40.000" text="'???? ??????? ??????'">
+</TextSample>
+<TextSample sampleTime="00:00:49.000" text="">
+</TextSample>
+</TextStream>

@@ -1,0 +1,133 @@
+<html>
+	<head>
+		<script type="application/javascript">
+			function rand(min,max) {
+				var argc = arguments.length;
+				if (argc === 0) {
+					min = 0;
+					max = 2147483647;
+				} else if (argc === 2) {
+					if (min > max) {
+						var tmp = max;
+						max = min;
+						min = tmp;
+					}
+				} else
+					throw new Error('rand() expects 0 or 2 parameters');
+					
+				return Math.floor(Math.random() * (max - min + 1)) + min;				
+			}
+			
+			function randomRGBA(bAlpha) {
+				var r = rand(128,255);
+				var g = rand(70,190);
+				var b = rand(0,128);
+				var a = bAlpha ? Math.random() : 0;
+				
+				// Increase likelihood of image not having 0% alpha
+				if(bAlpha)
+					a += (1-a)/2;
+				
+				return "rgba("+r+","+g+","+b+","+a+")";
+			}
+			
+			function draw() {
+				var canvas = document.getElementById("canvas");
+				
+				if (canvas.getContext) { // Canvas Support
+					var ctx = canvas.getContext("2d");
+					
+					// H
+					ctx.fillStyle = randomRGBA(true);
+					ctx.fillRect(10, 10, 10, 50);
+					ctx.fillRect(10, 30, 40, 10);
+					ctx.fillRect(40, 10, 10, 50);
+					
+					// E
+					ctx.fillStyle = randomRGBA(true);
+					ctx.fillRect(60, 10, 10, 50);
+					ctx.fillRect(60, 10, 40, 10);
+					ctx.fillRect(60, 30, 30, 10);
+					ctx.fillRect(60, 50, 40, 10);
+					
+					// L
+					ctx.fillStyle = randomRGBA(true);
+					ctx.fillRect(110, 10, 10, 50);
+					ctx.fillRect(110, 50, 40, 10);
+					
+					// L
+					ctx.fillStyle = randomRGBA(true);
+					ctx.fillRect(160, 10, 10, 50);
+					ctx.fillRect(160, 50, 40, 10);
+					
+					// O
+					ctx.fillStyle = randomRGBA(true);
+					ctx.fillRect(220, 10, 20, 10);
+					ctx.fillRect(210, 20, 10, 30);
+					ctx.fillRect(240, 20, 10, 30);
+					ctx.fillRect(220, 50, 20, 10);
+					
+					// W
+					ctx.strokeStyle = randomRGBA(true);
+					ctx.lineWidth = rand(5,10);
+					ctx.beginPath();  
+					ctx.moveTo(10,70);
+					ctx.lineTo(30,120);
+					ctx.lineTo(40,100);
+					ctx.lineTo(50,120);
+					ctx.lineTo(70,70);
+					ctx.stroke();
+					
+					// O
+					ctx.strokeStyle = randomRGBA(true);
+					ctx.lineWidth = rand(10,15);
+					ctx.beginPath();
+					ctx.arc(100,95,25,0,Math.PI*2,true);
+					ctx.stroke();
+					
+					// R
+					ctx.strokeStyle = randomRGBA(true);
+					ctx.lineWidth = rand(5,10);
+					ctx.beginPath();
+					ctx.moveTo(135,120);
+					ctx.lineTo(135,70);
+					ctx.quadraticCurveTo(180,82.5,135,95);
+					ctx.lineTo(150,120);
+					ctx.stroke();
+					
+					// L
+					ctx.strokeStyle = randomRGBA(true);
+					ctx.lineWidth = rand(5,20);
+					ctx.beginPath();
+					ctx.moveTo(160,70);
+					ctx.lineTo(160,120);
+					ctx.lineTo(200,120);
+					ctx.stroke();
+					
+					// D
+					ctx.strokeStyle = randomRGBA(true);
+					ctx.lineWidth = rand(5,20);
+					ctx.beginPath();  
+					ctx.moveTo(210,70);
+					ctx.bezierCurveTo(260,70,260,120,210,120);
+					ctx.closePath();
+					ctx.stroke();
+					
+					// Text version written (lineWidth ignored)
+					ctx.fillStyle = randomRGBA(true);
+					ctx.font = "20px Arial";
+					ctx.fillText("Hello World", 10, 150);
+					
+					// Text version stroked
+					ctx.strokeStyle = randomRGBA(true);
+					ctx.lineWidth = 3;
+					ctx.font = "40pt Arial";
+					ctx.strokeText("Hello World", 10, 200);
+				}
+			}
+		</script>
+	</head>
+	<body onload="draw()">
+		<canvas width="640" height="360" id="canvas"></canvas>
+	</body>
+</html>

@@ -1,0 +1,94 @@
+<html>
+	<head><!--
+		<script type="text/javascript">  
+			/* we only do any scripting if the browser actually supports video */
+			/*
+			var videoControls = {};
+			videoControls.attach = function (oVideo) {
+				if (typeof oVideo == "video") {
+					window.addEventListener('load',function() {
+						var oVideo=document.getElementById('player');
+					
+						
+						oVideo.removeAttribute('controls');
+					
+						
+						var container=document.createElement('div');
+						container.style.position='relative';
+						oVideo.parentNode.insertBefore(container,oVideo);
+						oVideo.parentNode.removeChild(oVideo);
+						container.appendChild(oVideo);
+						
+						
+						var controller = document.createElement('div');
+						controller.id="controls";
+						oVideo.parentNode.appendChild(controller);
+						controller.innerHTML='<button id="playpause"><img src="play.png" width="15" height="15" alt="play"></button><output id="display">-:--:--</output><img src="audio.png" width="15" height="15" alt="volume" id="volumeicon"><input type="range" min="0" max="1" step="0.1" id="volume">';
+
+						
+						document.getElementById('volume').value = oVideo.volume;
+						
+						
+						oVideo.addEventListener('timeupdate',function(e) {
+
+							var s=e.target.currentTime;
+							var h=Math.floor(s/3600);
+							s=s%3600;
+							var m=Math.floor(s/60);
+							s=Math.floor(s%60);
+							
+							if (s.toString().length < 2) s="0"+s;
+							if (m.toString().length < 2) m="0"+m;
+							
+							document.getElementById('display').innerHTML = h+":"+m+":"+s;
+						}, true);
+
+						oVideo.addEventListener('play',function(e) {
+							document.getElementById('playpause').innerHTML='<img src="pause.png" width="15" height="15" alt="pause">';
+						}, true);
+
+						oVideo.addEventListener('pause',function(e) {
+							document.getElementById('playpause').innerHTML='<img src="play.png" width="15" height="15" alt="play">';
+						}, true);
+	
+						oVideo.addEventListener('ended',function(e) {
+							document.getElementById('playpause').innerHTML='<img src="play.png" width="15" height="15" alt="play">';
+						}, true);
+
+						document.getElementById('playpause').addEventListener('click',function() {
+							
+							if (document.getElementById('player').paused) {
+								document.getElementById('player').play();
+							} else {
+								if (document.getElementById('player').ended) {
+									document.getElementById('player').currentTime=0;
+									document.getElementById('playpause').innerHTML='<img src="pause.png" width="15" height="15" alt="pause">';
+									document.getElementById('player').play();
+								} else {
+									document.getElementById('player').pause();
+								}
+							}
+						}, true);
+						
+						document.getElementById('volume').addEventListener('change',function(e) {
+							document.getElementById('player').volume=e.target.value;
+							if (e.target.value==0) {
+								document.getElementById('player').muted = true;
+								document.getElementById('volumeicon').src="audio-mute.png";
+							} else {
+								document.getElementById('player').muted = false;
+								document.getElementById('volumeicon').src="audio.png";
+							}
+							return false;
+						}, true);
+					}, true);
+				}
+			}*/
+		</script> -->
+	</head>
+	<body>
+		<video controls poster="poster.jpg" width="640" height="360" id="player">
+			<source src="big_buck_bunny.ogv" type="video/ogg" />
+		</video>
+	</body>
+</html>

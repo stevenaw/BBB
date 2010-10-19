@@ -1,0 +1,113 @@
+<html>
+	<head>
+		<script type="text/javascript">
+			var chapters = [];
+			
+			function Bookmark(src, title, startTime, endTime) {
+				this.title = title;
+				this.src = src;
+				
+				if (startTime < endTime) {
+					this.startTime = startTime;
+					this.endTime = endTime;
+				} else {
+					this.endTime = startTime;
+					this.startTime = endTime;
+				}
+			}
+			
+			Bookmark.prototype.title = "";
+			Bookmark.prototype.src = "";
+			Bookmark.prototype.startTime = 0;
+			Bookmark.prototype.endTime = 0;
+			Bookmark.prototype.toString = function() {
+				return "Source: "+this.src+"\nTitle: "+this.title+"\nStart Time: "+this.startTime+"\nEnd Time: "+this.endTime;
+			}
+			
+			Bookmark.prototype.toJSON = function() {
+				return '{ "src": "'+this.src+'", "title": "'+this.title+'", "startTime": '+this.startTime+', "endTime": '+this.endTime+' }';
+			}
+			
+			Bookmark.prototype.fromJSON = function(str) {
+				var obj = jsonParse(str);
+				return new Bookmark(obj.src, obj.title, obj.startTime, obj.endTime);
+			}
+			
+			function setCookie (name, value, expDays) {
+				var sDate="";
+				
+				if (!name.length)
+					throw "name can't be empty";
+				else {
+					if (expDays) {
+						var oDate = new Date();
+						oDate.setTime(oDate.getTime()+(days*24*60*60*1000));
+						sDate="; expires="+date.toGMTString();
+					}
+					
+					document.cookie=name+"="+value+sDate;
+				}
+			}
+			
+			// return string
+			function getCookie(name) {
+				if (document.cookie.length>0) {
+					var start=document.cookie.indexOf(name + "=");
+					if (start!==-1) {
+						start += name.length+1;
+						var end=document.cookie.indexOf(";",start);
+						if (end===-1) end=document.cookie.length;
+						return unescape(document.cookie.substring(start,end));
+					}
+				}
+				return "";
+			}
+			
+			function addElem() {
+				var tbl = document.getElementById('tblOfContents');
+				var bkmrk = new Bookmark(document.getElementById('bkmrkSrc').value,
+										document.getElementById('bkmrkTitle').value,
+										document.getElementById('bkmrkStart').value,
+										document.getElementById('bkmrkEnd').value);
+										
+				//var tr = document.createElement('tr'); // IE balks at this
+				//tbl.appendChild(tr);
+				// tr.innerHTML = // Row content HTML goes here
+				var tr = tbl.insertRow(1);
+				
+	            var srcElem = document.createElement('a');
+	            srcElem.href = 'javascript:playChapter('+chapters.length+');';
+	            srcElem.innerHTML = bkmrk.src;
+	            tr.insertCell(0).appendChild(srcElem);
+				
+				tr.insertCell(1).appendChild(document.createTextNode(bkmrk.title)); 
+				tr.insertCell(2).appendChild(document.createTextNode(bkmrk.startTime)); 
+				tr.insertCell(3).appendChild(document.createTextNode(bkmrk.endTime));
+				
+				chapters.push(bkmrk);
+			}
+			
+			function playChapter(idx) {
+				alert(chapters[idx].toString());
+			}
+		</script>
+	</head>
+	<body>
+		<form>
+			Title: <input type="text" id="bkmrkTitle" name="bkmrkTitle" />
+			<br />Source: <input type="text" id="bkmrkSrc" name="bkmrkSrc" />
+			<br />Start (sec): <input type="number" id="bkmrkStart" name="bkmrkStart" min="0" max="2147483647" step="1" />
+			<br />End (sec): <input type="number" id="bkmrkEnd" name="bkmrkEnd" min="0" max="2147483647" step="1" />
+			<br /><input value="Add Bookmark" type="button" id="bkmrkSubmit" name="bkmrkSubmit" onclick="javascript:addElem()" />
+		</form>
+		
+		<table id="tblOfContents">
+			<tr class="tblHeader">
+				<td>Source Video</td>
+				<td>Title</td>
+				<td>Start Time</td>
+				<td>End Time</td>
+			</tr>
+		</table>
+	</body>
+</html>

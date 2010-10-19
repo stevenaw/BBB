@@ -1,0 +1,44 @@
+<html>
+	<head>
+		<script type="application/javascript">			
+			function TimedText(_txt, _time) {
+				this.txt = _txt;
+				this.time = _time*1000; // convert sec to ms
+			}
+			
+			function TimedTextManager() {
+				//this.items = []; 
+				//this.current = 0;
+				//this.timerID = 0;
+				
+				//TimedTextManager.prototype.add = function(subtitle) { this.items.push(subtitle); }
+				TimedTextManager.prototype.play = function(outputId) {
+					var targetSpan = document.getElementById(outputId);
+					var current = 0;
+					var timerID = 0;
+					var items = [];
+					
+					items.push(new TimedText("Hello", 0));
+					items.push(new TimedText("Middle", 3));
+					items.push(new TimedText("End", 3));
+					items.push(new TimedText("Goodbye!", 1));
+					
+					timerID = setTimeout(function() {
+						targetSpan.innerHTML = items[current].txt;
+						
+						if (current < items.length-1)
+							timerID = setTimeout(arguments.callee, items[++current].time);
+					  }, items[current].time);
+				}
+			}
+
+			var mgr = new TimedTextManager();
+			//mgr.push(new TimedText("Hello", 0));
+			//mgr.push(new TimedText("Middle", 3));
+			//mgr.push(new TimedText("End", 6));
+		</script>
+	</head>
+	<body onload="mgr.play('output');">
+		<span width="640" height="360" id="output">Temp</span>
+	</body>
+</html>

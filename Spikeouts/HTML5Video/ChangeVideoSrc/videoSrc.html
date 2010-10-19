@@ -1,0 +1,89 @@
+<html>
+	<head>
+		<script type="application/javascript">
+			var chapters = [];
+			var curr = -1;
+			
+			// Times are in seconds
+			function Bookmark(src, title, startTime, endTime) {
+				this.title = title;
+				this.src = src;
+				
+				if (startTime < endTime) {
+					this.startTime = startTime;
+					this.endTime = endTime;
+				} else {
+					this.endTime = startTime;
+					this.startTime = endTime;
+				}
+			}
+			
+			Bookmark.prototype.title = "";
+			Bookmark.prototype.src = "";
+			Bookmark.prototype.startTime = 0;
+			Bookmark.prototype.endTime = 0;
+			Bookmark.prototype.toString = function() {
+				return "Source: "+this.src+"\nTitle: "+this.title+"\nStart Time: "+this.startTime+"\nEnd Time: "+this.endTime;
+			}
+			
+			Bookmark.prototype.toJSON = function() {
+				return '{ "src": "'+this.src+'", "title": "'+this.title+'", "startTime": '+this.startTime+', "endTime": '+this.endTime+' }';
+			}
+			
+			Bookmark.prototype.fromJSON = function(str) {
+				var obj = jsonParse(str);
+				return new Bookmark(obj.src, obj.title, obj.startTime, obj.endTime);
+			}
+			
+			function advanceVideo() {
+				curr = (curr+1) % 4;
+				var currChap = chapters[curr];
+				var vid = document.getElementById('player');
+				
+				// Attempting to get event listeners working
+				// Ran into MANY MANY timing issues
+				/*vid.addEventListener('loadedmetadata', function() {
+					vid.currentTime = currChap.startTime;
+				}, true);
+				
+				vid.addEventListener('canplay', function() {
+					vid.play();
+				}, true);
+				
+				vid.addEventListener('play', function() {
+					setTimeout('advanceVideo()', (currChap.endTime - currChap.startTime)*1000);
+				}, true);
+				
+				vid.src = currChap.src;
+				vid.load();*/
+				
+				// Working except for start time
+				vid.src = currChap.src;
+				vid.load();
+				vid.play();
+				//vid.currentTime = currChap.startTime; // Must be set after metadata is loaded. See above for issues with that
+				setTimeout('advanceVideo()', (currChap.endTime - currChap.startTime)*1000);
+			}
+			
+			function init() {
+				chapters.push(new Bookmark('http://upload.wikimedia.org/wikipedia/commons/7/75/Big_Buck_Bunny_Trailer_400p.ogg',
+				'Big Buck Bunny', 4, 14));
+				
+			chapters.push(new Bookmark('http://www.archive.org/download/deadmandirewolffanclub/DireWolfFanClub.ogv',
+				'Dire Wolf Fan Club', 4, 14));
+				
+			chapters.push(new Bookmark('http://www.archive.org/download/TheLivingTreasuresOfBali-OggVersion/Kembang_Kuning_Kumpul_Sueta.ogg',
+				'Treasures of bali', 4, 14));
+				
+			chapters.push(new Bookmark('http://www.archive.org/download/Kinetic_Art_Demo_Video/nym.ogv',
+				'Kinetic Art', 4, 14));
+				
+				advanceVideo();
+			}
+		</script>
+	</head>
+	<body onload="init()">
+		<video controls="true" width="640" height="360" id="player" src="" type="video/ogg">
+		</video>
+	</body>
+</html>
