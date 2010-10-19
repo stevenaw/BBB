@@ -87,7 +87,16 @@ var Mgr = (function() {
 	var _hasMadeToc = false;
 	var _hasTocChanged = false;
 	
+	var _curr = -1;
+	
     return {
+		// (Re-)initialize all values except internal element pointers
+		init: function() {
+			_chapters = [];
+			_hasMadeToc = false;
+			_hasTocChanged = true; // In event TOC has been output before calling init, this will redraw table
+			_curr = -1;
+		},
 		// Add a chapter
         addChapter: function(_c)  { _chapters.push(_c); _hasTocChanged = true; },
 		// Set the id for table of contents (<table>) and player (<video>) elements
@@ -97,33 +106,74 @@ var Mgr = (function() {
 		// output the TOC
 		printTOC: function() {
 			var tbl = document.getElementById(_tocID);
-			var tr;
 			
-			if (!_hasMadeToc) {
-				tr = tbl.insertRow(0);
-				tr.innerHTML = '<tr><td>Source Video</td><td>Title</td><td>Start Time</td><td>End Time</td></tr>';
-				_hasMadeToc = true;
-			}
-			
-			// Delete existing rows
-			for(var i=tbl.rows.length-1; i>0;i--)
-				tbl.deleteRow(i);
-			
-			if (_hasTocChanged) {
-				for(var i=_chapters.length-1; i>=0;i--) {
-					tr = tbl.insertRow(1);
-			
-					var srcElem = document.createElement('a');
-					srcElem.href = 'javascript:playChapter('+_chapters.length+');';
-					srcElem.innerHTML = _chapters[i].src;
-					tr.insertCell(0).appendChild(srcElem);
-					
-					tr.insertCell(1).appendChild(document.createTextNode(_chapters[i].title)); 
-					tr.insertCell(2).appendChild(document.createTextNode(_chapters[i].startTime)); 
-					tr.insertCell(3).appendChild(document.createTextNode(_chapters[i].endTime));
+			if (tbl) {
+				var tr;
+				
+				if (!_hasMadeToc) {
+					tr = tbl.insertRow(0);
+					tr.innerHTML = '<tr><td>Source Video</td><td>Title</td><td>Start Time</td><td>End Time</td></tr>';
+					_hasMadeToc = true;
 				}
 				
-				_hasTocChanged = false;
+				// Delete existing rows
+				for(var i=tbl.rows.length-1; i>0;i--)
+					tbl.deleteRow(i);
+				
+				if (_hasTocChanged) {
+					for(var i=_chapters.length-1; i>=0;i--) {
+						tr = tbl.insertRow(1);
+				
+						var srcElem = document.createElement('a');
+						srcElem.href = 'javascript:Mgr.playChapter('+i+');';
+						srcElem.innerHTML = _chapters[i].src;
+						tr.insertCell(0).appendChild(srcElem);
+						
+						tr.insertCell(1).appendChild(document.createTextNode(_chapters[i].title)); 
+						tr.insertCell(2).appendChild(document.createTextNode(_chapters[i].startTime)); 
+						tr.insertCell(3).appendChild(document.createTextNode(_chapters[i].endTime));
+					}
+					
+					tr = tbl.insertRow(1);
+					tr.colspan = 4;
+				
+					var srcElem = document.createElement('a');
+					srcElem.href = 'javascript:Mgr.playChapter(0, 1);';
+					srcElem.innerHTML = 'Play All';
+					tr.insertCell(0).appendChild(srcElem);
+					
+					_hasTocChanged = false;
+				}
+			}
+		},
+		
+		playChapter: function(idx, sequential) {
+			if (idx !== _curr && idx >= 0 && idx < _chapters.length) {
+				var vid = document.getElementById(_vidId);
+				
+				_curr = idx;
+                var currChap = _chapters[_curr];
+             	
+                vid.addEventListener('loadedmetadata', function(){
+                    vid.currentTime = currChap.startTime;
+                }, true);
+                
+                vid.addEventListener('canplay', function(){
+                    vid.play();
+                }, true);
+                                
+                vid.addEventListener('timeupdate', function(){
+                    if (vid.currentTime >= currChap.endTime) {
+						if (sequential)
+							Mgr.playChapter(idx+1, sequential);
+						else
+							vid.pause();
+					}
+                }, true);
+                
+                vid.src = currChap.src;
+                vid.load();
+				vid.play();
 			}
 		}
     };

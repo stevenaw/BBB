@@ -22,24 +22,30 @@
 			},
 			
 			function() { // Test TOC output
-				Mgr.setTOCId("tblOfContents");
-				Mgr.addChapter(new Bookmark('http://upload.wikimedia.org/wikipedia/commons/7/75/Big_Buck_Bunny_Trailer_400p.ogg',
-				'Big Buck Bunny', 4, 14));
-				
-				Mgr.addChapter(new Bookmark('http://www.archive.org/download/deadmandirewolffanclub/DireWolfFanClub.ogv',
-				'Dire Wolf Fan Club', 4, 14));
-				
-				Mgr.addChapter(new Bookmark('http://www.archive.org/download/TheLivingTreasuresOfBali-OggVersion/Kembang_Kuning_Kumpul_Sueta.ogg',
-				'Treasures of bali', 4, 14));
-				
 				Mgr.printTOC();
 				
 				Mgr.addChapter(new Bookmark('http://www.archive.org/download/Kinetic_Art_Demo_Video/nym.ogv',
 				'Kinetic Art', 4, 14));
 				
+				// Print again with extra element, ensure doesn't double-up!
 				Mgr.printTOC();
 			}
 		];
+		
+		function init() {
+			Mgr.init();
+			Mgr.setVideoId("player");
+			Mgr.setTOCId("tblOfContents");
+			
+			Mgr.addChapter(new Bookmark('http://upload.wikimedia.org/wikipedia/commons/7/75/Big_Buck_Bunny_Trailer_400p.ogg',
+			'Big Buck Bunny', 4, 14));
+			
+			Mgr.addChapter(new Bookmark('http://www.archive.org/download/deadmandirewolffanclub/DireWolfFanClub.ogv',
+			'Dire Wolf Fan Club', 4, 14));
+			
+			Mgr.addChapter(new Bookmark('http://www.archive.org/download/TheLivingTreasuresOfBali-OggVersion/Kembang_Kuning_Kumpul_Sueta.ogg',
+			'Treasures of bali', 4, 14));
+		}
 		
 		function setCookie (name, value, expDays) {
 				var sDate="";
@@ -72,11 +78,13 @@
 			}
 			
 		function test() {
+			init();
 			tests[1]();
 		}
 		</script>
 	</head>
 	<body onload="test()">
+		<video controls="true" width="640" height="360" id="player" src="" type="video/ogg"></video>
 		<table id="tblOfContents"></table>
 	</body>
 </html>
