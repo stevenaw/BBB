@@ -112,7 +112,25 @@ var Mgr = (function() {
 				
 				if (!_hasMadeToc) {
 					tr = tbl.insertRow(0);
-					tr.innerHTML = '<tr><td>Source Video</td><td>Title</td><td>Start Time</td><td>End Time</td></tr>';
+					
+					// DOM approach for tables (IE doesn't like tr.innerHTML)
+					var th = document.createElement('th');
+					th.innerHTML = "Source Video";
+					tr.appendChild(th);
+					
+					var th = document.createElement('th');
+					th.innerHTML = "Title";
+					tr.appendChild(th);
+					
+					var th = document.createElement('th');
+					th.innerHTML = "Start Time";
+					tr.appendChild(th);
+					
+					var th = document.createElement('th');
+					th.innerHTML = "End Time";
+					tr.appendChild(th);
+					
+					//tr.innerHTML = '<th>Source Video</th><th>Title</th><th>Start Time</th><th>End Time</th>';
 					_hasMadeToc = true;
 				}
 				
