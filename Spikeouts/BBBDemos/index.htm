@@ -1,0 +1,165 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+        <title>BBB Project - Video Chapter Demo</title>
+    </head>
+    <body>
+        <video id="video" class="video-js" src="http://jbuckley.ca/~hoops/elephant.ogv" autobuffer controls>
+        </video>
+		<br/><br/>
+		<b>Create a Bookmark</b>
+        <br/>			
+        Title: <input type="text" id="bkmrkTitle" name="bkmrkTitle" />
+        <br/>
+        Source: <input type="text" id="bkmrkSrc" name="bkmrkSrc" />
+        <br/>
+        Start (sec): <input type="number" id="bkmrkStart" name="bkmrkStart" min="0" max="2147483647" step="1" />
+        <br/>
+        End (sec): <input type="number" id="bkmrkEnd" name="bkmrkEnd" min="0" max="2147483647" step="1" />
+        <br/>
+        <br/>
+        <input value="Add Bookmark" type="button" id="bkmrkSubmit" name="bkmrkSubmit" onclick="javascript:addElem()"/>
+        <br/>
+        <br/>
+        <b>Bookmarks</b>
+        <table id="tblOfContents" border="1">
+            <tr class="tblHeader">
+                <td>
+                    Title
+                </td>
+                <td>
+                    Video
+                </td>
+                <td>
+                    Start Time (s)
+                </td>
+                <td>
+                    End Time (s)
+                </td>
+            </tr>
+        </table>
+        <script>
+        var endTime;
+        var video = document.getElementById("video");
+        var videoList = new Array("video.ogv", "indy.ogv");
+        var index = 0;
+		var oSrc;
+        var chapters = [];
+        
+        function BM(s, e){
+            video.currentTime = s;
+            endTime = e;
+            video.play();
+			oSrc = video.src;
+        }
+        
+        function getVideoFileName(){
+            var videoSrc = video.src;
+            var i = videoSrc.lastIndexOf("/");
+            videoSrc = videoSrc.substring(i + 1, videoSrc.length);
+            return videoSrc;
+        }
+        
+        video.addEventListener("ended", function(){
+            if (oSrc != video.src) {
+                if (index != videoList.length) {
+                    video.src = videoList[index];
+                    video.load();
+                    video.play();
+                    index++;
+                }
+            }
+        }, false);
+        
+        video.addEventListener("timeupdate", function(){
+            if (video.currentTime >= endTime) {
+                video.pause();
+            }
+        }, false);
+                        
+        function Bookmark(src, title, startTime, endTime){
+            this.title = title;
+            this.src = src;
+            
+            if (startTime < endTime) {
+                this.startTime = startTime;
+                this.endTime = endTime;
+            }
+            else {
+                this.endTime = startTime;
+                this.startTime = endTime;
+            }
+        }
+        
+        Bookmark.prototype.title = "";
+        Bookmark.prototype.src = "";
+        Bookmark.prototype.startTime = 0;
+        Bookmark.prototype.endTime = 0;
+        Bookmark.prototype.toString = function(){
+            return "Source: " + this.src + "\nTitle: " + this.title + "\nStart Time: " + this.startTime + "\nEnd Time: " + this.endTime;
+        }
+        
+        Bookmark.prototype.toJSON = function(){
+            return '{ "src": "' + this.src + '", "title": "' + this.title + '", "startTime": ' + this.startTime + ', "endTime": ' + this.endTime + ' }';
+        }
+        
+        Bookmark.prototype.fromJSON = function(str){
+            var obj = jsonParse(str);
+            return new Bookmark(obj.src, obj.title, obj.startTime, obj.endTime);
+        }
+        
+        function setCookie(name, value, expDays){
+            var sDate = "";
+            
+            if (!name.length) 
+                throw "name can't be empty";
+            else {
+                if (expDays) {
+                    var oDate = new Date();
+                    oDate.setTime(oDate.getTime() + (days * 24 * 60 * 60 * 1000));
+                    sDate = "; expires=" + date.toGMTString();
+                }
+                
+                document.cookie = name + "=" + value + sDate;
+            }
+        }
+        
+        // return string
+        function getCookie(name){
+            if (document.cookie.length > 0) {
+                var start = document.cookie.indexOf(name + "=");
+                if (start !== -1) {
+                    start += name.length + 1;
+                    var end = document.cookie.indexOf(";", start);
+                    if (end === -1) 
+                        end = document.cookie.length;
+                    return unescape(document.cookie.substring(start, end));
+                }
+            }
+            return "";
+        }
+        
+        function addElem(){
+            var tbl = document.getElementById('tblOfContents');
+            var bkmrk = new Bookmark(document.getElementById('bkmrkTitle').value, document.getElementById('bkmrkSrc').value, document.getElementById('bkmrkStart').value, document.getElementById('bkmrkEnd').value);
+            var tr = tbl.insertRow(1);
+            
+            var srcElem = document.createElement('a');
+            srcElem.href = 'javascript:playChapter(' + chapters.length + ');';
+            srcElem.innerHTML = bkmrk.src;
+            tr.insertCell(0).appendChild(srcElem);
+            
+            tr.insertCell(1).appendChild(document.createTextNode(bkmrk.title));
+            tr.insertCell(2).appendChild(document.createTextNode(bkmrk.startTime));
+            tr.insertCell(3).appendChild(document.createTextNode(bkmrk.endTime));
+            
+            chapters.push(bkmrk);
+        }
+        
+        function playChapter(idx){
+            BM(chapters[idx].startTime, chapters[idx].endTime);
+        }
+        </script>
+    </body>
+</html>
