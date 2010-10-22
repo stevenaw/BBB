@@ -8,14 +8,21 @@ function Bookmark(src, title, startTime, endTime){
     this.title = title;
     this.src = src;
     	
-    if (startTime < endTime) {
+	if (endTime > startTime)
+	{
+		this.startTime = startTime;
+		this.endTime = endTime;
+	}
+	else if (startTime > endTime)
+	{
+		this.startTime = 0;
+		this.endTime = startTime;
+	}	
+		
+    /*if (startTime < endTime) {
         this.startTime = startTime;
         this.endTime = endTime;
-    }
-    else {
-        this.endTime = startTime;
-        this.startTime = endTime;
-    }
+    }*/
 }
 
 Bookmark.prototype.title = "";
@@ -104,6 +111,7 @@ var Mgr = (function(){
     var _hasTocChanged = false;
     
     var _curr = -1;
+	var currChap;
     
     return {
         // (Re-)initialize all values except internal element pointers
@@ -138,7 +146,7 @@ var Mgr = (function(){
                     
                     // DOM approach for tables (IE doesn't like tr.innerHTML)
                     var th = document.createElement('th');
-                    th.innerHTML = "Title";
+                    th.innerHTML = "Chapter Title";
                     tr.appendChild(th);
                     
                     var th = document.createElement('th');
@@ -190,10 +198,10 @@ var Mgr = (function(){
         playChapter: function(idx, sequential){
             if (idx !== _curr && idx >= 0 && idx < _chapters.length) {
                 var vid = document.getElementById(_vidId);
-                
+                				
                 _curr = idx;
-                var currChap = _chapters[_curr];
-                
+                currChap = _chapters[_curr];
+                				
                 vid.addEventListener('loadedmetadata', function(){
                     vid.currentTime = currChap.startTime;
                 }, true);
@@ -201,13 +209,13 @@ var Mgr = (function(){
                 vid.addEventListener('canplay', function(){
                     vid.play();
                 }, true);
-                
+
                 vid.addEventListener('timeupdate', function(){
                     if (vid.currentTime >= currChap.endTime) {
-                        if (sequential) 
-                            Mgr.playChapter(idx + 1, sequential);
-                        else 
-                            vid.pause();
+                        if (sequential)
+							Mgr.playChapter(idx++, sequential);
+						else 
+							vid.pause();
                     }
                 }, true);
                 
