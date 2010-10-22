@@ -189,7 +189,7 @@ var Mgr = (function(){
         },
         
         playChapter: function(idx, sequential){
-            if (idx >= 0 && idx < _chapters.length) {
+            if (idx !== _curr && idx >= 0 && idx < _chapters.length) {
                 var vid = document.getElementById(_vidId);
                 
                 _curr = idx;
