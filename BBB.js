@@ -18,11 +18,6 @@ function Bookmark(src, title, startTime, endTime){
 		this.startTime = 0;
 		this.endTime = startTime;
 	}	
-		
-    /*if (startTime < endTime) {
-        this.startTime = startTime;
-        this.endTime = endTime;
-    }*/
 }
 
 Bookmark.prototype.title = "";
@@ -195,13 +190,13 @@ var Mgr = (function(){
             }
         },
         
-        playChapter: function(idx, sequential){
-            if (idx !== _curr && idx >= 0 && idx < _chapters.length) {
+        playChapter: function(idx, sequential){			
+            if (idx >= 0 && idx < _chapters.length) {
                 var vid = document.getElementById(_vidId);
                 				
                 _curr = idx;
                 currChap = _chapters[_curr];
-                				
+				                				
                 vid.addEventListener('loadedmetadata', function(){
                     vid.currentTime = currChap.startTime;
                 }, true);
