@@ -35,11 +35,6 @@
             alert("After cookie:\n" + book4.toString());
         }, function(){ // Test TOC output
             Mgr.printTOC();
-            
-            Mgr.addChapter(new Bookmark('http://www.archive.org/download/Kinetic_Art_Demo_Video/nym.ogv', 'Kinetic Art', 4, 14));
-            
-            // Print again with extra element, ensure doesn't double-up!
-            Mgr.printTOC();
         }
         ];
         
@@ -49,8 +44,9 @@
             Mgr.setTOCId("tblOfContents");
             
             Mgr.addChapter(new Bookmark('http://upload.wikimedia.org/wikipedia/commons/7/75/Big_Buck_Bunny_Trailer_400p.ogg', 'Big Buck Bunny', 5, 14));
-            Mgr.addChapter(new Bookmark('http://www.archive.org/download/deadmandirewolffanclub/DireWolfFanClub.ogv', 'Dire Wolf Fan Club', 4, 14));
-            Mgr.addChapter(new Bookmark('http://www.archive.org/download/TheLivingTreasuresOfBali-OggVersion/Kembang_Kuning_Kumpul_Sueta.ogg', 'Treasures of bali', 4, 14));
+            Mgr.addChapter(new Bookmark('http://www.archive.org/download/deadmandirewolffanclub/DireWolfFanClub.ogv', 'Dire Wolf Fan Club', 10, 29));
+            Mgr.addChapter(new Bookmark('http://jbuckley.ca/~hoops/elephant.ogv', 'Elephants Dream', 145, 200));
+			Mgr.addChapter(new Bookmark('http://www.archive.org/download/Kinetic_Art_Demo_Video/nym.ogv', 'Kinetic Art', 60, 66));			
         }
         
         function setCookie(name, value, expDays){
@@ -97,7 +93,8 @@
         <link rel="stylesheet" href="css/video-js.css" type="text/css" media="screen" title="Video JS">
     </head>
     <body onload="test()">
-        <div id="left" style="float:right; padding-right: 440px;">
+    	<h3>HTML5 Video Chaptering Demo</h3>
+        <div id="right" style="float:right; padding-right: 440px;">
             <div id = "panel">
                 <b>Create Chapter</b>
                 <table>
@@ -137,7 +134,7 @@
                         <td>
                         </td>
                         <td>
-                            <input value="Add Bookmark" type="button" id="bkmrkSubmit" name="bkmrkSubmit" onclick="javascript:addElem()"/>
+                            <input value="Add Chapter" type="button" id="bkmrkSubmit" name="bkmrkSubmit" onclick="javascript:addElem()"/>
                         </td>
                     </tr>
                 </table>
@@ -153,10 +150,14 @@
         </div>
         <div>
             <button>
-                + Add Chapter
-            </button>        	<br/><br/>
+                + Toggle Chapter Add
+            </button>
+            <br/>
+            <br/>
+			<div style="float:left; width:470px">This demo will showcase functionality that will allow the creation of video chapters. A chapter consists of a title, source, start time, and end time. When a chapter is opened it will change the HTML5 video element's source to the chapter's source, seek to the start time, then play to the end time.<br/><br/>To add a chapter, click the "Toggle Chapter Add" button, input the chapter information in the form, then click the "Add Chapter" button. The table of contents to the right will display all chapters. Click on the title link to open a chapter. Alternatively, click "Play All" to play all chapters sequentially.</div>
+			<div style="float:right;">
             <table id="tblOfContents">
-            </table>
+            </table></div>
         </div>
         <script>
             $("button").click(function(){
