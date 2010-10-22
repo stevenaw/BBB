@@ -1,0 +1,24 @@
+BBB [dot] JS
+A library that works with the HTML5 <video> tag.
+
+/////////////////////////////////////////////////////////////////////////////////
+
+
+License: MIT (See LICENSE file)
+Original Authors: Steven Weerdenburg, Kevin Lasconia 
+
+/////////////////////////////////////////////////////////////////////////////////
+
+VERSION 0.1
+The first release of BBB.js includes functionality for creating video chapters. A chapter is defined as having a title, source URL, start time, and end time. BBB.js also includes functionality that dynamically populates a "table of contents" when a new chapter is created. This table of contents will include a URL for the chapter title. If clicked the selected chapter will play from start to end time. A "Play All" URL will also be generated. If clicked all chapters will play in sequential order. (Order as they were added) BBB.js also includes functions to serialize a Bookmark object to JSON, and convert JSON back into a Bookmark object.
+
+/////////////////////////////////////////////////////////////////////////////////
+
+COMPATIBILITY
+Browsers that support the HTML5 <video> tag
+
+/////////////////////////////////////////////////////////////////////////////////
+
+NOTES
+- The Demos folder contains a working demo that uses the BBB chaptering functionality with the video.js library
+- Need to find a way to stop/control looping once all chapters are done

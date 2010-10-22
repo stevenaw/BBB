@@ -3,12 +3,11 @@
  * 		By Steven Weerdenburg and Kevin Lasconia
  * 		Last Modification: 10/21/2010
  */
-
 function Bookmark(src, title, startTime, endTime){
     this.title = title;
     this.src = src;
     
-    if (startTime < endTime) {
+    if (parseInt(startTime) < parseInt(endTime)) {
         this.startTime = startTime;
         this.endTime = endTime;
     }
@@ -104,89 +103,96 @@ var Mgr = (function(){
     var _hasTocChanged = false;
     
     var _curr = -1;
+    var currChap;
     
     return {
-		// (Re-)initialize all values except internal element pointers
-		init: function() {
-			_chapters = [];
-			_hasMadeToc = false;
-			_hasTocChanged = true; // In event TOC has been output before calling init, this will redraw table
-			_curr = -1;
-		},
-		// Add a chapter
-        addChapter: function(_c)  { _chapters.push(_c); _hasTocChanged = true; },
-		// Set the id for table of contents (<table>) and player (<video>) elements
-        setTOCId: function(_id)  { _tocID = _id; },
-		setVideoId: function(_id) { _vidId = _id; },
-		
-		// output the TOC
-		printTOC: function() {
-			var tbl = document.getElementById(_tocID);
-			
-			if (tbl) {
-				var tr;
-				
-				if (!_hasMadeToc) {
-					tr = tbl.insertRow(0);
-					
-					// DOM approach for tables (IE doesn't like tr.innerHTML)
-					var th = document.createElement('th');
-					th.innerHTML = "Source Video";
-					tr.appendChild(th);
-					
-					var th = document.createElement('th');
-					th.innerHTML = "Title";
-					tr.appendChild(th);
-					
-					var th = document.createElement('th');
-					th.innerHTML = "Start Time";
-					tr.appendChild(th);
-					
-					var th = document.createElement('th');
-					th.innerHTML = "End Time";
-					tr.appendChild(th);
-					
-					//tr.innerHTML = '<th>Source Video</th><th>Title</th><th>Start Time</th><th>End Time</th>';
-					_hasMadeToc = true;
-				}
-				
-				// Delete existing rows
-				for(var i=tbl.rows.length-1; i>0;i--)
-					tbl.deleteRow(i);
-				
-				if (_hasTocChanged) {
-					for(var i=_chapters.length-1; i>=0;i--) {
-						tr = tbl.insertRow(1);
-				
-						var srcElem = document.createElement('a');
-						srcElem.href = 'javascript:Mgr.playChapter('+i+');';
-						srcElem.innerHTML = _chapters[i].src;
-						tr.insertCell(0).appendChild(srcElem);
-						
-						tr.insertCell(1).appendChild(document.createTextNode(_chapters[i].title)); 
-						tr.insertCell(2).appendChild(document.createTextNode(_chapters[i].startTime)); 
-						tr.insertCell(3).appendChild(document.createTextNode(_chapters[i].endTime));
-					}
-					
-					tr = tbl.insertRow(1);
-					tr.colspan = 4;
-				
-					var srcElem = document.createElement('a');
-					srcElem.href = 'javascript:Mgr.playChapter(0, 1);';
-					srcElem.innerHTML = 'Play All';
-					tr.insertCell(0).appendChild(srcElem);
-					
-					_hasTocChanged = false;
-				}
-			}
-		},
-		
-		playChapter: function(idx, sequential) {
-			if (idx !== _curr && idx >= 0 && idx < _chapters.length) {
-				var vid = document.getElementById(_vidId);
-				
-				_curr = idx;
-                var currChap = _chapters[_curr];
+        // (Re-)initialize all values except internal element pointers
+        init: function(){
+            _chapters = [];
+            _hasMadeToc = false;
+            _hasTocChanged = true; // In event TOC has been output before calling init, this will redraw table
+            _curr = -1;
+        },
+        // Add a chapter
+        addChapter: function(_c){
+            _chapters.push(_c);
+            _hasTocChanged = true;
+        },
+        // Set the id for table of contents (<table>) and player (<video>) elements
+        setTOCId: function(_id){
+            _tocID = _id;
+        },
+        setVideoId: function(_id){
+            _vidId = _id;
+        },
+        
+        // output the TOC
+        printTOC: function(){
+            var tbl = document.getElementById(_tocID);
+            
+            if (tbl) {
+                var tr;
+                
+                if (!_hasMadeToc) {
+                    tr = tbl.insertRow(0);
+                    
+                    // DOM approach for tables (IE doesn't like tr.innerHTML)
+                    var th = document.createElement('th');
+                    th.innerHTML = "Chapter Title";
+                    tr.appendChild(th);
+                    
+                    var th = document.createElement('th');
+                    th.innerHTML = "Source";
+                    tr.appendChild(th);
+                    
+                    var th = document.createElement('th');
+                    th.innerHTML = "Start Time";
+                    tr.appendChild(th);
+                    
+                    var th = document.createElement('th');
+                    th.innerHTML = "End Time";
+                    tr.appendChild(th);
+                    
+                    //tr.innerHTML = '<th>Source Video</th><th>Title</th><th>Start Time</th><th>End Time</th>';
+                    _hasMadeToc = true;
+                }
+                
+                // Delete existing rows
+                for (var i = tbl.rows.length - 1; i > 0; i--) 
+                    tbl.deleteRow(i);
+                
+                if (_hasTocChanged) {
+                    for (var i = _chapters.length - 1; i >= 0; i--) {
+                        tr = tbl.insertRow(1);
+                        
+                        var srcElem = document.createElement('a');
+                        srcElem.href = 'javascript:Mgr.playChapter(' + i + ');';
+                        srcElem.innerHTML = _chapters[i].title;
+                        tr.insertCell(0).appendChild(srcElem);
+                        tr.insertCell(1).appendChild(document.createTextNode(_chapters[i].src));
+                        tr.insertCell(2).appendChild(document.createTextNode(_chapters[i].startTime));
+                        tr.insertCell(3).appendChild(document.createTextNode(_chapters[i].endTime));
+                    }
+                    
+                    tr = tbl.insertRow(1);
+                    tr.colspan = 4;
+                    
+                    var srcElem = document.createElement('a');
+                    srcElem.href = 'javascript:Mgr.playChapter(0, 1);';
+                    srcElem.innerHTML = 'Play All';
+                    tr.insertCell(0).appendChild(srcElem);
+                    
+                    _hasTocChanged = false;
+                }
+            }
+        },
+        
+        playChapter: function(idx, sequential){
+            if (idx !== _curr && idx >= 0 && idx < _chapters.length) {
+                var vid = document.getElementById(_vidId);
+                
+                _curr = idx;
+                currChap = _chapters[_curr];
                 
                 vid.addEventListener('loadedmetadata', function(){
                     vid.currentTime = currChap.startTime;
@@ -198,10 +204,12 @@ var Mgr = (function(){
                 
                 vid.addEventListener('timeupdate', function(){
                     if (vid.currentTime >= currChap.endTime) {
-                        if (sequential) 
-                            Mgr.playChapter(idx + 1, sequential);
-                        else 
+                        if (sequential) {
+                            Mgr.playChapter(idx++, sequential);
+                        }
+                        else {
                             vid.pause();
+                        }
                     }
                 }, true);
                 
