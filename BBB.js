@@ -7,7 +7,7 @@
 function Bookmark(src, title, startTime, endTime){
     this.title = title;
     this.src = src;
-    
+    	
     if (startTime < endTime) {
         this.startTime = startTime;
         this.endTime = endTime;
@@ -138,11 +138,11 @@ var Mgr = (function(){
                     
                     // DOM approach for tables (IE doesn't like tr.innerHTML)
                     var th = document.createElement('th');
-                    th.innerHTML = "Source Video";
+                    th.innerHTML = "Title";
                     tr.appendChild(th);
                     
                     var th = document.createElement('th');
-                    th.innerHTML = "Title";
+                    th.innerHTML = "Source";
                     tr.appendChild(th);
                     
                     var th = document.createElement('th');
@@ -167,10 +167,9 @@ var Mgr = (function(){
                         
                         var srcElem = document.createElement('a');
                         srcElem.href = 'javascript:Mgr.playChapter(' + i + ');';
-                        srcElem.innerHTML = _chapters[i].src;
+                        srcElem.innerHTML = _chapters[i].title;
                         tr.insertCell(0).appendChild(srcElem);
-                        
-                        tr.insertCell(1).appendChild(document.createTextNode(_chapters[i].title));
+                        tr.insertCell(1).appendChild(document.createTextNode(_chapters[i].src));
                         tr.insertCell(2).appendChild(document.createTextNode(_chapters[i].startTime));
                         tr.insertCell(3).appendChild(document.createTextNode(_chapters[i].endTime));
                     }
