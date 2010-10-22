@@ -7,15 +7,14 @@ function Bookmark(src, title, startTime, endTime){
     this.title = title;
     this.src = src;
     
-    if (endTime > startTime) {
+    if (parseInt(startTime) < parseInt(endTime)) {
         this.startTime = startTime;
         this.endTime = endTime;
     }
-    else 
-        if (startTime > endTime) {
-            this.startTime = 0;
-            this.endTime = startTime;
-        }
+    else {
+        this.endTime = startTime;
+        this.startTime = endTime;
+    }
 }
 
 Bookmark.prototype.title = "";
