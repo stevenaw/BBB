@@ -13,7 +13,7 @@
         VideoJS.setupAllWhenReady();
         
         function addElem(){
-            Mgr.addChapter(new Bookmark(document.getElementById('bkmrkSrc').value, document.getElementById('bkmrkTitle').value, document.getElementById('bkmrkStart').value, document.getElementById('bkmrkEnd').value));
+            Mgr.addChapter(new Bookmark(document.getElementById('bkmrkSrc').value, document.getElementById('bkmrkTitle').value, document.getElementById('bkmrkDescription').value, document.getElementById('bkmrkStart').value, document.getElementById('bkmrkEnd').value));
             Mgr.printTOC();
         }
         
@@ -43,10 +43,11 @@
             Mgr.setVideoId("player");
             Mgr.setTOCId("tblOfContents");
             
-            Mgr.addChapter(new Bookmark('http://upload.wikimedia.org/wikipedia/commons/7/75/Big_Buck_Bunny_Trailer_400p.ogg', 'Big Buck Bunny', 5, 14));
-            Mgr.addChapter(new Bookmark('http://www.archive.org/download/deadmandirewolffanclub/DireWolfFanClub.ogv', 'Dire Wolf Fan Club', 10, 29));
-            Mgr.addChapter(new Bookmark('http://jbuckley.ca/~hoops/elephant.ogv', 'Elephants Dream', 145, 200));
-			Mgr.addChapter(new Bookmark('http://www.archive.org/download/Kinetic_Art_Demo_Video/nym.ogv', 'Kinetic Art', 60, 66));			
+            Mgr.addChapter(new Bookmark('http://upload.wikimedia.org/wikipedia/commons/7/75/Big_Buck_Bunny_Trailer_400p.ogg', 'Big Buck Bunny', 'An animated video', 5, 14));
+            Mgr.addChapter(new Bookmark('http://www.archive.org/download/deadmandirewolffanclub/DireWolfFanClub.ogv', 'Dire Wolf Fan Club', 'An unusual video', 10, 29));
+            Mgr.addChapter(new Bookmark('http://jbuckley.ca/~hoops/elephant.ogv', 'Elephants Dream', 'Elephants', 145, 200));
+			Mgr.addChapter(new Bookmark('http://www.archive.org/download/Kinetic_Art_Demo_Video/nym.ogv', 'Kinetic Art', 'Domino fun', 60, 66));
+			Mgr.addChapter(new Bookmark('http://ftp.gnu.org/video/Stephen_Fry-Happy_Birthday_GNU-hq_600px_780kbit.ogv', 'Freedom Fry', 'Happy B-Day', 1, 60));
         }
         
         function setCookie(name, value, expDays){
@@ -106,6 +107,14 @@
                             <input type="text" id="bkmrkTitle" name="bkmrkTitle" />
                         </td>
                     </tr>
+					<tr>
+                        <td>
+                            Description
+                        </td>
+                        <td>
+                            <input type="text" id="bkmrkDescription" name="bkmrkDescription" />
+                        </td>
+                    </tr>
                     <tr>
                         <td>
                             Source
@@ -141,7 +150,7 @@
             </div>
         </div>
         <div class="video-js-box">
-            <video id="player" class="video-js" width="640" height="264" controls="controls" preload="auto">
+            <video id="player" class="video-js" width="640" height="264" controls="controls" preload="auto" data-subtitles="demo-subtitles.srt">
                 <source src="" type='video/mp4; codecs="avc1.42E01E, mp4a.40.2"' /><source src="" type='video/webm; codecs="vp8, vorbis"' /><source src="http://upload.wikimedia.org/wikipedia/commons/7/75/Big_Buck_Bunny_Trailer_400p.ogg" type='video/ogg; codecs="theora, vorbis"' />
                 <object id="flash_fallback_1" class="vjs-flash-fallback" width="640" height="264" type="application/x-shockwave-flash" data="http://releases.flowplayer.org/swf/flowplayer-3.2.1.swf">
                     <param name="movie" value="http://releases.flowplayer.org/swf/flowplayer-3.2.1.swf" /><param name="allowfullscreen" value="true" /><param name="flashvars" value='config={"playlist":["http://video-js.zencoder.com/oceans-clip.png", {"url": "http://video-js.zencoder.com/oceans-clip.mp4","autoPlay":false,"autoBuffering":true}]}' />

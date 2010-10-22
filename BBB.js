@@ -1,17 +1,22 @@
 /*
  * 	BBB v0.1
  * 		By Steven Weerdenburg and Kevin Lasconia
- * 		Last Modification: 10/21/2010
+ * 		Last Modification: 10/22/2010
  */
-function Bookmark(src, title, startTime, endTime){
+function Bookmark(src, title, description, startTime, endTime){
     this.title = title;
+    this.description = description;
     this.src = src;
-    
-    if (parseInt(startTime) < parseInt(endTime)) {
+	
+	startTime = parseInt(startTime);
+	endTime = parseInt(endTime);
+	
+    if (startTime < 0 || endTime < 0)
+		throw "Start and end times must be positive!";
+	else if (startTime < endTime) {
         this.startTime = startTime;
         this.endTime = endTime;
-    }
-    else {
+    } else {
         this.endTime = startTime;
         this.startTime = endTime;
     }
@@ -21,12 +26,13 @@ Bookmark.prototype.title = "";
 Bookmark.prototype.src = "";
 Bookmark.prototype.startTime = 0;
 Bookmark.prototype.endTime = 0;
+Bookmark.prototype.description = "";
 Bookmark.prototype.toString = function(){
-    return "Source: " + this.src + "\nTitle: " + this.title + "\nStart Time: " + this.startTime + "\nEnd Time: " + this.endTime;
+    return "Source: " + this.src + "\nTitle: " + this.title + "\Description: " + this.description + "\nStart Time: " + this.startTime + "\nEnd Time: " + this.endTime;
 }
 
 Bookmark.prototype.toJSON = function(){
-    return '{ "src": "' + this.src + '", "title": "' + this.title + '", "startTime": ' + this.startTime + ', "endTime": ' + this.endTime + ' }';
+    return '{ "src": "' + this.src + '", "title": "' + this.title + '", "description": "' + this.description + '", "startTime": ' + this.startTime + ', "endTime": ' + this.endTime + ' }';
 }
 
 Bookmark.prototype.fromJSON = function(str){
@@ -49,27 +55,23 @@ Bookmark.prototype.fromJSON = function(str){
         while ((currItem = str[++currEnd]) !== '"' || !foundAttr) {
             if (str[currEnd] === ':') {
                 foundSemi = true;
-            }
-            else 
+            } else {
                 if (str[currEnd] === '"') { // Check for strings
                     if (foundSemi && str[currEnd - 1] !== '\\') {
                         if (!foundType) {
                             foundType = 1;
                             currStart = currEnd;
-                        }
-                        else {
+                        } else {
                             obj[attrName] = str.substring(currStart + 1, currEnd);
                             foundAttr = true;
                             break; // Go into outer loop to find next attribute
                         }
                     }
-                }
-                else 
+                } else {
                     if (str[currEnd] === '.') { // Check for decimal for numeric->float data
                         if (foundType === 2) 
                             foundType = 3;
-                    }
-                    else 
+                    } else {
                         if (str[currEnd] === ' ') {
                             if (foundType === 2 || foundType === 3) { // Check for end of numeric data
                                 if (foundType === 2) // Integer
@@ -81,8 +83,7 @@ Bookmark.prototype.fromJSON = function(str){
                                 foundAttr = true;
                                 break;
                             }
-                        }
-                        else {
+                        } else {
                             if (!foundType) {
                                 if (!isNaN(str[currEnd])) {
                                     currStart = str[currEnd - 1] === '-' ? currEnd - 1 : currEnd;
@@ -90,10 +91,13 @@ Bookmark.prototype.fromJSON = function(str){
                                 }
                             }
                         }
+					}
+				}
+			}
         }
     }
     
-    return new Bookmark(obj.src, obj.title, obj.startTime, obj.endTime);
+    return new Bookmark(obj.src, obj.title, obj.description, obj.startTime, obj.endTime);
 }
 
 var Mgr = (function(){
@@ -118,6 +122,12 @@ var Mgr = (function(){
             _chapters.push(_c);
             _hasTocChanged = true;
         },
+		// Add a chapter
+        removeChapter: function(_idx){
+            _chapters.splice(_idx, 1);
+            _hasTocChanged = true;
+        },
+		
         // Set the id for table of contents (<table>) and player (<video>) elements
         setTOCId: function(_id){
             _tocID = _id;
@@ -142,7 +152,7 @@ var Mgr = (function(){
                     tr.appendChild(th);
                     
                     var th = document.createElement('th');
-                    th.innerHTML = "Source";
+                    th.innerHTML = "Description";
                     tr.appendChild(th);
                     
                     var th = document.createElement('th');
@@ -152,8 +162,11 @@ var Mgr = (function(){
                     var th = document.createElement('th');
                     th.innerHTML = "End Time";
                     tr.appendChild(th);
-                    
-                    //tr.innerHTML = '<th>Source Video</th><th>Title</th><th>Start Time</th><th>End Time</th>';
+					
+					var th = document.createElement('th');
+                    th.innerHTML = 'Delete';
+                    tr.appendChild(th);
+					
                     _hasMadeToc = true;
                 }
                 
@@ -169,9 +182,10 @@ var Mgr = (function(){
                         srcElem.href = 'javascript:Mgr.playChapter(' + i + ');';
                         srcElem.innerHTML = _chapters[i].title;
                         tr.insertCell(0).appendChild(srcElem);
-                        tr.insertCell(1).appendChild(document.createTextNode(_chapters[i].src));
+                        tr.insertCell(1).appendChild(document.createTextNode(_chapters[i].description));
                         tr.insertCell(2).appendChild(document.createTextNode(_chapters[i].startTime));
                         tr.insertCell(3).appendChild(document.createTextNode(_chapters[i].endTime));
+                        tr.insertCell(4).innerHTML = '<input type="checkbox" onclick="Mgr.removeChapter('+i+'); Mgr.printTOC();" />';
                     }
                     
                     tr = tbl.insertRow(1);
@@ -206,8 +220,7 @@ var Mgr = (function(){
                     if (vid.currentTime >= currChap.endTime) {
                         if (sequential) {
                             Mgr.playChapter(idx++, sequential);
-                        }
-                        else {
+                        } else {
                             vid.pause();
                         }
                     }
