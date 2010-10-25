@@ -222,14 +222,8 @@ var Mgr = (function(){
                             Mgr.playChapter(idx++, sequential);
                         } else {
                             vid.pause();
-                            return false;
                         }
                     }
-                }, true);
-                
-                vid.addEventListener('seeked', function(){
-                    if (vid.currentTime >= currChap.endTime)
-                        return false;
                 }, true);
                 
                 vid.src = currChap.src;
