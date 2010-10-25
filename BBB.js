@@ -102,7 +102,7 @@ Bookmark.prototype.fromJSON = function(str){
 
 var Mgr = (function(){
     var _chapters = []; // Array of Chapters/Bookmarks
-    var _vid, _toc; // id to store the table of contents and video player
+    var _vid = 0, _toc = 0; // id to store the table of contents and video player
     var _hasMadeToc = false;
     var _hasTocChanged = false;
     
@@ -113,23 +113,23 @@ var Mgr = (function(){
     return {
         // (Re-)initialize all values except internal element pointers
         init: function(vidId, tocId){
-            this._chapters = [];
-            this._hasMadeToc = false;
-            this._hasTocChanged = true; // In event TOC has been output before calling init, this will redraw table
-            this._curr = -1;
+            _chapters = [];
+            _hasMadeToc = false;
+            _hasTocChanged = true; // In event TOC has been output before calling init, this will redraw table
+            _curr = -1;
             
             this.setVideoId(vidId);
             this.setTOCId(tocId);
         },
         // Add a chapter
         addChapter: function(_c){
-            this._chapters.push(_c);
-           this. _hasTocChanged = true;
+            _chapters.push(_c);
+            _hasTocChanged = true;
         },
 		// Add a chapter
         removeChapter: function(_idx){
-            this._chapters.splice(_idx, 1);
-            this._hasTocChanged = true;
+            _chapters.splice(_idx, 1);
+            _hasTocChanged = true;
         },
 		
         // Set the table of contents (<table>) and player (<video>) elements based on id
@@ -137,6 +137,7 @@ var Mgr = (function(){
         setTOCId: function(_id){
             if (_id && (!this._toc || this._toc.id !== _id)) { // Valid id given and No id supplied yet or different id supplied
                 this._toc = document.getElementById(_id);
+                _hasTocChanged = true;
             }
         },
         
@@ -168,11 +169,9 @@ var Mgr = (function(){
         
         // output the TOC
         printTOC: function(){
-            if (this._toc) {
-                var tr;
-                
+            if (this._toc) {                
                 if (!_hasMadeToc) {
-                    tr = this._toc.insertRow(0);
+                    var tr = this._toc.insertRow(0);
                     
                     // DOM approach for tables (IE doesn't like tr.innerHTML)
                     var th = document.createElement('th');
@@ -204,7 +203,7 @@ var Mgr = (function(){
                 
                 if (_hasTocChanged) {
                     for (var i = _chapters.length - 1; i >= 0; i--) {
-                        tr = this._toc.insertRow(1);
+                        var tr = this._toc.insertRow(1);
                         
                         var srcElem = document.createElement('a');
                         srcElem.href = 'javascript:Mgr.playChapter(' + i + ');';
@@ -216,7 +215,7 @@ var Mgr = (function(){
                         tr.insertCell(4).innerHTML = '<input type="checkbox" onclick="Mgr.removeChapter('+i+'); Mgr.printTOC();" />';
                     }
                     
-                    tr = this._toc.insertRow(1);
+                    var tr = this._toc.insertRow(1);
                     tr.colspan = 4;
                     
                     var srcElem = document.createElement('a');
