@@ -11,6 +11,7 @@
         </script>
         <script type="text/javascript">
         VideoJS.setupAllWhenReady();
+        init();
         
         function addElem(){
             Mgr.addChapter(new Bookmark(document.getElementById('bkmrkSrc').value, document.getElementById('bkmrkTitle').value, document.getElementById('bkmrkDescription').value, document.getElementById('bkmrkStart').value, document.getElementById('bkmrkEnd').value));
@@ -39,9 +40,7 @@
         ];
         
         function init(){
-            Mgr.init();
-            Mgr.setVideoId("player");
-            Mgr.setTOCId("tblOfContents");
+            Mgr.init("player", "tblOfContents");
             
             Mgr.addChapter(new Bookmark('http://upload.wikimedia.org/wikipedia/commons/7/75/Big_Buck_Bunny_Trailer_400p.ogg', 'Big Buck Bunny', 'An animated video', 5, 14));
             Mgr.addChapter(new Bookmark('http://www.archive.org/download/deadmandirewolffanclub/DireWolfFanClub.ogv', 'Dire Wolf Fan Club', 'An unusual video', 10, 29));
@@ -82,7 +81,6 @@
         }
         
         function test(){
-            init();
             tests[1]();
         }
         </script>

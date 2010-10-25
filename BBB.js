@@ -101,50 +101,78 @@ Bookmark.prototype.fromJSON = function(str){
 }
 
 var Mgr = (function(){
-    var _chapters = []; // Array of Bookmarks
-    var _vidId, _tocID; // id to store the table of contents and video player
+    var _chapters = []; // Array of Chapters/Bookmarks
+    var _vid, _toc; // id to store the table of contents and video player
     var _hasMadeToc = false;
     var _hasTocChanged = false;
     
     var _curr = -1;
-    var currChap;
+    var currChap = 0;
+    var _playSeq = 0;
     
     return {
         // (Re-)initialize all values except internal element pointers
-        init: function(){
-            _chapters = [];
-            _hasMadeToc = false;
-            _hasTocChanged = true; // In event TOC has been output before calling init, this will redraw table
-            _curr = -1;
+        init: function(vidId, tocId){
+            this._chapters = [];
+            this._hasMadeToc = false;
+            this._hasTocChanged = true; // In event TOC has been output before calling init, this will redraw table
+            this._curr = -1;
+            
+            this.setVideoId(vidId);
+            this.setTOCId(tocId);
         },
         // Add a chapter
         addChapter: function(_c){
-            _chapters.push(_c);
-            _hasTocChanged = true;
+            this._chapters.push(_c);
+           this. _hasTocChanged = true;
         },
 		// Add a chapter
         removeChapter: function(_idx){
-            _chapters.splice(_idx, 1);
-            _hasTocChanged = true;
+            this._chapters.splice(_idx, 1);
+            this._hasTocChanged = true;
         },
 		
-        // Set the id for table of contents (<table>) and player (<video>) elements
+        // Set the table of contents (<table>) and player (<video>) elements based on id
+        // Only set them if the currently stored element is null or has a differing id
         setTOCId: function(_id){
-            this._tocID = _id;
+            if (_id && (!this._toc || this._toc.id !== _id)) { // Valid id given and No id supplied yet or different id supplied
+                this._toc = document.getElementById(_id);
+            }
         },
+        
         setVideoId: function(_id){
-            this._vidId = _id;
+            if (_id && (!this._vid || this._vid.id !== _id)) { // valid id given and No id supplied yet or different id supplied
+                // Store locally for easy reference for event setup
+                var vid = this._vid = document.getElementById(_id);
+                var sequential = this._playSeq;
+                
+                vid.addEventListener('loadedmetadata', function(){
+                    vid.currentTime = currChap.startTime;
+                }, true);
+                
+                vid.addEventListener('canplay', function(){
+                    vid.play();
+                }, true);
+                
+                vid.addEventListener('timeupdate', function(){
+                    if (vid.currentTime >= currChap.endTime) {
+                        if (sequential) {
+                            Mgr.playChapter(idx++, sequential);
+                        } else {
+                            vid.pause();
+                        }
+                    }
+                }, true);
+            }
         },
         
         // output the TOC
         printTOC: function(){
-            var tbl = document.getElementById(this._tocID);
-            
-            if (tbl) {
+            if (this._toc) {
                 var tr;
                 
                 if (!_hasMadeToc) {
-                    tr = tbl.insertRow(0);
+                    tr = this._toc.insertRow(0);
                     
                     // DOM approach for tables (IE doesn't like tr.innerHTML)
                     var th = document.createElement('th');
@@ -171,12 +199,12 @@ var Mgr = (function(){
                 }
                 
                 // Delete existing rows
-                for (var i = tbl.rows.length - 1; i > 0; i--) 
-                    tbl.deleteRow(i);
+                for (var i = this._toc.rows.length - 1; i > 0; i--) 
+                    this._toc.deleteRow(i);
                 
                 if (_hasTocChanged) {
                     for (var i = _chapters.length - 1; i >= 0; i--) {
-                        tr = tbl.insertRow(1);
+                        tr = this._toc.insertRow(1);
                         
                         var srcElem = document.createElement('a');
                         srcElem.href = 'javascript:Mgr.playChapter(' + i + ');';
@@ -188,7 +216,7 @@ var Mgr = (function(){
                         tr.insertCell(4).innerHTML = '<input type="checkbox" onclick="Mgr.removeChapter('+i+'); Mgr.printTOC();" />';
                     }
                     
-                    tr = tbl.insertRow(1);
+                    tr = this._toc.insertRow(1);
                     tr.colspan = 4;
                     
                     var srcElem = document.createElement('a');
@@ -203,32 +231,14 @@ var Mgr = (function(){
         
         playChapter: function(idx, sequential){
             if (idx !== _curr && idx >= 0 && idx < _chapters.length) {
-                var vid = document.getElementById(this._vidId);
+                this._playSeq = sequential;
                 
                 _curr = idx;
                 currChap = _chapters[_curr];
                 
-                vid.addEventListener('loadedmetadata', function(){
-                    vid.currentTime = currChap.startTime;
-                }, true);
-                
-                vid.addEventListener('canplay', function(){
-                    vid.play();
-                }, true);
-                
-                vid.addEventListener('timeupdate', function(){
-                    if (vid.currentTime >= currChap.endTime) {
-                        if (sequential) {
-                            Mgr.playChapter(idx++, sequential);
-                        } else {
-                            vid.pause();
-                        }
-                    }
-                }, true);
-                
-                vid.src = currChap.src;
-                vid.load();
-                vid.play();
+                this._vid.src = currChap.src;
+                this._vid.load();
+                this._vid.play();
             }
         }
     };
