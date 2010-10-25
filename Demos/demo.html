@@ -150,9 +150,11 @@
             </div>
         </div>
         <div class="video-js-box">
-            <video id="player" class="video-js" width="640" height="264" controls="controls" preload="auto" data-subtitles="demo-subtitles.srt">
-                <source src="" type='video/mp4; codecs="avc1.42E01E, mp4a.40.2"' /><source src="" type='video/webm; codecs="vp8, vorbis"' /><source src="http://upload.wikimedia.org/wikipedia/commons/7/75/Big_Buck_Bunny_Trailer_400p.ogg" type='video/ogg; codecs="theora, vorbis"' />
-                <object id="flash_fallback_1" class="vjs-flash-fallback" width="640" height="264" type="application/x-shockwave-flash" data="http://releases.flowplayer.org/swf/flowplayer-3.2.1.swf">
+            <video id="player" class="video-js" width="640px" height="264px" controls="controls" preload="auto" >
+                <source src="" type='video/mp4; codecs="avc1.42E01E, mp4a.40.2"' />
+                <source src="" type='video/webm; codecs="vp8, vorbis"' />
+                <source src="http://upload.wikimedia.org/wikipedia/commons/7/75/Big_Buck_Bunny_Trailer_400p.ogg" type='video/ogg; codecs="theora, vorbis"' />
+                <object id="flash_fallback_1" class="vjs-flash-fallback" width="640px" height="264px" type="application/x-shockwave-flash" data="http://releases.flowplayer.org/swf/flowplayer-3.2.1.swf">
                     <param name="movie" value="http://releases.flowplayer.org/swf/flowplayer-3.2.1.swf" /><param name="allowfullscreen" value="true" /><param name="flashvars" value='config={"playlist":["http://video-js.zencoder.com/oceans-clip.png", {"url": "http://video-js.zencoder.com/oceans-clip.mp4","autoPlay":false,"autoBuffering":true}]}' />
                 </object>
             </video>

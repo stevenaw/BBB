@@ -130,15 +130,15 @@ var Mgr = (function(){
 		
         // Set the id for table of contents (<table>) and player (<video>) elements
         setTOCId: function(_id){
-            _tocID = _id;
+            this._tocID = _id;
         },
         setVideoId: function(_id){
-            _vidId = _id;
+            this._vidId = _id;
         },
         
         // output the TOC
         printTOC: function(){
-            var tbl = document.getElementById(_tocID);
+            var tbl = document.getElementById(this._tocID);
             
             if (tbl) {
                 var tr;
@@ -203,7 +203,7 @@ var Mgr = (function(){
         
         playChapter: function(idx, sequential){
             if (idx !== _curr && idx >= 0 && idx < _chapters.length) {
-                var vid = document.getElementById(_vidId);
+                var vid = document.getElementById(this._vidId);
                 
                 _curr = idx;
                 currChap = _chapters[_curr];
@@ -222,8 +222,14 @@ var Mgr = (function(){
                             Mgr.playChapter(idx++, sequential);
                         } else {
                             vid.pause();
+                            return false;
                         }
                     }
+                }, true);
+                
+                vid.addEventListener('seeked', function(){
+                    if (vid.currentTime >= currChap.endTime)
+                        return false;
                 }, true);
                 
                 vid.src = currChap.src;
