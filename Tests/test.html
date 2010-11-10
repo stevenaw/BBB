@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8" />
+        <title>HTML5 Video Player</title>
+        <script src="../Demos/js/video.js" type="text/javascript" charset="utf-8"></script>
+        <script type="text/javascript" src="../BBB.js"></script>
+        <script src="http://code.jquery.com/jquery-latest.min.js"></script>
+        <script type="text/javascript">
+        VideoJS.setupAllWhenReady();
+        
+        function addElem() {
+            Mgr.addChapter({
+                src: document.getElementById('bkmrkSrc').value,
+                title: document.getElementById('bkmrkTitle').value,
+                description: document.getElementById('bkmrkDescription').value,
+                startTime: document.getElementById('bkmrkStart').value,
+                endTime: document.getElementById('bkmrkEnd').value});
+                
+            Mgr.printTOC();
+        }
+        
+        var tests = [
+            {
+                title: "JSON Serialization",
+                func: function(){
+                    var book1 = Mgr.Bookmark({
+                        src: "localhost",
+                        title: "Test1",
+                        description: "",
+                        startTime: 0,
+                        endTime: 500});
+                        
+                    var book2 = Mgr.Bookmark({
+                        src: "google",
+                        title: "Test 2",
+                        description: "",
+                        startTime: 603,
+                        endTime: 1220});
+                    
+                    var ser = book1.toJSON();
+                    var book3 = Mgr.Bookmark().fromJSON(ser);
+                    var book4;
+                    
+                    ser = book2.toJSON();
+                    book4 = Mgr.Bookmark().fromJSON(ser);
+                    
+                    var assertEquals = function(obj1, obj2) {
+                        if (!obj1.equals(obj2)) {
+                            alert("Object 1 and 2 not equal!\n\nObj 1:\n"+
+                                obj1.toString() + "\n\n ===> \n\n" +
+                                obj2.toString());
+                                
+                            return false;
+                        }
+                        
+                        return true;
+                    }
+                    
+                    return assertEquals(book1, book3) && assertEquals(book2, book4);
+                }
+            },
+            {
+                title: "Table of Contents Output",
+                func: function(){
+                    try {
+                        Mgr.printTOC();
+                        return true;
+                    } catch (e) {
+                        alert("Could not output Table of Contents!\n\n Error: \n\n"+e);
+                        return false;
+                    }
+                }
+            },
+            {
+                title: "Table of Contents Modification",
+                func: function(){
+                    try {
+                        Mgr.printTOC();
+                        
+                        Mgr.addChapter({
+                          src: "Some new source",
+                          title: "Some new title",
+                          description: "Some new description",
+                          startTime: 8,
+                          endTime: 10});
+                          
+                        Mgr.printTOC();
+                        
+                        return true;
+                    } catch (e) {
+                        alert("Could not modify Table of Contents!\n\n Error: \n\n"+e);
+                        return false;
+                    }
+                }
+            }
+        ];
+        
+        function init(){
+            Mgr.init("player", "tblOfContents");
+        }
+        
+        function setCookie(name, value, expDays){
+            var sDate = "";
+            
+            if (!name.length) 
+                throw "name can't be empty";
+            else {
+                if (expDays) {
+                    var oDate = new Date();
+                    oDate.setTime(oDate.getTime() + (days * 24 * 60 * 60 * 1000));
+                    sDate = "; expires=" + date.toGMTString();
+                }
+                
+                document.cookie = name + "=" + value + sDate;
+            }
+        }
+        
+        // return string
+        function getCookie(name){
+            if (document.cookie.length > 0) {
+                var start = document.cookie.indexOf(name + "=");
+                if (start !== -1) {
+                    start += name.length + 1;
+                    var end = document.cookie.indexOf(";", start);
+                    if (end === -1) 
+                        end = document.cookie.length;
+                    return unescape(document.cookie.substring(start, end));
+                }
+            }
+            return "";
+        }
+        
+        function test(){
+            var numTests = tests.length;
+            var i=0;
+            var success = true;
+            
+            for(i=0;i<numTests && success; i++) {
+                success = tests[i].func();
+            }
+            
+            if (success)
+                alert("All tests passed!");
+            else
+                alert("Tests failed");
+        }
+        </script>
+        <style>
+            #panel {
+                display: none;
+            }
+        </style>
+        <link rel="stylesheet" href="../Demos/css/video-js.css" type="text/css" media="screen" title="Video JS">
+    </head>
+    <body onload="init()">
+    	<h3>HTML5 Video Chaptering Demo</h3>
+        <div id="right" style="float:right; padding-right: 440px;">
+            <div id = "panel">
+                <b>Create Chapter</b>
+                <table>
+                    <tr>
+                        <td>
+                            Title
+                        </td>
+                        <td>
+                            <input type="text" id="bkmrkTitle" name="bkmrkTitle" />
+                        </td>
+                    </tr>
+					<tr>
+                        <td>
+                            Description
+                        </td>
+                        <td>
+                            <input type="text" id="bkmrkDescription" name="bkmrkDescription" />
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            Source
+                        </td>
+                        <td>
+                            <input type="text" id="bkmrkSrc" name="bkmrkSrc" />
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            Start (sec)
+                        </td>
+                        <td>
+                            <input type="number" id="bkmrkStart" name="bkmrkStart" min="0" max="2147483647" step="1" />
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            End (sec)
+                        </td>
+                        <td>
+                            <input type="number" id="bkmrkEnd" name="bkmrkEnd" min="0" max="2147483647" step="1" />
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                        </td>
+                        <td>
+                            <input value="Add Chapter" type="button" id="bkmrkSubmit" name="bkmrkSubmit" onclick="javascript:addElem()"/>
+                        </td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+        <div class="video-js-box">
+            <video id="player" class="video-js" width="640px" height="264px" data-subtitles="../Demos/demo-subtitles.ttxt" controls="controls" preload="auto"  >
+                <source src="" type='video/mp4; codecs="avc1.42E01E, mp4a.40.2"' />
+                <source src="" type='video/webm; codecs="vp8, vorbis"' />
+                <source src="http://upload.wikimedia.org/wikipedia/commons/7/75/Big_Buck_Bunny_Trailer_400p.ogg" type='video/ogg; codecs="theora, vorbis"' />
+                <object id="flash_fallback_1" class="vjs-flash-fallback" width="640px" height="264px" type="application/x-shockwave-flash" data="http://releases.flowplayer.org/swf/flowplayer-3.2.1.swf">
+                    <param name="movie" value="http://releases.flowplayer.org/swf/flowplayer-3.2.1.swf" /><param name="allowfullscreen" value="true" /><param name="flashvars" value='config={"playlist":["http://video-js.zencoder.com/oceans-clip.png", {"url": "http://video-js.zencoder.com/oceans-clip.mp4","autoPlay":false,"autoBuffering":true}]}' />
+                </object>
+            </video>
+        </div>
+        <div>
+            <button id="chapterAdd">
+                + Toggle Chapter Add
+            </button>
+            <button onclick="test();">Run all Tests</button>
+            <br/>
+            <br/>
+			<div style="float:left; width:470px">This page will house a suite of tests which can be run to test the functionality of the BBB Player</div>
+			<div style="float:right;">
+            <table id="tblOfContents">
+            </table></div>
+        </div>
+        <script>
+            $("#chapterAdd").click(function(){
+                $("#panel").slideToggle("slow");
+            });
+        </script>
+    </body>
+</html>
