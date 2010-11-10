@@ -9,7 +9,7 @@
         <script type="text/javascript">
         VideoJS.setupAllWhenReady();
         
-        function addElem(){
+        function addElem() {
             Mgr.addChapter({
                 src: document.getElementById('bkmrkSrc').value,
                 title: document.getElementById('bkmrkTitle').value,
@@ -136,8 +136,6 @@
             var i=0;
             var success = true;
             
-            init();
-            
             for(i=0;i<numTests && success; i++) {
                 success = tests[i].func();
             }
@@ -155,7 +153,7 @@
         </style>
         <link rel="stylesheet" href="../Demos/css/video-js.css" type="text/css" media="screen" title="Video JS">
     </head>
-    <body onload="test()">
+    <body onload="init()">
     	<h3>HTML5 Video Chaptering Demo</h3>
         <div id="right" style="float:right; padding-right: 440px;">
             <div id = "panel">
@@ -222,18 +220,19 @@
             </video>
         </div>
         <div>
-            <button>
+            <button id="chapterAdd">
                 + Toggle Chapter Add
             </button>
+            <button onclick="test();">Run all Tests</button>
             <br/>
             <br/>
-			<div style="float:left; width:470px">This demo will showcase functionality that will allow the creation of video chapters. A chapter consists of a title, source, start time, and end time. When a chapter is opened it will change the HTML5 video element's source to the chapter's source, seek to the start time, then play to the end time.<br/><br/>To add a chapter, click the "Toggle Chapter Add" button, input the chapter information in the form, then click the "Add Chapter" button. The table of contents to the right will display all chapters. Click on the title link to open a chapter. Alternatively, click "Play All" to play all chapters sequentially.</div>
+			<div style="float:left; width:470px">This page will house a suite of tests which can be run to test the functionality of the BBB Player</div>
 			<div style="float:right;">
             <table id="tblOfContents">
             </table></div>
         </div>
         <script>
-            $("button").click(function(){
+            $("#chapterAdd").click(function(){
                 $("#panel").slideToggle("slow");
             });
         </script>
