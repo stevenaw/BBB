@@ -4,8 +4,9 @@
         <meta charset="utf-8" />
         <title>HTML5 Video Player</title>
         <script src="js/video.js" type="text/javascript" charset="utf-8"></script>
-        <script type="text/javascript" src="../BBB.js"></script>
+        <script src="js/json2.js" type="text/javascript" charset="utf-8"></script>
         <script src="http://code.jquery.com/jquery-latest.min.js"></script>
+        <script type="text/javascript" src="../BBB.js"></script>
         <script type="text/javascript">
         VideoJS.setupAllWhenReady();
         
@@ -21,7 +22,7 @@
         }
         
         function init(){
-            Mgr.init("player", "tblOfContents");
+            Mgr.init({playerId: "player", tocId: "tblOfContents", chapterStorage: "server.php"});
         }
         
         function setCookie(name, value, expDays){

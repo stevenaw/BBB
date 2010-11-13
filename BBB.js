@@ -3,6 +3,16 @@
  * 		By Steven Weerdenburg and Kevin Lasconia
  * 		Last Modification: 11/08/2010
  */
+if (typeof XMLHttpRequest == "undefined") {
+    XMLHttpRequest = function () {
+        try { return new ActiveXObject("Msxml2.XMLHTTP.6.0"); } catch (e) {}
+        try { return new ActiveXObject("Msxml2.XMLHTTP.3.0"); } catch (f) {}
+        try { return new ActiveXObject("Msxml2.XMLHTTP"); } catch (g) {}
+        // Impossible to support XHR
+        throw new Error("This browser does not support XMLHttpRequest.");
+    };
+}
+
 var Mgr = (function(){
     var _chapters = []; // Array of Chapters/Bookmarks
     var _vid = 0, _toc = 0; // id to store the table of contents and video player
@@ -25,11 +35,11 @@ var Mgr = (function(){
             var endTime = 0;
             
             if (params) {
-                title = params["title"];
-                description = params["description"];
-                src = params["src"];
-                startTime = parseInt(params["startTime"]);
-                endTime = parseInt(params["endTime"]);
+                title = params["title"] || "";
+                description = params["description"] || "";
+                src = params["src"] || "";
+                startTime = parseInt(params["startTime"] || 0);
+                endTime = parseInt(params["endTime"] || 0);
               
                 if (startTime < 0 || endTime < 0)
                     throw "Start and end times must be positive!";
@@ -59,58 +69,60 @@ var Mgr = (function(){
                         startTime === bkmrk.getStartTime() && endTime === bkmrk.getEndTime();
                 },
                 fromJSON: function(str){
-                    //var obj = jsonParse(str);
-                    
-                    var currStart = -1;
-                    var currEnd = 0;
-                    var obj = {};
-                    
-                    while ((currStart = str.indexOf('"', currEnd + 1)) !== -1 && (currEnd = str.indexOf('"', currStart + 1)) !== -1) {
-                        // Has found another attribute
+                    if (JSON)
+                        return Mgr.Bookmark(JSON.parse(str));
+                    else {
+                        var currStart = -1;
+                        var currEnd = 0;
+                        var obj = {};
                         
-                        var attrName = str.substring(currStart + 1, currEnd);
-                        var foundAttr = false;
-                        var foundSemi = false;
-                        var foundType = 0; // 0 = none, 1 = string, 2 = numeric, 3 = float
-                        var currItem;
-                        
-                        // Process value, eagerly assume comma follows when value found
-                        while ((currItem = str[++currEnd]) !== '"' || !foundAttr) {
-                            if (str[currEnd] === ':') {
-                                foundSemi = true;
-                            } else {
-                                if (str[currEnd] === '"') { // Check for strings
-                                    if (foundSemi && str[currEnd - 1] !== '\\') {
-                                        if (!foundType) {
-                                            foundType = 1;
-                                            currStart = currEnd;
-                                        } else {
-                                            obj[attrName] = str.substring(currStart + 1, currEnd);
-                                            foundAttr = true;
-                                            break; // Go into outer loop to find next attribute
-                                        }
-                                    }
+                        while ((currStart = str.indexOf('"', currEnd + 1)) !== -1 && (currEnd = str.indexOf('"', currStart + 1)) !== -1) {
+                            // Has found another attribute
+                            
+                            var attrName = str.substring(currStart + 1, currEnd);
+                            var foundAttr = false;
+                            var foundSemi = false;
+                            var foundType = 0; // 0 = none, 1 = string, 2 = numeric, 3 = float
+                            var currItem;
+                            
+                            // Process value, eagerly assume comma follows when value found
+                            while ((currItem = str[++currEnd]) !== '"' || !foundAttr) {
+                                if (str[currEnd] === ':') {
+                                    foundSemi = true;
                                 } else {
-                                    if (str[currEnd] === '.') { // Check for decimal for numeric->float data
-                                        if (foundType === 2) 
-                                            foundType = 3;
-                                    } else {
-                                        if (str[currEnd] === ' ') {
-                                            if (foundType === 2 || foundType === 3) { // Check for end of numeric data
-                                                if (foundType === 2) // Integer
-                                                    obj[attrName] = parseInt(str.substring(currStart, currEnd));
-                                                else 
-                                                    if (foundType === 3) // Float
-                                                        obj[attrName] = parseFloat(str.substring(currStart, currEnd));
-                                                
-                                                foundAttr = true;
-                                                break;
-                                            }
-                                        } else {
+                                    if (str[currEnd] === '"') { // Check for strings
+                                        if (foundSemi && str[currEnd - 1] !== '\\') {
                                             if (!foundType) {
-                                                if (!isNaN(str[currEnd])) {
-                                                    currStart = str[currEnd - 1] === '-' ? currEnd - 1 : currEnd;
-                                                    foundType = 2; // Numeric, may be upgraded to float later
+                                                foundType = 1;
+                                                currStart = currEnd;
+                                            } else {
+                                                obj[attrName] = str.substring(currStart + 1, currEnd);
+                                                foundAttr = true;
+                                                break; // Go into outer loop to find next attribute
+                                            }
+                                        }
+                                    } else {
+                                        if (str[currEnd] === '.') { // Check for decimal for numeric->float data
+                                            if (foundType === 2) 
+                                                foundType = 3;
+                                        } else {
+                                            if (str[currEnd] === ' ') {
+                                                if (foundType === 2 || foundType === 3) { // Check for end of numeric data
+                                                    if (foundType === 2) // Integer
+                                                        obj[attrName] = parseInt(str.substring(currStart, currEnd));
+                                                    else 
+                                                        if (foundType === 3) // Float
+                                                            obj[attrName] = parseFloat(str.substring(currStart, currEnd));
+                                                    
+                                                    foundAttr = true;
+                                                    break;
+                                                }
+                                            } else {
+                                                if (!foundType) {
+                                                    if (!isNaN(str[currEnd])) {
+                                                        currStart = str[currEnd - 1] === '-' ? currEnd - 1 : currEnd;
+                                                        foundType = 2; // Numeric, may be upgraded to float later
+                                                    }
                                                 }
                                             }
                                         }
@@ -118,61 +130,48 @@ var Mgr = (function(){
                                 }
                             }
                         }
+                        
+                        return Mgr.Bookmark(obj);
                     }
-                    
-                    return Mgr.Bookmark(obj);
                 }
             }
         },
-        fetchBookmarks: function() {
-            // Stub code, will eventually get bookmarks from server call
+        // (Re-)initialize all values
+        init: function(params){
+            this.setVideoId(params.playerId);
+            this.setTOCId(params.tocId);
             
-            Mgr.addChapter({
-                src: 'http://upload.wikimedia.org/wikipedia/commons/7/75/Big_Buck_Bunny_Trailer_400p.ogg',
-                title: 'Big Buck Bunny',
-                description: 'An animated video',
-                startTime: 5,
-                endTime: 14});
-                
-            Mgr.addChapter({
-                src: 'http://www.archive.org/download/deadmandirewolffanclub/DireWolfFanClub.ogv',
-                title: 'Dire Wolf Fan Club',
-                description: 'An unusual video',
-                startTime: 10,
-                endTime: 29});
-                
-            Mgr.addChapter({
-                src: 'http://jbuckley.ca/~hoops/elephant.ogv',
-                title: 'Elephants Dream',
-                description: 'Elephants',
-                startTime: 145,
-                endTime: 200});
-                
-            Mgr.addChapter({
-                src: 'http://www.archive.org/download/Kinetic_Art_Demo_Video/nym.ogv',
-                title: 'Kinetic Art',
-                description: 'Domino fun',
-                startTime: 60,
-                endTime: 66});
-                
-            Mgr.addChapter({
-                src: 'http://ftp.gnu.org/video/Stephen_Fry-Happy_Birthday_GNU-hq_600px_780kbit.ogv',
-                title: 'Freedom Fry',
-                description: 'Happy B-Day',
-                startTime: 1,
-                endTime: 60});
+            // Default search directory "BBB" for callPage
+            // Careful, cross-origin issues may result if specified
+            var baseUri = params.remoteServer || location.href.substring(0, location.href.lastIndexOf("/BBB/")+5);            
+            this.fetchChapters(baseUri+params.chapterStorage);
         },
-        // (Re-)initialize all values except internal element pointers
-        init: function(vidId, tocId, updateEvent, canPlayEvent){
+        fetchChapters: function(endPoint) {
+            var request = new XMLHttpRequest();
+            
             _chapters = [];
             _hasMadeToc = false;
             _hasTocChanged = true; // In event TOC has been output before calling init, this will redraw table
             _curr = -1;
             
-            this.setVideoId(vidId, updateEvent, canPlayEvent);
-            this.setTOCId(tocId);
-            Mgr.fetchBookmarks();
+            request.open("GET",endPoint);
+            request.onreadystatechange = function() {
+                var arr = [];
+                var i=0, numItems = 0;
+                
+                if (request.readyState == 4 && request.status == 200) {
+                    arr = JSON.parse(request.responseText);
+                    numItems = arr.length;
+                    for(i=0; i<numItems; i++) {
+                        Mgr.addChapter(arr[i]);
+                    }
+                    
+                    Mgr.printTOC();
+                }
+            };
+            request.send();
         },
+        
         // Add a chapter
         addChapter: function(_c){
             _chapters.push(Mgr.Bookmark(_c));
