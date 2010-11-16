@@ -29,6 +29,7 @@
         function init(){
             Mgr.init("player", "tblOfContents");
 			Mgr.trackStatistics(ip);
+			Mgr.displayWatermark();
         }
         
         function setCookie(name, value, expDays){
@@ -70,7 +71,6 @@
         <link rel="stylesheet" href="css/video-js.css" type="text/css" media="screen" title="Video JS">
     </head>
     <body onload="init()">
-    	<h3>HTML5 Video Chaptering Demo</h3>
         <div id="right" style="float:right; padding-right: 440px;">
             <div id = "panel">
                 <b>Create Chapter</b>
@@ -125,8 +125,10 @@
                 </table>
             </div>
         </div>
+	        <!--<video id="player" class="video-js" src="video.ogv" controls="controls">
+        </video>-->	
         <div class="video-js-box">
-            <video id="player" class="video-js" width="640px" height="264px" data-subtitles="demo-subtitles.ttxt" controls="controls" preload="auto"  >
+            <video id="player" class="video-js" width="300px" height="200px" data-subtitles="demo-subtitles.ttxt" controls="controls" preload="auto"  >
 				<source src="video.ogv" type='video/ogg; codecs="theora, vorbis"' />            	
                 <source src="" type='video/mp4; codecs="avc1.42E01E, mp4a.40.2"' />
                 <source src="" type='video/webm; codecs="vp8, vorbis"' />
