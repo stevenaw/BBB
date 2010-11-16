@@ -1,7 +1,7 @@
 /*
- * 	BBB v0.1
+ * 	BBB v0.2
  * 		By Steven Weerdenburg and Kevin Lasconia
- * 		Last Modification: 11/08/2010
+ * 		Last Modification: 11/16/2010
  */
 var Mgr = (function(){
     var _chapters = []; // Array of Chapters/Bookmarks
@@ -341,11 +341,45 @@ var Mgr = (function(){
             
             var endListener = function(){
                 stats._100 = true;
+				//Debugging purposes
 				alert(stats._25 + ' ' + stats._50 + ' ' + stats._75 + ' ' + stats._90 + ' ' + stats._100);	
             }
 			
             vid.addEventListener('timeupdate', durationListener, false);
             vid.addEventListener('ended', endListener, false);		
-        }
+        },
+		
+		displayWatermark: function(src, opacity, alpha) {
+			//Try and clean up code later :(
+			var vid = this._vid;
+			// Position of video player
+			var videoTop = parseInt(vid.clientTop);
+			var videoLeft = parseInt(vid.clientLeft);			
+			// Create div element
+			var watermarkDiv = document.createElement('div');
+			// Set div attributes
+			watermarkDiv.setAttribute('id', 'watermark');
+			watermarkDiv.className = 'watermark';
+			watermarkDiv.style.position= 'absolute';       
+			watermarkDiv.style.left = videoLeft + 5 + 'px';
+			watermarkDiv.style.top = videoTop + 5 + 'px';
+			// Width and height will be hard-coded for now, will re-factor later
+			watermarkDiv.style.width = 150 + 'px';
+			watermarkDiv.style.height = 70 + 'px' ;
+			// If image source is not specificed, default image will be used
+			if (!src) {
+				watermarkDiv.style.backgroundImage = 'url("watermark.png")';				
+			}
+			else {
+				watermarkDiv.style.backgroundImage = 'url("' + src + '")';
+			}
+			watermarkDiv.style.backgroundRepeat = "no-repeat";
+			// Arbitrary zIndex value to ensure watermark is above video player
+			watermarkDiv.style.zIndex = 100;
+			watermarkDiv.style.opacity = 0.4;
+			var alpha = 40;
+			watermarkDiv.style.filter  = "alpha(opacity=" + alpha + ")";
+			document.body.appendChild(watermarkDiv);			
+		}
     };
 })();
