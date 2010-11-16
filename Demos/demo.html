@@ -3,12 +3,18 @@
     <head>
         <meta charset="utf-8" />
         <title>HTML5 Video Player</title>
+        <script src="http://code.jquery.com/jquery-latest.min.js"></script>		
         <script src="js/video.js" type="text/javascript" charset="utf-8"></script>
         <script type="text/javascript" src="../BBB.js"></script>
-        <script src="http://code.jquery.com/jquery-latest.min.js"></script>
         <script type="text/javascript">
         VideoJS.setupAllWhenReady();
         
+		var ip;
+		
+        $.getJSON("http://jsonip.appspot.com?callback=?", function(data){
+        	ip = data.ip;
+        });		
+		
         function addElem(){
             Mgr.addChapter({
                 src: document.getElementById('bkmrkSrc').value,
@@ -22,6 +28,7 @@
         
         function init(){
             Mgr.init("player", "tblOfContents");
+			Mgr.trackStatistics(ip);
         }
         
         function setCookie(name, value, expDays){
@@ -120,9 +127,9 @@
         </div>
         <div class="video-js-box">
             <video id="player" class="video-js" width="640px" height="264px" data-subtitles="demo-subtitles.ttxt" controls="controls" preload="auto"  >
+				<source src="video.ogv" type='video/ogg; codecs="theora, vorbis"' />            	
                 <source src="" type='video/mp4; codecs="avc1.42E01E, mp4a.40.2"' />
                 <source src="" type='video/webm; codecs="vp8, vorbis"' />
-                <source src="http://upload.wikimedia.org/wikipedia/commons/7/75/Big_Buck_Bunny_Trailer_400p.ogg" type='video/ogg; codecs="theora, vorbis"' />
                 <object id="flash_fallback_1" class="vjs-flash-fallback" width="640px" height="264px" type="application/x-shockwave-flash" data="http://releases.flowplayer.org/swf/flowplayer-3.2.1.swf">
                     <param name="movie" value="http://releases.flowplayer.org/swf/flowplayer-3.2.1.swf" /><param name="allowfullscreen" value="true" /><param name="flashvars" value='config={"playlist":["http://video-js.zencoder.com/oceans-clip.png", {"url": "http://video-js.zencoder.com/oceans-clip.mp4","autoPlay":false,"autoBuffering":true}]}' />
                 </object>
