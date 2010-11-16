@@ -12,7 +12,7 @@ var Mgr = (function(){
     var _curr = -1;
     var currChap = 0;
     var _playSeq = 0;
-    
+	    
     var canVideo = !!document.createElement('video').play;
     
     return {
@@ -124,6 +124,14 @@ var Mgr = (function(){
                 }
             }
         },
+        // A Statistics object for the manager to work with		
+		Statistics: function() {
+			var a = "";
+			
+			return {
+				
+			}
+		},
         fetchBookmarks: function() {
             // Stub code, will eventually get bookmarks from server call
             
@@ -163,7 +171,7 @@ var Mgr = (function(){
                 endTime: 60});
         },
         // (Re-)initialize all values except internal element pointers
-        init: function(vidId, tocId, updateEvent, canPlayEvent){
+        init: function(vidId, tocId, updateEvent, canPlayEvent, ip){
             _chapters = [];
             _hasMadeToc = false;
             _hasTocChanged = true; // In event TOC has been output before calling init, this will redraw table
@@ -172,6 +180,7 @@ var Mgr = (function(){
             this.setVideoId(vidId, updateEvent, canPlayEvent);
             this.setTOCId(tocId);
             Mgr.fetchBookmarks();
+			//Mgr.trackStatistics();
         },
         // Add a chapter
         addChapter: function(_c){
@@ -301,6 +310,42 @@ var Mgr = (function(){
                     vid.play();
                 }
             }
+        },
+		
+        trackStatistics: function(ip) {
+			var stats = {ip : 0, onLoad : false, _25 : false, _50 : false, _75 : false, _90 : false, _100 : false, cc_on : false, cc_off : false, ad_on : false, ad_off : false};				
+			var vid = this._vid;
+            var duration = vid.duration;
+			
+			stats.ip = ip;
+			
+            var durationListener = function() {
+                if (parseInt(vid.currentTime, 10) === parseInt(duration * 0.25, 10)) {
+                    vid.removeEventListener('timeupdate', durationListener, false);
+					stats._25 = true;
+                }
+                else if (parseInt(vid.currentTime, 10) === parseInt(duration * 0.50, 10)) {
+                	vid.removeEventListener('timeupdate', durationListener, false);
+                    stats._50 = true;
+                }
+                else if (parseInt(vid.currentTime, 10) === parseInt(duration * 0.75, 10)) {
+                	vid.removeEventListener('timeupdate', durationListener, false);
+                    stats._75 = true;
+                }
+                else if (parseInt(vid.currentTime, 10) === parseInt(duration * 0.90, 10)) {
+                	vid.removeEventListener('timeupdate', durationListener, false);
+                    stats._90 = true;
+                }
+                vid.addEventListener('timeupdate', durationListener, false);	
+            }
+            
+            var endListener = function(){
+                stats._100 = true;
+				alert(stats._25 + ' ' + stats._50 + ' ' + stats._75 + ' ' + stats._90 + ' ' + stats._100);	
+            }
+			
+            vid.addEventListener('timeupdate', durationListener, false);
+            vid.addEventListener('ended', endListener, false);		
         }
     };
 })();
