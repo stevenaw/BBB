@@ -28,112 +28,34 @@ var Mgr = (function(){
     return {
         // A Bookmark object for the manager to work with
         Bookmark: function(params) {
-            var title = "";
-            var description = "";
-            var src = "";
-            var startTime = 0;
-            var endTime = 0;
+            var params = params || {};
             
-            if (params) {
-                title = params["title"] || "";
-                description = params["description"] || "";
-                src = params["src"] || "";
-                startTime = parseInt(params["startTime"] || 0);
-                endTime = parseInt(params["endTime"] || 0);
-              
-                if (startTime < 0 || endTime < 0)
-                    throw "Start and end times must be positive!";
-                else if (startTime < endTime) {
-                    startTime = startTime;
-                    endTime = endTime;
-                } else {
-                    endTime = startTime;
-                    startTime = endTime;
-                }
+            var title = params["title"] || "";
+            var description = params["description"] || "";
+            var src = params["src"] || "";
+            var startTime = parseInt(params["startTime"] || 0);
+            var endTime = parseInt(params["endTime"] || 0);
+            
+            if (startTime < 0 || endTime < 0)
+                throw "Start and end times must be positive!";
+            else if (startTime < endTime) {
+                startTime = startTime;
+                endTime = endTime;
+            } else {
+                endTime = startTime;
+                startTime = endTime;
             }
             
-            return {
-                getTitle: function() { return title; },
-                getDescription: function() { return description; },
-                getSrc: function() { return src; },
-                getStartTime: function() { return startTime; },
-                getEndTime: function() { return endTime; },
-                toString: function(){
-                    return "Source: " + src + "\nTitle: " + title + "\nDescription: " + description + "\nStart Time: " + startTime + "\nEnd Time: " + endTime;
-                },
-                toJSON: function(){
-                    return '{ "src": "' + src + '", "title": "' + title + '", "description": "' + description + '", "startTime": ' + startTime + ', "endTime": ' + endTime + ' }';
-                },
-                equals: function(bkmrk) {
-                    return src === bkmrk.getSrc() && title === bkmrk.getTitle() && description === bkmrk.getDescription() &&
-                        startTime === bkmrk.getStartTime() && endTime === bkmrk.getEndTime();
-                },
-                fromJSON: function(str){
-                    if (JSON)
-                        return Mgr.Bookmark(JSON.parse(str));
-                    else {
-                        var currStart = -1;
-                        var currEnd = 0;
-                        var obj = {};
-                        
-                        while ((currStart = str.indexOf('"', currEnd + 1)) !== -1 && (currEnd = str.indexOf('"', currStart + 1)) !== -1) {
-                            // Has found another attribute
-                            
-                            var attrName = str.substring(currStart + 1, currEnd);
-                            var foundAttr = false;
-                            var foundSemi = false;
-                            var foundType = 0; // 0 = none, 1 = string, 2 = numeric, 3 = float
-                            var currItem;
-                            
-                            // Process value, eagerly assume comma follows when value found
-                            while ((currItem = str[++currEnd]) !== '"' || !foundAttr) {
-                                if (str[currEnd] === ':') {
-                                    foundSemi = true;
-                                } else {
-                                    if (str[currEnd] === '"') { // Check for strings
-                                        if (foundSemi && str[currEnd - 1] !== '\\') {
-                                            if (!foundType) {
-                                                foundType = 1;
-                                                currStart = currEnd;
-                                            } else {
-                                                obj[attrName] = str.substring(currStart + 1, currEnd);
-                                                foundAttr = true;
-                                                break; // Go into outer loop to find next attribute
-                                            }
-                                        }
-                                    } else {
-                                        if (str[currEnd] === '.') { // Check for decimal for numeric->float data
-                                            if (foundType === 2) 
-                                                foundType = 3;
-                                        } else {
-                                            if (str[currEnd] === ' ') {
-                                                if (foundType === 2 || foundType === 3) { // Check for end of numeric data
-                                                    if (foundType === 2) // Integer
-                                                        obj[attrName] = parseInt(str.substring(currStart, currEnd));
-                                                    else 
-                                                        if (foundType === 3) // Float
-                                                            obj[attrName] = parseFloat(str.substring(currStart, currEnd));
-                                                    
-                                                    foundAttr = true;
-                                                    break;
-                                                }
-                                            } else {
-                                                if (!foundType) {
-                                                    if (!isNaN(str[currEnd])) {
-                                                        currStart = str[currEnd - 1] === '-' ? currEnd - 1 : currEnd;
-                                                        foundType = 2; // Numeric, may be upgraded to float later
-                                                    }
-                                                }
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                        
-                        return Mgr.Bookmark(obj);
-                    }
-                }
+            this.getTitle = function() { return title; },
+            this.getDescription= function() { return description; },
+            this.getSrc = function() { return src; },
+            this.getStartTime = function() { return startTime; },
+            this.getEndTime = function() { return endTime; },
+            this.toString = function(){
+                return "Source: " + src + "\nTitle: " + title + "\nDescription: " + description + "\nStart Time: " + startTime + "\nEnd Time: " + endTime;
+            },
+            this.toJSON = function(){
+                return '{ "src": "' + src + '", "title": "' + title + '", "description": "' + description + '", "startTime": ' + startTime + ', "endTime": ' + endTime + ' }';
             }
         },
         // (Re-)initialize all values
@@ -174,7 +96,7 @@ var Mgr = (function(){
         
         // Add a chapter
         addChapter: function(_c){
-            _chapters.push(Mgr.Bookmark(_c));
+            _chapters.push(new Mgr.Bookmark(_c));
             _hasTocChanged = true;
         },
         // Add a chapter
@@ -303,3 +225,76 @@ var Mgr = (function(){
         }
     };
 })();
+
+Mgr.Bookmark.prototype = {
+  fromJSON: function(str){
+    if (JSON)
+        return new Mgr.Bookmark(JSON.parse(str));
+    else {
+        var currStart = -1;
+        var currEnd = 0;
+        var obj = {};
+        
+        while ((currStart = str.indexOf('"', currEnd + 1)) !== -1 && (currEnd = str.indexOf('"', currStart + 1)) !== -1) {
+            // Has found another attribute
+            
+            var attrName = str.substring(currStart + 1, currEnd);
+            var foundAttr = false;
+            var foundSemi = false;
+            var foundType = 0; // 0 = none, 1 = string, 2 = numeric, 3 = float
+            var currItem;
+            
+            // Process value, eagerly assume comma follows when value found
+            while ((currItem = str[++currEnd]) !== '"' || !foundAttr) {
+                if (str[currEnd] === ':') {
+                    foundSemi = true;
+                } else {
+                    if (str[currEnd] === '"') { // Check for strings
+                        if (foundSemi && str[currEnd - 1] !== '\\') {
+                            if (!foundType) {
+                                foundType = 1;
+                                currStart = currEnd;
+                            } else {
+                                obj[attrName] = str.substring(currStart + 1, currEnd);
+                                foundAttr = true;
+                                break; // Go into outer loop to find next attribute
+                            }
+                        }
+                    } else {
+                        if (str[currEnd] === '.') { // Check for decimal for numeric->float data
+                            if (foundType === 2) 
+                                foundType = 3;
+                        } else {
+                            if (str[currEnd] === ' ') {
+                                if (foundType === 2 || foundType === 3) { // Check for end of numeric data
+                                    if (foundType === 2) // Integer
+                                        obj[attrName] = parseInt(str.substring(currStart, currEnd));
+                                    else 
+                                        if (foundType === 3) // Float
+                                            obj[attrName] = parseFloat(str.substring(currStart, currEnd));
+                                    
+                                    foundAttr = true;
+                                    break;
+                                }
+                            } else {
+                                if (!foundType) {
+                                    if (!isNaN(str[currEnd])) {
+                                        currStart = str[currEnd - 1] === '-' ? currEnd - 1 : currEnd;
+                                        foundType = 2; // Numeric, may be upgraded to float later
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        
+        return new Mgr.Bookmark(obj);
+    }
+  },
+  equals: function(bkmrk) {
+      return this.getSrc() === bkmrk.getSrc() && this.getTitle() === bkmrk.getTitle() && this.getDescription() === bkmrk.getDescription() &&
+          this.getStartTime() === bkmrk.getStartTime() && this.getEndTime() === bkmrk.getEndTime();
+  }
+};

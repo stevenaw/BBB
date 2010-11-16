@@ -25,14 +25,14 @@
             {
                 title: "JSON Serialization",
                 func: function(){
-                    var book1 = Mgr.Bookmark({
+                    var book1 = new Mgr.Bookmark({
                         src: "localhost",
                         title: "Test1",
                         description: "",
                         startTime: 0,
                         endTime: 500});
                         
-                    var book2 = Mgr.Bookmark({
+                    var book2 = new Mgr.Bookmark({
                         src: "google",
                         title: "Test 2",
                         description: "",
@@ -40,11 +40,11 @@
                         endTime: 1220});
                     
                     var ser = book1.toJSON();
-                    var book3 = Mgr.Bookmark().fromJSON(ser);
+                    var book3 = Mgr.Bookmark.prototype.fromJSON(ser);
                     var book4;
                     
                     ser = book2.toJSON();
-                    book4 = Mgr.Bookmark().fromJSON(ser);
+                    book4 = Mgr.Bookmark.prototype.fromJSON(ser);
                     
                     var assertEquals = function(obj1, obj2) {
                         if (!obj1.equals(obj2)) {
