@@ -238,7 +238,7 @@ var Mgr = (function () {
 				id: 1,
                 title: 'Green Screen',
                 description: 'Demo',
-				duration: 10,				
+				duration: '0:10',				
                 src: 'http://jbuckley.ca/~hoops/video.ogv',
 				rating: 'G',
 				thumbnailSrc: 'video.jpg',				
@@ -248,7 +248,7 @@ var Mgr = (function () {
 				id: 2,
                 title: 'Big Buck Bunny',
                 description: 'An animated video',
-				duration: 10,				
+				duration: '0:32',				
                 src: 'http://upload.wikimedia.org/wikipedia/commons/7/75/Big_Buck_Bunny_Trailer_400p.ogg',
 				rating: 'G',
 				thumbnailSrc: 'bunny.jpg',
@@ -258,7 +258,7 @@ var Mgr = (function () {
 				id: 3,
                 title: 'Indy',
                 description: 'Cars on the track',
-				duration: 10,				
+				duration: '0:24',				
                 src: 'http://jbuckley.ca/~hoops/indy.ogv',
 				rating: 'G',
 				thumbnailSrc: 'indy.jpg',				
@@ -268,7 +268,7 @@ var Mgr = (function () {
 				id: 4,
                 title: 'Dire Wolf Fanclub',
                 description: '???',
-				duration: 10,				
+				duration: '2:28',				
                 src: 'http://jbuckley.ca/~hoops/DireWolfFanClub.ogv',
 				rating: 'G',
 				thumbnailSrc: 'dwfc.jpg',				
@@ -286,6 +286,7 @@ var Mgr = (function () {
             this.setTOCId(tocId);
             Mgr.fetchBookmarks();
 			Mgr.fetchVideos();
+			//Mgr.displayRecommendedVideos();
         },
         // Add a chapter
         addChapter: function (_c) {
@@ -489,15 +490,52 @@ var Mgr = (function () {
 				if (s) {
 					document.body.removeChild(s);
 				}					
-				Mgr.printVideoStats();
+				//Mgr.printVideoStats();
 				if (_stats) {
 					_stats = null;
-				}						
+				}
+				Mgr.displayRecommendedVideos();						
             }
             vid.addEventListener('timeupdate', durationListener, false);
             vid.addEventListener('ended', endListener, false);
         },
-
+		// Stub method to send stats to BBB server
+		sendStatistics: function() {
+			// Probably convert statistics object into JSON and send it
+		},
+		// Displays rec'd videos
+		displayRecommendedVideos: function() {
+			var numVids = _recommended.length;
+			var i;
+			var recCont = document.createElement('div');
+			recCont.setAttribute('id', 'container');
+			recCont.style.position = "absolute";
+			document.body.appendChild(recCont);	
+		    var cont = document.getElementById('container');		
+			for (i = 0; i < numVids; ++i) {
+				// Generate thumbnails
+				var image = document.createElement('img');
+				image.src = _recommended[i].getThumbnailSrc();
+				image.style.width = 70 + 'px';
+				image.style.height = 70 + 'px';
+				cont.appendChild(image);
+				// Generate title and duration links that will play the video				
+				var info = document.createElement('div');
+				info.href = 'javascript:Mgr.test();';
+				info.innerHTML = '<a href="javascript:Mgr.playVideo(' + i + ');">' + _recommended[i].getTitle() + ' - ' + _recommended[i].getDuration(); + '</a>';
+				cont.appendChild(info);
+			}
+		},
+		// Will play a video using an index from an array of videos
+		// Will need to refactor to support tags to retrieve related videos
+		playVideo: function(idx) {
+			var vid = this._vid;
+            vid.src = _recommended[idx].getSrc();
+            vid.load();
+            vid.play();
+			var cont = document.getElementById('container');
+			document.body.removeChild(cont);		
+		},
         displayWatermark: function (src, opacity, alpha) {
             //Try and clean up code later :(
             var vid = this._vid;
