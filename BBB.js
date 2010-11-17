@@ -285,6 +285,7 @@ var Mgr = (function () {
             this.setVideoId(vidId, updateEvent, canPlayEvent);
             this.setTOCId(tocId);
             Mgr.fetchBookmarks();
+			Mgr.fetchVideos();
         },
         // Add a chapter
         addChapter: function (_c) {
@@ -321,6 +322,18 @@ var Mgr = (function () {
 		// Set statistics
 		setStatistics: function (_s) {
 			_stats = (Mgr.Statistics(_s));
+		},
+		// Output video stats
+		printVideoStats: function() {			
+			var vidStats = document.createElement('div');
+			vidStats.setAttribute('id', 'vidStats');
+			vidStats.innerHTML = '<b>Stats</b><br/>IP: ' + _stats.getIp() 
+							 + '<br/>Reached 25%: ' + _stats.get25() 
+							 + '<br/>Reached 50%: ' + _stats.get50()
+							 + '<br/>Reached 75%: ' + _stats.get75()
+							 + '<br/>Reached 90%: ' + _stats.get90()
+							 + '<br/>Reached 100%: ' + _stats.get100();
+			document.body.appendChild(vidStats);			
 		},
         // Set the table of contents (<table>) and player (<video>) elements based on id
         // Only set them if the currently stored element is null or has a differing id
@@ -469,9 +482,17 @@ var Mgr = (function () {
             var endListener = function () {
                 stats._100 = true;
                 //Debugging purposes
-                alert(stats._25 + ' ' + stats._50 + ' ' + stats._75 + ' ' + stats._90 + ' ' + stats._100);
+                //alert(stats._25 + ' ' + stats._50 + ' ' + stats._75 + ' ' + stats._90 + ' ' + stats._100);
 				//Add in cc and add stuff later
-			    Mgr.setStatistics({ip : stats.ip,_25 : stats._25,_50 : stats._50,_75 : stats._75,_90 : stats._90,_100 : stats._100});						
+			    Mgr.setStatistics({ip : stats.ip,_25 : stats._25,_50 : stats._50,_75 : stats._75,_90 : stats._90,_100 : stats._100});
+				var s = document.getElementById('vidStats');
+				if (s) {
+					document.body.removeChild(s);
+				}					
+				Mgr.printVideoStats();
+				if (_stats) {
+					_stats = null;
+				}						
             }
             vid.addEventListener('timeupdate', durationListener, false);
             vid.addEventListener('ended', endListener, false);
