@@ -5,6 +5,9 @@
  */
 var Mgr = (function () {
     var _chapters = []; // Array of Chapters/Bookmarks
+    var _recommended = []; // Array of recommended videos
+    var _initialVideo;
+    var _stats; // Statistics object
     var _vid = 0,
         _toc = 0; // id to store the table of contents and video player
     var _hasMadeToc = false;
@@ -129,56 +132,149 @@ var Mgr = (function () {
                 }
             }
         },
+		// A Video object for the manager to work with
+		Video: function(params) {
+			var id = 0;
+			var title = "";
+			var description = "";
+			var duration = "";
+			var src = "";
+			var rating = "";
+			var thumbnailSrc = "";
+			var tags = [];
+			
+            if (params) {
+				id = params['id'];
+                title = params['title'];
+				description = params['description'];
+				duration = params['duration'];
+				src = params['src'];
+				rating = params['rating'];
+				thumbnailSrc = params['thumbnailSrc'];
+            }			
+			
+			return {
+                getId: function () {
+                    return id;
+                },
+                getTitle: function () {
+                    return title;
+                },
+                getDescription: function () {
+                    return description;
+                },
+                getDuration: function () {
+                    return duration;
+                },
+                getSrc: function () {
+                    return src;
+                },
+                getRating: function () {
+                    return rating;
+                },
+				getThumbnailSrc: function() {
+					return thumbnailSrc;
+				}																									
+			}
+		},
         // A Statistics object for the manager to work with		
-        Statistics: function () {
-            var a = "";
+        Statistics: function (params) {
+        	var ip = 0;
+            var onLoad = false;
+            var _25 = false;
+            var _50 = false;
+            var _75 = false;
+            var _90 = false;
+            var _100 = false;
+            var cc_on = false;
+            var cc_off = false;
+            var ad_on = false;
+            var ad_off = false;
+			
+			if (params) {
+				ip = params['ip'];
+				onLoad = params['onLoad'];
+				_25 = params['_25'];
+				_50 = params['_50'];
+				_75 = params['_75'];
+				_90 = params['_90'];
+				_100 = params['_100'];
+				//cc_on = params['cc_on'];
+				//cc_off = params['cc_off'];
+				//ad_on = params['ad_on'];
+				//ad_off = params['ad_off'];
+			}				
 
             return {
-
+                getIp: function () {
+                    return ip;
+                },
+                getOnLoad: function () {
+                    return onLoad;
+                },
+                get25: function () {
+                    return _25;
+                },
+                get50: function () {
+                    return _50;
+                },
+                get75: function () {
+                    return _75;
+                },
+                get90: function () {
+                    return _90;
+                },
+                get100: function () {
+                    return _100;
+                }																												
             }
-        },
+        },		
         fetchBookmarks: function () {
             // Stub code, will eventually get bookmarks from server call
-            Mgr.addChapter({
-                src: 'http://upload.wikimedia.org/wikipedia/commons/7/75/Big_Buck_Bunny_Trailer_400p.ogg',
+        },
+		fetchVideos: function() {
+			// Eventually be replaced by server calls
+            Mgr.addRecVideo({
+				id: 1,
+                title: 'Green Screen',
+                description: 'Demo',
+				duration: 10,				
+                src: 'http://jbuckley.ca/~hoops/video.ogv',
+				rating: 'G',
+				thumbnailSrc: 'video.jpg',				
+				tags: ['test']
+            });				
+            Mgr.addRecVideo({
+				id: 2,
                 title: 'Big Buck Bunny',
                 description: 'An animated video',
-                startTime: 5,
-                endTime: 14
+				duration: 10,				
+                src: 'http://upload.wikimedia.org/wikipedia/commons/7/75/Big_Buck_Bunny_Trailer_400p.ogg',
+				rating: 'G',
+				thumbnailSrc: 'bunny.jpg',
+				tags: ['test']
             });
-
-            Mgr.addChapter({
-                src: 'http://www.archive.org/download/deadmandirewolffanclub/DireWolfFanClub.ogv',
-                title: 'Dire Wolf Fan Club',
-                description: 'An unusual video',
-                startTime: 10,
-                endTime: 29
+            Mgr.addRecVideo({
+				id: 3,
+                title: 'Indy',
+                description: 'Cars on the track',
+				duration: 10,				
+                src: 'http://jbuckley.ca/~hoops/indy.ogv',
+				rating: 'G',
+				thumbnailSrc: 'indy.jpg',				
+				tags: ['test']
             });
-
-            Mgr.addChapter({
-                src: 'http://jbuckley.ca/~hoops/elephant.ogv',
-                title: 'Elephants Dream',
-                description: 'Elephants',
-                startTime: 145,
-                endTime: 200
-            });
-
-            Mgr.addChapter({
-                src: 'http://www.archive.org/download/Kinetic_Art_Demo_Video/nym.ogv',
-                title: 'Kinetic Art',
-                description: 'Domino fun',
-                startTime: 60,
-                endTime: 66
-            });
-
-            Mgr.addChapter({
-                src: 'http://ftp.gnu.org/video/Stephen_Fry-Happy_Birthday_GNU-hq_600px_780kbit.ogv',
-                title: 'Freedom Fry',
-                description: 'Happy B-Day',
-                startTime: 1,
-                endTime: 60
-            });
-        },
+            Mgr.addRecVideo({
+				id: 4,
+                title: 'Dire Wolf Fanclub',
+                description: '???',
+				duration: 10,				
+                src: 'http://jbuckley.ca/~hoops/DireWolfFanClub.ogv',
+				rating: 'G',
+				thumbnailSrc: 'dwfc.jpg',				
+				tags: ['test']
+            });										
+		},
         // (Re-)initialize all values except internal element pointers
         init: function (vidId, tocId, updateEvent, canPlayEvent, ip) {
             _chapters = [];
@@ -189,7 +285,6 @@ var Mgr = (function () {
             this.setVideoId(vidId, updateEvent, canPlayEvent);
             this.setTOCId(tocId);
             Mgr.fetchBookmarks();
-            //Mgr.trackStatistics();
         },
         // Add a chapter
         addChapter: function (_c) {
@@ -201,7 +296,32 @@ var Mgr = (function () {
             _chapters.splice(_idx, 1);
             _hasTocChanged = true;
         },
-
+		// Add a video
+		addRecVideo: function (_v) {
+			_recommended.push(Mgr.Video(_v));
+		},
+		// Set initial video
+		setInitialVideo: function (_v) {
+			_initialVideo = (Mgr.Video(_v));
+		},
+		// Get initial video
+		getInitialVideo: function() {
+			return _initialVideo;
+		},
+		// Output video info
+		printVideoInfo: function(_v) {
+			var info = document.createElement('div');
+			info.setAttribute('id', 'vidInfo');
+			info.innerHTML = '<b>Video Information</b><br/>Title: ' + _initialVideo.getTitle() 
+							 + '<br/>Description: ' + _initialVideo.getDescription() 
+							 + '<br/>Duration: ' + _initialVideo.getDuration() + ' sec'
+							 + '<br/>Rating: ' + _initialVideo.getRating();
+			document.body.appendChild(info);
+		},
+		// Set statistics
+		setStatistics: function (_s) {
+			_stats = (Mgr.Statistics(_s));
+		},
         // Set the table of contents (<table>) and player (<video>) elements based on id
         // Only set them if the currently stored element is null or has a differing id
         setTOCId: function (_id) {
@@ -210,7 +330,6 @@ var Mgr = (function () {
                 _hasTocChanged = true;
             }
         },
-
         setVideoId: function (_id) {
             if (canVideo) {
                 if (_id && (!this._vid || this._vid.id !== _id)) { // valid id given and No id supplied yet or different id supplied
@@ -219,7 +338,6 @@ var Mgr = (function () {
                 }
             }
         },
-
         // output the TOC
         printTOC: function () {
             if (canVideo) {
@@ -322,24 +440,12 @@ var Mgr = (function () {
         },
 
         trackStatistics: function (ip) {
-            var stats = {
-                ip: 0,
-                onLoad: false,
-                _25: false,
-                _50: false,
-                _75: false,
-                _90: false,
-                _100: false,
-                cc_on: false,
-                cc_off: false,
-                ad_on: false,
-                ad_off: false
-            };
+            var stats = {ip: 0,onLoad: false,_25: false,_50: false,_75: false,_90: false,_100: false,cc_on: false,cc_off: false,ad_on: false,ad_off: false};
             var vid = this._vid;
             var duration = vid.duration;
-
-            stats.ip = ip;
-
+        	$.getJSON("http://jsonip.appspot.com?callback=?", function(data){
+        		stats.ip = data.ip;
+        	});					
             var durationListener = function () {
                 if (parseInt(vid.currentTime, 10) === parseInt(duration * 0.25, 10)) {
                     vid.removeEventListener('timeupdate', durationListener, false);
@@ -364,8 +470,9 @@ var Mgr = (function () {
                 stats._100 = true;
                 //Debugging purposes
                 alert(stats._25 + ' ' + stats._50 + ' ' + stats._75 + ' ' + stats._90 + ' ' + stats._100);
+				//Add in cc and add stuff later
+			    Mgr.setStatistics({ip : stats.ip,_25 : stats._25,_50 : stats._50,_75 : stats._75,_90 : stats._90,_100 : stats._100});						
             }
-
             vid.addEventListener('timeupdate', durationListener, false);
             vid.addEventListener('ended', endListener, false);
         },
@@ -374,8 +481,8 @@ var Mgr = (function () {
             //Try and clean up code later :(
             var vid = this._vid;
             // Position of video player
-            var videoTop = parseInt(vid.clientTop);
-            var videoLeft = parseInt(vid.clientLeft);
+            var videoTop = parseInt(vid.style.top);
+            var videoLeft = parseInt(vid.style.left);
             // Create div element
             var watermarkDiv = document.createElement('div');
             // Set div attributes
