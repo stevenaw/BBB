@@ -6,7 +6,7 @@
 var Mgr = (function () {
     var _chapters = []; // Array of Chapters/Bookmarks
     var _recommended = []; // Array of recommended videos
-    var _initialVideo;
+    var _video;
     var _stats; // Statistics object
     var _vid = 0,
         _toc = 0; // id to store the table of contents and video player
@@ -132,28 +132,28 @@ var Mgr = (function () {
                 }
             }
         },
-		// A Video object for the manager to work with
-		Video: function(params) {
-			var id = 0;
-			var title = "";
-			var description = "";
-			var duration = "";
-			var src = "";
-			var rating = "";
-			var thumbnailSrc = "";
-			var tags = [];
-			
+        // A Video object for the manager to work with
+        Video: function (params) {
+            var id = 0;
+            var title = "";
+            var description = "";
+            var duration = "";
+            var src = "";
+            var rating = "";
+            var thumbnailSrc = "";
+            var tags = [];
+
             if (params) {
-				id = params['id'];
+                id = params['id'];
                 title = params['title'];
-				description = params['description'];
-				duration = params['duration'];
-				src = params['src'];
-				rating = params['rating'];
-				thumbnailSrc = params['thumbnailSrc'];
-            }			
-			
-			return {
+                description = params['description'];
+                duration = params['duration'];
+                src = params['src'];
+                rating = params['rating'];
+                thumbnailSrc = params['thumbnailSrc'];
+            }
+
+            return {
                 getId: function () {
                     return id;
                 },
@@ -172,14 +172,14 @@ var Mgr = (function () {
                 getRating: function () {
                     return rating;
                 },
-				getThumbnailSrc: function() {
-					return thumbnailSrc;
-				}																									
-			}
-		},
+                getThumbnailSrc: function () {
+                    return thumbnailSrc;
+                }
+            }
+        },
         // A Statistics object for the manager to work with		
         Statistics: function (params) {
-        	var ip = 0;
+            var ip = 0;
             var onLoad = false;
             var _25 = false;
             var _50 = false;
@@ -190,20 +190,20 @@ var Mgr = (function () {
             var cc_off = false;
             var ad_on = false;
             var ad_off = false;
-			
-			if (params) {
-				ip = params['ip'];
-				onLoad = params['onLoad'];
-				_25 = params['_25'];
-				_50 = params['_50'];
-				_75 = params['_75'];
-				_90 = params['_90'];
-				_100 = params['_100'];
-				//cc_on = params['cc_on'];
-				//cc_off = params['cc_off'];
-				//ad_on = params['ad_on'];
-				//ad_off = params['ad_off'];
-			}				
+
+            if (params) {
+                ip = params['ip'];
+                onLoad = params['onLoad'];
+                _25 = params['_25'];
+                _50 = params['_50'];
+                _75 = params['_75'];
+                _90 = params['_90'];
+                _100 = params['_100'];
+                //cc_on = params['cc_on'];
+                //cc_off = params['cc_off'];
+                //ad_on = params['ad_on'];
+                //ad_off = params['ad_off'];
+            }
 
             return {
                 getIp: function () {
@@ -226,55 +226,55 @@ var Mgr = (function () {
                 },
                 get100: function () {
                     return _100;
-                }																												
+                }
             }
-        },		
+        },
         fetchBookmarks: function () {
             // Stub code, will eventually get bookmarks from server call
         },
-		fetchVideos: function() {
-			// Eventually be replaced by server calls
+        fetchVideos: function () {
+            // Eventually be replaced by server calls
             Mgr.addRecVideo({
-				id: 1,
+                id: 1,
                 title: 'Green Screen',
                 description: 'Demo',
-				duration: '0:10',				
-                src: 'http://jbuckley.ca/~hoops/video.ogv',
-				rating: 'G',
-				thumbnailSrc: 'video.jpg',				
-				tags: ['test']
-            });				
+                duration: '0:10',
+                src: 'http://matrix.senecac.on.ca/~kclascon/DPS909/d4/video.ogv',
+                rating: 'G',
+                thumbnailSrc: 'video.jpg',
+                tags: ['test']
+            });
             Mgr.addRecVideo({
-				id: 2,
+                id: 2,
                 title: 'Big Buck Bunny',
                 description: 'An animated video',
-				duration: '0:32',				
+                duration: '0:32',
                 src: 'http://upload.wikimedia.org/wikipedia/commons/7/75/Big_Buck_Bunny_Trailer_400p.ogg',
-				rating: 'G',
-				thumbnailSrc: 'bunny.jpg',
-				tags: ['test']
+                rating: 'G',
+                thumbnailSrc: 'bunny.jpg',
+                tags: ['test']
             });
             Mgr.addRecVideo({
-				id: 3,
+                id: 3,
                 title: 'Indy',
                 description: 'Cars on the track',
-				duration: '0:24',				
+                duration: '0:24',
                 src: 'http://jbuckley.ca/~hoops/indy.ogv',
-				rating: 'G',
-				thumbnailSrc: 'indy.jpg',				
-				tags: ['test']
+                rating: 'G',
+                thumbnailSrc: 'indy.jpg',
+                tags: ['test']
             });
             Mgr.addRecVideo({
-				id: 4,
+                id: 4,
                 title: 'Dire Wolf Fanclub',
                 description: '???',
-				duration: '2:28',				
+                duration: '2:28',
                 src: 'http://jbuckley.ca/~hoops/DireWolfFanClub.ogv',
-				rating: 'G',
-				thumbnailSrc: 'dwfc.jpg',				
-				tags: ['test']
-            });										
-		},
+                rating: 'G',
+                thumbnailSrc: 'dwfc.jpg',
+                tags: ['test']
+            });
+        },
         // (Re-)initialize all values except internal element pointers
         init: function (vidId, tocId, updateEvent, canPlayEvent, ip) {
             _chapters = [];
@@ -285,8 +285,7 @@ var Mgr = (function () {
             this.setVideoId(vidId, updateEvent, canPlayEvent);
             this.setTOCId(tocId);
             Mgr.fetchBookmarks();
-			Mgr.fetchVideos();
-			//Mgr.displayRecommendedVideos();
+            Mgr.fetchVideos();
         },
         // Add a chapter
         addChapter: function (_c) {
@@ -298,44 +297,42 @@ var Mgr = (function () {
             _chapters.splice(_idx, 1);
             _hasTocChanged = true;
         },
-		// Add a video
-		addRecVideo: function (_v) {
-			_recommended.push(Mgr.Video(_v));
-		},
-		// Set initial video
-		setInitialVideo: function (_v) {
-			_initialVideo = (Mgr.Video(_v));
-		},
-		// Get initial video
-		getInitialVideo: function() {
-			return _initialVideo;
-		},
-		// Output video info
-		printVideoInfo: function(_v) {
-			var info = document.createElement('div');
-			info.setAttribute('id', 'vidInfo');
-			info.innerHTML = '<b>Video Information</b><br/>Title: ' + _initialVideo.getTitle() 
-							 + '<br/>Description: ' + _initialVideo.getDescription() 
-							 + '<br/>Duration: ' + _initialVideo.getDuration() + ' sec'
-							 + '<br/>Rating: ' + _initialVideo.getRating();
-			document.body.appendChild(info);
-		},
-		// Set statistics
-		setStatistics: function (_s) {
-			_stats = (Mgr.Statistics(_s));
-		},
-		// Output video stats
-		printVideoStats: function() {			
-			var vidStats = document.createElement('div');
-			vidStats.setAttribute('id', 'vidStats');
-			vidStats.innerHTML = '<b>Stats</b><br/>IP: ' + _stats.getIp() 
-							 + '<br/>Reached 25%: ' + _stats.get25() 
-							 + '<br/>Reached 50%: ' + _stats.get50()
-							 + '<br/>Reached 75%: ' + _stats.get75()
-							 + '<br/>Reached 90%: ' + _stats.get90()
-							 + '<br/>Reached 100%: ' + _stats.get100();
-			document.body.appendChild(vidStats);			
-		},
+        // Add a video
+        addRecVideo: function (_v) {
+            _recommended.push(Mgr.Video(_v));
+        },
+        // Set initial video
+        setVideo: function (_v) {
+            _video = (Mgr.Video(_v));
+        },
+        // Get initial video
+        getVideo: function () {
+            return _video;
+        },
+        // Output video info
+        printVideoInfo: function (_c) {
+            if (_c === true) {
+                var info = document.createElement('div');
+                info.setAttribute('id', 'vidInfo');
+                info.innerHTML = '<b>Video Information</b><br/>Title: ' + _video.getTitle() + '<br/>Description: ' + _video.getDescription() + '<br/>Duration: ' + _video.getDuration() + ' sec' + '<br/>Rating: ' + _video.getRating();
+                document.body.appendChild(info);
+            }
+            else {
+                var existing = document.getElementById('vidInfo');
+                document.body.removeChild(existing);
+            }
+        },
+        // Set statistics
+        setStatistics: function (_s) {
+            _stats = (Mgr.Statistics(_s));
+        },
+        // Output video stats
+        printVideoStats: function () {
+            var vidStats = document.createElement('div');
+            vidStats.setAttribute('id', 'vidStats');
+            vidStats.innerHTML = '<b>Stats</b><br/>IP: ' + _stats.getIp() + '<br/>Reached 25%: ' + _stats.get25() + '<br/>Reached 50%: ' + _stats.get50() + '<br/>Reached 75%: ' + _stats.get75() + '<br/>Reached 90%: ' + _stats.get90() + '<br/>Reached 100%: ' + _stats.get100();
+            document.body.appendChild(vidStats);
+        },
         // Set the table of contents (<table>) and player (<video>) elements based on id
         // Only set them if the currently stored element is null or has a differing id
         setTOCId: function (_id) {
@@ -454,12 +451,24 @@ var Mgr = (function () {
         },
 
         trackStatistics: function (ip) {
-            var stats = {ip: 0,onLoad: false,_25: false,_50: false,_75: false,_90: false,_100: false,cc_on: false,cc_off: false,ad_on: false,ad_off: false};
+            var stats = {
+                ip: 0,
+                onLoad: false,
+                _25: false,
+                _50: false,
+                _75: false,
+                _90: false,
+                _100: false,
+                cc_on: false,
+                cc_off: false,
+                ad_on: false,
+                ad_off: false
+            };
             var vid = this._vid;
             var duration = vid.duration;
-        	$.getJSON("http://jsonip.appspot.com?callback=?", function(data){
-        		stats.ip = data.ip;
-        	});					
+            $.getJSON("http://jsonip.appspot.com?callback=?", function (data) {
+                stats.ip = data.ip;
+            });
             var durationListener = function () {
                 if (parseInt(vid.currentTime, 10) === parseInt(duration * 0.25, 10)) {
                     vid.removeEventListener('timeupdate', durationListener, false);
@@ -483,59 +492,70 @@ var Mgr = (function () {
             var endListener = function () {
                 stats._100 = true;
                 //Debugging purposes
-                //alert(stats._25 + ' ' + stats._50 + ' ' + stats._75 + ' ' + stats._90 + ' ' + stats._100);
-				//Add in cc and add stuff later
-			    Mgr.setStatistics({ip : stats.ip,_25 : stats._25,_50 : stats._50,_75 : stats._75,_90 : stats._90,_100 : stats._100});
-				var s = document.getElementById('vidStats');
-				if (s) {
-					document.body.removeChild(s);
-				}					
-				//Mgr.printVideoStats();
-				if (_stats) {
-					_stats = null;
-				}
-				Mgr.displayRecommendedVideos();						
+                alert('[Statistics]\nIP: ' + stats.ip + '\n25%: ' + stats._25 + '\n50%: ' + stats._50 + '\n75%: ' + stats._75 + '\n90%: ' + stats._90 + '\n100%: ' + stats._100);
+                //Add in cc and add stuff later
+                Mgr.setStatistics({
+                    ip: stats.ip,
+                    _25: stats._25,
+                    _50: stats._50,
+                    _75: stats._75,
+                    _90: stats._90,
+                    _100: stats._100
+                });
+                var s = document.getElementById('vidStats');
+                if (s) {
+                    document.body.removeChild(s);
+                }
+                //Mgr.printVideoStats();
+                if (_stats) {
+                    _stats = null;
+                }
+                Mgr.displayRecommendedVideos();
             }
             vid.addEventListener('timeupdate', durationListener, false);
             vid.addEventListener('ended', endListener, false);
         },
-		// Stub method to send stats to BBB server
-		sendStatistics: function() {
-			// Probably convert statistics object into JSON and send it
-		},
-		// Displays rec'd videos
-		displayRecommendedVideos: function() {
-			var numVids = _recommended.length;
-			var i;
-			var recCont = document.createElement('div');
-			recCont.setAttribute('id', 'container');
-			recCont.style.position = "absolute";
-			document.body.appendChild(recCont);	
-		    var cont = document.getElementById('container');		
-			for (i = 0; i < numVids; ++i) {
-				// Generate thumbnails
-				var image = document.createElement('img');
-				image.src = _recommended[i].getThumbnailSrc();
-				image.style.width = 70 + 'px';
-				image.style.height = 70 + 'px';
-				cont.appendChild(image);
-				// Generate title and duration links that will play the video				
-				var info = document.createElement('div');
-				info.href = 'javascript:Mgr.test();';
-				info.innerHTML = '<a href="javascript:Mgr.playVideo(' + i + ');">' + _recommended[i].getTitle() + ' - ' + _recommended[i].getDuration(); + '</a>';
-				cont.appendChild(info);
-			}
-		},
-		// Will play a video using an index from an array of videos
-		// Will need to refactor to support tags to retrieve related videos
-		playVideo: function(idx) {
-			var vid = this._vid;
+        // Stub method to send stats to BBB server
+        sendStatistics: function () {
+            // Probably convert statistics object into JSON and send it
+        },
+        // Displays rec'd videos
+        displayRecommendedVideos: function () {
+            var numVids = _recommended.length;
+            var i;
+            var recCont = document.createElement('div');
+            recCont.setAttribute('id', 'container');
+            recCont.style.position = "absolute";
+            document.body.appendChild(recCont);
+            var cont = document.getElementById('container');
+            for (i = 0; i < numVids; ++i) {
+                // Generate thumbnails
+                var image = document.createElement('img');
+                image.src = _recommended[i].getThumbnailSrc();
+                image.style.width = 70 + 'px';
+                image.style.height = 70 + 'px';
+                cont.appendChild(image);
+                // Generate title and duration links that will play the video				
+                var info = document.createElement('div');
+                info.href = 'javascript:Mgr.test();';
+                info.innerHTML = '<a href="javascript:Mgr.playVideo(' + i + ');">' + _recommended[i].getTitle() + ' - ' + _recommended[i].getDuration(); + '</a>';
+                cont.appendChild(info);
+            }
+        },
+        // Will play a video using an index from an array of videos
+        // Will need to refactor to support tags to retrieve related videos
+        playVideo: function (idx) {
+            var vid = this._vid;
             vid.src = _recommended[idx].getSrc();
             vid.load();
             vid.play();
-			var cont = document.getElementById('container');
-			document.body.removeChild(cont);		
-		},
+            var cont = document.getElementById('container');
+            document.body.removeChild(cont);
+            _video = _recommended[idx];
+            //This is a hack, fix later
+            Mgr.printVideoInfo(false);
+            Mgr.printVideoInfo(true);
+        },
         displayWatermark: function (src, opacity, alpha) {
             //Try and clean up code later :(
             var vid = this._vid;
