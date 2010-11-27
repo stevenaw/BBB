@@ -22,6 +22,8 @@ var Mgr = (function(){
     var _curr = -1;
     var currChap = 0;
     var _playSeq = 0;
+    var serverRoot = "";
+    var serverEnd = "";
     
     var canVideo = !!document.createElement('video').play;
     
@@ -65,8 +67,9 @@ var Mgr = (function(){
             
             // Default search directory "BBB" for callPage
             // Careful, cross-origin issues may result if specified
-            var baseUri = params.remoteServer || location.href.substring(0, location.href.lastIndexOf("/BBB/")+5);            
-            this.fetchChapters(baseUri+params.chapterStorage);
+            serverRoot = params.remoteServer || location.href.substring(0, location.href.lastIndexOf("/BBB/")+5);
+            serverEnd = params.chapterStorage || "";
+            this.fetchChapters(serverRoot+serverEnd);
         },
         fetchChapters: function(endPoint) {
             var request = new XMLHttpRequest();
@@ -95,14 +98,41 @@ var Mgr = (function(){
         },
         
         // Add a chapter
-        addChapter: function(_c){
-            _chapters.push(new Mgr.Bookmark(_c));
+        addChapter: function(_c, isNew){
+            var bkmrk = new Mgr.Bookmark(_c);
+            _chapters.push(bkmrk);
             _hasTocChanged = true;
+            
+            if (isNew) {
+              // Update at server
+              var request = new XMLHttpRequest();
+              var params = "action=add&data="+bkmrk.toJSON();
+              
+              request.open("POST",serverRoot+serverEnd);
+              request.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+              request.onreadystatechange = function() {
+                  
+              };
+              
+              request.send(params);
+            }
         },
         // Add a chapter
         removeChapter: function(_idx){
+            var bkmrk = _chapters[_idx];
             _chapters.splice(_idx, 1);
             _hasTocChanged = true;
+            
+            // Update at server
+            var request = new XMLHttpRequest();
+            var params = "action=delete&data="+bkmrk.toJSON();
+            
+            request.open("POST",serverRoot+serverEnd);
+            request.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+            request.onreadystatechange = function() {
+            };
+            
+            request.send(params);
         },
 		
         // Set the table of contents (<table>) and player (<video>) elements based on id
