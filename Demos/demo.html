@@ -3,49 +3,34 @@
     <head>
         <meta charset="utf-8" />
         <title>HTML5 Video Player</title>
-        <script src="http://code.jquery.com/jquery-latest.min.js"></script>		
-        <script src="js/video.js" type="text/javascript" charset="utf-8"></script>
-<<<<<<< HEAD
-=======
         <script src="js/json2.js" type="text/javascript" charset="utf-8"></script>
         <script src="http://code.jquery.com/jquery-latest.min.js"></script>
->>>>>>> ab71fb40bf07f5d017a19ee6df1f1a7d76cceb67
+        <script src="js/video.js" type="text/javascript" charset="utf-8"></script>
         <script type="text/javascript" src="../BBB.js"></script>
         <script type="text/javascript">
         VideoJS.setupAllWhenReady();
-        
-		var ip;
-		
-        $.getJSON("http://jsonip.appspot.com?callback=?", function(data){
-        	ip = data.ip;
-        });		
-		
+
         function addElem(){
-            Mgr.addChapter({
+            bbb.addChapter({
                 src: document.getElementById('bkmrkSrc').value,
                 title: document.getElementById('bkmrkTitle').value,
                 description: document.getElementById('bkmrkDescription').value,
                 startTime: document.getElementById('bkmrkStart').value,
                 endTime: document.getElementById('bkmrkEnd').value});
                 
-            Mgr.printTOC();
+            bbb.printTOC();
         }
         
         function init(){
-<<<<<<< HEAD
-            Mgr.init("player", "tblOfContents");
-			Mgr.trackStatistics(ip);
-			Mgr.displayWatermark();
-			Mgr.fetchVideos();
-=======
-            Mgr.init({playerId: "player", tocId: "tblOfContents", chapterStorage: "server.php"});
->>>>>>> ab71fb40bf07f5d017a19ee6df1f1a7d76cceb67
+            bbb.init({playerId: "player", tocId: "tblOfContents", chapterStorage: "server.php"});
+            bbb.trackStatistics();
+            bbb.displayWatermark();
         }
         
         function setCookie(name, value, expDays){
             var sDate = "";
             
-            if (!name.length) 
+            if (!name.length)
                 throw "name can't be empty";
             else {
                 if (expDays) {
@@ -65,7 +50,7 @@
                 if (start !== -1) {
                     start += name.length + 1;
                     var end = document.cookie.indexOf(";", start);
-                    if (end === -1) 
+                    if (end === -1)
                         end = document.cookie.length;
                     return unescape(document.cookie.substring(start, end));
                 }
@@ -93,7 +78,7 @@
                             <input type="text" id="bkmrkTitle" name="bkmrkTitle" />
                         </td>
                     </tr>
-					<tr>
+<tr>
                         <td>
                             Description
                         </td>
@@ -135,11 +120,11 @@
                 </table>
             </div>
         </div>
-	        <!--<video id="player" class="video-js" src="video.ogv" controls="controls">
-        </video>-->	
+<!--<video id="player" class="video-js" src="video.ogv" controls="controls">
+</video>-->
         <div class="video-js-box">
-            <video id="player" class="video-js" width="300px" height="200px" data-subtitles="demo-subtitles.ttxt" controls="controls" preload="auto"  >
-				<source src="video.ogv" type='video/ogg; codecs="theora, vorbis"' />            	
+            <video id="player" class="video-js" width="300px" height="200px" data-subtitles="demo-subtitles.ttxt" controls="controls" preload="auto" >
+<source src="video.ogv" type='video/ogg; codecs="theora, vorbis"' />
                 <source src="" type='video/mp4; codecs="avc1.42E01E, mp4a.40.2"' />
                 <source src="" type='video/webm; codecs="vp8, vorbis"' />
                 <object id="flash_fallback_1" class="vjs-flash-fallback" width="640px" height="264px" type="application/x-shockwave-flash" data="http://releases.flowplayer.org/swf/flowplayer-3.2.1.swf">
@@ -153,8 +138,8 @@
             </button>
             <br/>
             <br/>
-			<div style="float:left; width:470px">This demo will showcase functionality that will allow the creation of video chapters. A chapter consists of a title, source, start time, and end time. When a chapter is opened it will change the HTML5 video element's source to the chapter's source, seek to the start time, then play to the end time.<br/><br/>To add a chapter, click the "Toggle Chapter Add" button, input the chapter information in the form, then click the "Add Chapter" button. The table of contents to the right will display all chapters. Click on the title link to open a chapter. Alternatively, click "Play All" to play all chapters sequentially.</div>
-			<div style="float:right;">
+<div style="float:left; width:470px">This demo will showcase functionality that will allow the creation of video chapters. A chapter consists of a title, source, start time, and end time. When a chapter is opened it will change the HTML5 video element's source to the chapter's source, seek to the start time, then play to the end time.<br/><br/>To add a chapter, click the "Toggle Chapter Add" button, input the chapter information in the form, then click the "Add Chapter" button. The table of contents to the right will display all chapters. Click on the title link to open a chapter. Alternatively, click "Play All" to play all chapters sequentially.</div>
+<div style="float:right;">
             <table id="tblOfContents">
             </table></div>
         </div>
