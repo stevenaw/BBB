@@ -17,7 +17,11 @@ var bbb = (function(){
     var currChap = 0;
     var _playSeq = 0;
     
-    var endPoint = { root: "", service: "", fullUri: function() { return root+service; }};
+    var endPoint = {
+      root: "",
+      service: "",
+      fullUri: function() { return endPoint.root+endPoint.service; }
+    };
     
     if (typeof XMLHttpRequest == "undefined") {
       XMLHttpRequest = function () {
@@ -251,11 +255,11 @@ var bbb = (function(){
         
         // Add a chapter
         addChapter: function(_c, updateRemote){
-            var bkmrk = new Mgr.Bookmark(_c);
+            var bkmrk = new bbb.Bookmark(_c);
             function addChapter(bkmrk) {
                 _chapters.push(bkmrk);
                 _hasTocChanged = true;
-                Mgr.printTOC();
+                bbb.printTOC();
             }
             
             if (updateRemote) {
