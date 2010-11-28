@@ -238,7 +238,7 @@ var Mgr = (function () {
                 id: 1,
                 title: 'Green Screen',
                 description: 'Demo',
-                duration: '0:10',
+                duration: '0:24',
                 src: 'http://matrix.senecac.on.ca/~kclascon/DPS909/d4/video.ogv',
                 rating: 'G',
                 thumbnailSrc: 'video.jpg',
@@ -249,7 +249,7 @@ var Mgr = (function () {
                 title: 'Big Buck Bunny',
                 description: 'An animated video',
                 duration: '0:32',
-                src: 'http://upload.wikimedia.org/wikipedia/commons/7/75/Big_Buck_Bunny_Trailer_400p.ogg',
+                src: 'http://jbuckley.ca/~hoops/bunny.ogv',
                 rating: 'G',
                 thumbnailSrc: 'bunny.jpg',
                 tags: ['test']
@@ -314,7 +314,7 @@ var Mgr = (function () {
             if (_c === true) {
                 var info = document.createElement('div');
                 info.setAttribute('id', 'vidInfo');
-                info.innerHTML = '<b>Video Information</b><br/>Title: ' + _video.getTitle() + '<br/>Description: ' + _video.getDescription() + '<br/>Duration: ' + _video.getDuration() + ' sec' + '<br/>Rating: ' + _video.getRating();
+                info.innerHTML = '<b>Video Information</b><br/>Title: ' + _video.getTitle() + '<br/>Description: ' + _video.getDescription() + '<br/>Duration: ' + _video.getDuration() + '<br/>Rating: ' + _video.getRating();
                 document.body.appendChild(info);
             }
             else {
