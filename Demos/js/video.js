@@ -194,9 +194,37 @@ var VideoJS = JRClass.extend({
 
     // Load subtitles. Based on http://matroska.org/technical/specs/subtitles/srt.html
     this.subtitlesSource = this.video.getAttribute("data-subtitles");
+    
+    var subTglId = this.video.getAttribute("data-subToggle");
+    if (subTglId)
+      var subTgl = document.getElementById(subTglId);
+      
     if (this.subtitlesSource !== null) {
+      if (subTgl) {
+        subTgl.checked = true;
+        subTgl.addEventListener("click", function() { this.toggleSubitles(subTgl.checked); }.context(this), false);
+      }
+    
       this.loadSubtitles();
       this.buildSubtitles();
+    } else { hideSubToggle(subTgl); }
+    
+    this.toggleSubitles(this.subtitlesSource); // If subtitles are available, display them
+    
+    // Hide the checkbox for subtitles if no subtitle file given
+    function hideSubToggle(elem) {
+      if(!elem) return;
+      var f = elem.parentNode.firstChild;
+      
+      // Find label for checkbox, make invisible
+      for(;f;f = f.nextSibling) {
+        if (f.nodeType === 1 && f.tagName === "LABEL" && f.getAttribute("for") === subTglId) {
+          f.style.display = "none";
+          break;
+        }
+      }
+      
+      elem.style.display = "none";
     }
 
     /* Removeable Event Listeners with Context
@@ -1048,6 +1076,15 @@ var VideoJS = JRClass.extend({
     this.subtitlesDiv = _V_.createElement("div", { className: 'vjs-subtitles' });
     this.video.parentNode.appendChild(this.subtitlesDiv);
   },
+  
+  toggleSubitles: function(isOn) {
+    this.showSubs = isOn = !!isOn;
+    
+    if (!isOn) {
+      this.subtitlesDiv.innerHTML = "";
+      this.subtitles[this.currentSubtitlePosition].showing = false;
+    }
+  },
 
   onTimeUpdate: function(){
 
@@ -1055,7 +1092,7 @@ var VideoJS = JRClass.extend({
     if(this.spinner.style.display == "block") { this.hideSpinner(); }
 
     // show the subtitles
-    if (this.subtitles) {
+    if (this.showSubs && this.subtitles) {
       var x = this.currentSubtitlePosition;
 
       while (x<this.subtitles.length && this.video.currentTime>this.subtitles[x].endTime) {
@@ -1075,7 +1112,6 @@ var VideoJS = JRClass.extend({
       }
     }
   },
-
 
   /* Device Fixes
   ================================================================================ */

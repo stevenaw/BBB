@@ -2,11 +2,11 @@
 
 switch ($_POST["action"]) {
   case "add":
-    //file_put_contents("added.txt", $_POST["data"]); // For debugging
+    file_put_contents("serverMessages.log", $_SERVER["REMOTE_ADDR"]."     ".date("c")."   Added: ".$_POST["data"].chr(13), FILE_APPEND); // For debugging
   break;
   
   case "delete":
-    //file_put_contents("deleted.txt", $_POST["data"]); // For debugging
+    file_put_contents("serverMessages.log", $_SERVER["REMOTE_ADDR"]."     ".date("c")."   Deleted: ".$_POST["data"].chr(13), FILE_APPEND); // For debugging
   break;
   
   // For if GET request or unrecognized POST request

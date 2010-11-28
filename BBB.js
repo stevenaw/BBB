@@ -100,8 +100,11 @@ var Mgr = (function(){
         // Add a chapter
         addChapter: function(_c, isNew){
             var bkmrk = new Mgr.Bookmark(_c);
-            _chapters.push(bkmrk);
-            _hasTocChanged = true;
+            function addChapter(bkmrk) {
+                _chapters.push(bkmrk);
+                _hasTocChanged = true;
+                Mgr.printTOC();
+            }
             
             if (isNew) {
               // Update at server
@@ -111,10 +114,14 @@ var Mgr = (function(){
               request.open("POST",serverRoot+serverEnd);
               request.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
               request.onreadystatechange = function() {
-                  
+                  if (request.readyState == 4 && request.status == 200) {
+                    addChapter(bkmrk);
+                  }
               };
               
               request.send(params);
+            } else {
+              addChapter(bkmrk);
             }
         },
         // Add a chapter
@@ -187,11 +194,13 @@ var Mgr = (function(){
                         _hasMadeToc = true;
                     }
                     
-                    // Delete existing rows
-                    for (var i = this._toc.rows.length - 1; i > 0; i--) 
-                        this._toc.deleteRow(i);
+                    
                     
                     if (_hasTocChanged) {
+                        // Delete existing rows
+                        for (var i = this._toc.rows.length - 1; i > 0; i--) 
+                            this._toc.deleteRow(i);
+                        
                         for (var i = _chapters.length - 1; i >= 0; i--) {
                             tr = this._toc.insertRow(1);
                             srcElem = document.createElement('a');
