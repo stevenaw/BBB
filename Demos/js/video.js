@@ -1086,9 +1086,10 @@ var VideoJS = JRClass.extend({
     } else {
       for(var i=0, l=this.subtitles.length;i<l;i++) {
         var thisSub = this.subtitles[i];
-        if(this.video.currentTime>=thisSub.startTime && this.video.currentTime<=thisSub.endTime) {
+        thisSub.showing = this.video.currentTime>=thisSub.startTime && this.video.currentTime<=thisSub.endTime;
+        if(thisSub.showing) {
           this.currentSubtitlePosition = i; // Detect current subtitle position
-          break;
+          this.subtitlesDiv.innerHTML = thisSub.text; // Display subtitle
         }
       }
     }
@@ -1101,8 +1102,26 @@ var VideoJS = JRClass.extend({
 
     // show the subtitles
     if (this.showSubs && this.subtitles) {
+      var foundSub = 0;
+      // Find current subtitle (may be normal video progression or scrolling forward/back
+      for(var i=0, l=this.subtitles.length;i<l;i++) {
+        var thisSub = this.subtitles[i];
+        thisSub.showing = this.video.currentTime>=thisSub.startTime && this.video.currentTime<=thisSub.endTime;
+        
+        if(thisSub.showing) {
+          if(i !== this.currentSubtitlePosition) { // Found subtitle to display and is different than last one
+            this.currentSubtitlePosition = i;
+            this.subtitlesDiv.innerHTML = thisSub.text;
+          }
+          foundSub = 1;
+        }
+      }
+      
+      if (!foundSub) { // Clear if found no matching subtitle
+        this.subtitlesDiv.innerHTML = "";
+      }
+/*
       var x = this.currentSubtitlePosition;
-
       while (x<this.subtitles.length && this.video.currentTime>this.subtitles[x].endTime) {
         if (this.subtitles[x].showing) {
           this.subtitles[x].showing = false;
@@ -1117,7 +1136,7 @@ var VideoJS = JRClass.extend({
       if (this.video.currentTime>=this.subtitles[x].startTime && this.video.currentTime<=this.subtitles[x].endTime) {
         this.subtitlesDiv.innerHTML = this.subtitles[x].text;
         this.subtitles[x].showing = true;
-      }
+      }*/
     }
   },
 
