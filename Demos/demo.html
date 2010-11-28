@@ -5,6 +5,11 @@
         <title>HTML5 Video Player</title>
         <script src="http://code.jquery.com/jquery-latest.min.js"></script>		
         <script src="js/video.js" type="text/javascript" charset="utf-8"></script>
+<<<<<<< HEAD
+=======
+        <script src="js/json2.js" type="text/javascript" charset="utf-8"></script>
+        <script src="http://code.jquery.com/jquery-latest.min.js"></script>
+>>>>>>> ab71fb40bf07f5d017a19ee6df1f1a7d76cceb67
         <script type="text/javascript" src="../BBB.js"></script>
         <script type="text/javascript">
         VideoJS.setupAllWhenReady();
@@ -27,10 +32,14 @@
         }
         
         function init(){
+<<<<<<< HEAD
             Mgr.init("player", "tblOfContents");
 			Mgr.trackStatistics(ip);
 			Mgr.displayWatermark();
 			Mgr.fetchVideos();
+=======
+            Mgr.init({playerId: "player", tocId: "tblOfContents", chapterStorage: "server.php"});
+>>>>>>> ab71fb40bf07f5d017a19ee6df1f1a7d76cceb67
         }
         
         function setCookie(name, value, expDays){
