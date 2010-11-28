@@ -3,33 +3,28 @@
     <head>
         <meta charset="utf-8" />
         <title>HTML5 Video Player</title>
+        <script src="js/json2.js" type="text/javascript" charset="utf-8"></script>
         <script src="http://code.jquery.com/jquery-latest.min.js"></script>		
         <script src="js/video.js" type="text/javascript" charset="utf-8"></script>
         <script type="text/javascript" src="../BBB.js"></script>
         <script type="text/javascript">
         VideoJS.setupAllWhenReady();
-        
-		var ip;
-		
-        $.getJSON("http://jsonip.appspot.com?callback=?", function(data){
-        	ip = data.ip;
-        });		
 		
         function addElem(){
-            Mgr.addChapter({
+            bbb.addChapter({
                 src: document.getElementById('bkmrkSrc').value,
                 title: document.getElementById('bkmrkTitle').value,
                 description: document.getElementById('bkmrkDescription').value,
                 startTime: document.getElementById('bkmrkStart').value,
                 endTime: document.getElementById('bkmrkEnd').value});
                 
-            Mgr.printTOC();
+            bbb.printTOC();
         }
         
         function init(){
-            Mgr.init("player", "tblOfContents");
-			Mgr.trackStatistics(ip);
-			Mgr.displayWatermark();
+            bbb.init({playerId: "player", tocId: "tblOfContents", chapterStorage: "server.php"});
+            bbb.trackStatistics();
+            bbb.displayWatermark();
         }
         
         function setCookie(name, value, expDays){

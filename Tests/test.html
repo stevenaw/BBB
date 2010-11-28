@@ -4,34 +4,35 @@
         <meta charset="utf-8" />
         <title>HTML5 Video Player</title>
         <script src="../Demos/js/video.js" type="text/javascript" charset="utf-8"></script>
-        <script type="text/javascript" src="../BBB.js"></script>
+        <script src="../Demos/js/json2.js" type="text/javascript" charset="utf-8"></script>
         <script src="http://code.jquery.com/jquery-latest.min.js"></script>
+        <script type="text/javascript" src="../BBB.js"></script>
         <script type="text/javascript">
         VideoJS.setupAllWhenReady();
         
-        function addElem(){
-            Mgr.addChapter({
+        function addElem() {
+            bbb.addChapter({
                 src: document.getElementById('bkmrkSrc').value,
                 title: document.getElementById('bkmrkTitle').value,
                 description: document.getElementById('bkmrkDescription').value,
                 startTime: document.getElementById('bkmrkStart').value,
                 endTime: document.getElementById('bkmrkEnd').value});
                 
-            Mgr.printTOC();
+            bbb.printTOC();
         }
         
         var tests = [
             {
                 title: "JSON Serialization",
                 func: function(){
-                    var book1 = Mgr.Bookmark({
+                    var book1 = new bbb.Bookmark({
                         src: "localhost",
                         title: "Test1",
                         description: "",
                         startTime: 0,
                         endTime: 500});
                         
-                    var book2 = Mgr.Bookmark({
+                    var book2 = new bbb.Bookmark({
                         src: "google",
                         title: "Test 2",
                         description: "",
@@ -39,11 +40,11 @@
                         endTime: 1220});
                     
                     var ser = book1.toJSON();
-                    var book3 = Mgr.Bookmark().fromJSON(ser);
+                    var book3 = bbb.Bookmark.prototype.fromJSON(ser);
                     var book4;
                     
                     ser = book2.toJSON();
-                    book4 = Mgr.Bookmark().fromJSON(ser);
+                    book4 = bbb.Bookmark.prototype.fromJSON(ser);
                     
                     var assertEquals = function(obj1, obj2) {
                         if (!obj1.equals(obj2)) {
@@ -64,7 +65,7 @@
                 title: "Table of Contents Output",
                 func: function(){
                     try {
-                        Mgr.printTOC();
+                        bbb.printTOC();
                         return true;
                     } catch (e) {
                         alert("Could not output Table of Contents!\n\n Error: \n\n"+e);
@@ -76,16 +77,16 @@
                 title: "Table of Contents Modification",
                 func: function(){
                     try {
-                        Mgr.printTOC();
+                        bbb.printTOC();
                         
-                        Mgr.addChapter({
+                        bbb.addChapter({
                           src: "Some new source",
                           title: "Some new title",
                           description: "Some new description",
                           startTime: 8,
                           endTime: 10});
                           
-                        Mgr.printTOC();
+                        bbb.printTOC();
                         
                         return true;
                     } catch (e) {
@@ -97,7 +98,7 @@
         ];
         
         function init(){
-            Mgr.init("player", "tblOfContents");
+            bbb.init({playerId: "player", tocId: "tblOfContents", chapterStorage: "server.php"});
         }
         
         function setCookie(name, value, expDays){
@@ -136,8 +137,6 @@
             var i=0;
             var success = true;
             
-            init();
-            
             for(i=0;i<numTests && success; i++) {
                 success = tests[i].func();
             }
@@ -153,9 +152,9 @@
                 display: none;
             }
         </style>
-        <link rel="stylesheet" href="css/video-js.css" type="text/css" media="screen" title="Video JS">
+        <link rel="stylesheet" href="../Demos/css/video-js.css" type="text/css" media="screen" title="Video JS">
     </head>
-    <body onload="test()">
+    <body onload="init()">
     	<h3>HTML5 Video Chaptering Demo</h3>
         <div id="right" style="float:right; padding-right: 440px;">
             <div id = "panel">
@@ -212,7 +211,7 @@
             </div>
         </div>
         <div class="video-js-box">
-            <video id="player" class="video-js" width="640px" height="264px" data-subtitles="demo-subtitles.ttxt" controls="controls" preload="auto"  >
+            <video id="player" class="video-js" width="640px" height="264px" data-subtitles="../Demos/demo-subtitles.ttxt" controls="controls" preload="auto"  >
                 <source src="" type='video/mp4; codecs="avc1.42E01E, mp4a.40.2"' />
                 <source src="" type='video/webm; codecs="vp8, vorbis"' />
                 <source src="http://upload.wikimedia.org/wikipedia/commons/7/75/Big_Buck_Bunny_Trailer_400p.ogg" type='video/ogg; codecs="theora, vorbis"' />
@@ -222,18 +221,19 @@
             </video>
         </div>
         <div>
-            <button>
+            <button id="chapterAdd">
                 + Toggle Chapter Add
             </button>
+            <button onclick="test();">Run all Tests</button>
             <br/>
             <br/>
-			<div style="float:left; width:470px">This demo will showcase functionality that will allow the creation of video chapters. A chapter consists of a title, source, start time, and end time. When a chapter is opened it will change the HTML5 video element's source to the chapter's source, seek to the start time, then play to the end time.<br/><br/>To add a chapter, click the "Toggle Chapter Add" button, input the chapter information in the form, then click the "Add Chapter" button. The table of contents to the right will display all chapters. Click on the title link to open a chapter. Alternatively, click "Play All" to play all chapters sequentially.</div>
+			<div style="float:left; width:470px">This page will house a suite of tests which can be run to test the functionality of the BBB Player</div>
 			<div style="float:right;">
             <table id="tblOfContents">
             </table></div>
         </div>
         <script>
-            $("button").click(function(){
+            $("#chapterAdd").click(function(){
                 $("#panel").slideToggle("slow");
             });
         </script>

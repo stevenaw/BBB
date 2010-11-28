@@ -15,11 +15,11 @@
             VideoJS.setupAllWhenReady();
 
             function init() {
-                Mgr.init("player");	
-            	Mgr.setVideo({id: 1,title: 'Green Screen',description: 'Demo',duration: 24,src: 'video.ogv',rating: 'G',thumbnailSrc: 'video.jpg',tags: ['test']});
-				Mgr.printVideoInfo(true);
-				Mgr.trackStatistics();
-				Mgr.displayWatermark();
+                bbb.init({playerId: "player", tocId: "tblOfContents", chapterStorage: "server.php"});
+                bbb.setVideo({id: 1,title: 'Green Screen',description: 'Demo',duration: 24,src: 'video.ogv',rating: 'G',thumbnailSrc: 'video.jpg',tags: ['test']});
+                bbb.printVideoInfo(true);
+                bbb.trackStatistics();
+                bbb.displayWatermark();
             }
 			
             function useDefaultWatermark() {
@@ -29,18 +29,18 @@
                 }
                 else {
                     document.body.removeChild(wm);
-                    Mgr.displayWatermark();
+                    bbb.displayWatermark();
                 }
             }
 
             function changeWatermark() {
                 var wm = document.getElementById('watermark');
                 if (!wm) {
-                    Mgr.displayWatermark();
+                    bbb.displayWatermark();
                 }
                 else {
                     document.body.removeChild(wm);
-                    Mgr.displayWatermark('watermark1.png');
+                    bbb.displayWatermark('watermark1.png');
                 }
             }			
         </script>

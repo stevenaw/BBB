@@ -3,7 +3,7 @@
  * 		By Steven Weerdenburg and Kevin Lasconia
  * 		Last Modification: 11/16/2010
  */
-var Mgr = (function () {
+var bbb = (function(){
     var _chapters = []; // Array of Chapters/Bookmarks
     var _recommended = []; // Array of recommended videos
     var _video;
@@ -16,120 +16,50 @@ var Mgr = (function () {
     var _curr = -1;
     var currChap = 0;
     var _playSeq = 0;
+    
+    if (typeof XMLHttpRequest == "undefined") {
+      XMLHttpRequest = function () {
+          try { return new ActiveXObject("Msxml2.XMLHTTP.6.0"); } catch (e) {}
+          try { return new ActiveXObject("Msxml2.XMLHTTP.3.0"); } catch (f) {}
+          try { return new ActiveXObject("Msxml2.XMLHTTP"); } catch (g) {}
+          // Impossible to support XHR
+          throw new Error("This browser does not support XMLHttpRequest.");
+      };
+  }
 
     var canVideo = !! document.createElement('video').play;
 
     return {
         // A Bookmark object for the manager to work with
-        Bookmark: function (params) {
-            var title = "";
-            var description = "";
-            var src = "";
-            var startTime = 0;
-            var endTime = 0;
-
-            if (params) {
-                title = params["title"];
-                description = params["description"];
-                src = params["src"];
-                startTime = parseInt(params["startTime"]);
-                endTime = parseInt(params["endTime"]);
-
-                if (startTime < 0 || endTime < 0) throw "Start and end times must be positive!";
-                else if (startTime < endTime) {
-                    startTime = startTime;
-                    endTime = endTime;
-                } else {
-                    endTime = startTime;
-                    startTime = endTime;
-                }
+        Bookmark: function(params) {
+            var params = params || {};
+            
+            var title = params["title"] || "";
+            var description = params["description"] || "";
+            var src = params["src"] || "";
+            var startTime = parseInt(params["startTime"] || 0);
+            var endTime = parseInt(params["endTime"] || 0);
+            
+            if (startTime < 0 || endTime < 0)
+                throw "Start and end times must be positive!";
+            else if (startTime < endTime) {
+                startTime = startTime;
+                endTime = endTime;
+            } else {
+                endTime = startTime;
+                startTime = endTime;
             }
-
-            return {
-                getTitle: function () {
-                    return title;
-                },
-                getDescription: function () {
-                    return description;
-                },
-                getSrc: function () {
-                    return src;
-                },
-                getStartTime: function () {
-                    return startTime;
-                },
-                getEndTime: function () {
-                    return endTime;
-                },
-                toString: function () {
-                    return "Source: " + src + "\nTitle: " + title + "\nDescription: " + description + "\nStart Time: " + startTime + "\nEnd Time: " + endTime;
-                },
-                toJSON: function () {
-                    return '{ "src": "' + src + '", "title": "' + title + '", "description": "' + description + '", "startTime": ' + startTime + ', "endTime": ' + endTime + ' }';
-                },
-                equals: function (bkmrk) {
-                    return src === bkmrk.getSrc() && title === bkmrk.getTitle() && description === bkmrk.getDescription() && startTime === bkmrk.getStartTime() && endTime === bkmrk.getEndTime();
-                },
-                fromJSON: function (str) {
-                    //var obj = jsonParse(str);
-                    var currStart = -1;
-                    var currEnd = 0;
-                    var obj = {};
-
-                    while ((currStart = str.indexOf('"', currEnd + 1)) !== -1 && (currEnd = str.indexOf('"', currStart + 1)) !== -1) {
-                        // Has found another attribute
-                        var attrName = str.substring(currStart + 1, currEnd);
-                        var foundAttr = false;
-                        var foundSemi = false;
-                        var foundType = 0; // 0 = none, 1 = string, 2 = numeric, 3 = float
-                        var currItem;
-
-                        // Process value, eagerly assume comma follows when value found
-                        while ((currItem = str[++currEnd]) !== '"' || !foundAttr) {
-                            if (str[currEnd] === ':') {
-                                foundSemi = true;
-                            } else {
-                                if (str[currEnd] === '"') { // Check for strings
-                                    if (foundSemi && str[currEnd - 1] !== '\\') {
-                                        if (!foundType) {
-                                            foundType = 1;
-                                            currStart = currEnd;
-                                        } else {
-                                            obj[attrName] = str.substring(currStart + 1, currEnd);
-                                            foundAttr = true;
-                                            break; // Go into outer loop to find next attribute
-                                        }
-                                    }
-                                } else {
-                                    if (str[currEnd] === '.') { // Check for decimal for numeric->float data
-                                        if (foundType === 2) foundType = 3;
-                                    } else {
-                                        if (str[currEnd] === ' ') {
-                                            if (foundType === 2 || foundType === 3) { // Check for end of numeric data
-                                                if (foundType === 2) // Integer
-                                                obj[attrName] = parseInt(str.substring(currStart, currEnd));
-                                                else if (foundType === 3) // Float
-                                                obj[attrName] = parseFloat(str.substring(currStart, currEnd));
-
-                                                foundAttr = true;
-                                                break;
-                                            }
-                                        } else {
-                                            if (!foundType) {
-                                                if (!isNaN(str[currEnd])) {
-                                                    currStart = str[currEnd - 1] === '-' ? currEnd - 1 : currEnd;
-                                                    foundType = 2; // Numeric, may be upgraded to float later
-                                                }
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-
-                    return Mgr.Bookmark(obj);
-                }
+            
+            this.getTitle = function() { return title; },
+            this.getDescription= function() { return description; },
+            this.getSrc = function() { return src; },
+            this.getStartTime = function() { return startTime; },
+            this.getEndTime = function() { return endTime; },
+            this.toString = function(){
+                return "Source: " + src + "\nTitle: " + title + "\nDescription: " + description + "\nStart Time: " + startTime + "\nEnd Time: " + endTime;
+            },
+            this.toJSON = function(){
+                return '{ "src": "' + src + '", "title": "' + title + '", "description": "' + description + '", "startTime": ' + startTime + ', "endTime": ' + endTime + ' }';
             }
         },
         // A Video object for the manager to work with
@@ -229,12 +159,9 @@ var Mgr = (function () {
                 }
             }
         },
-        fetchBookmarks: function () {
-            // Stub code, will eventually get bookmarks from server call
-        },
         fetchVideos: function () {
             // Eventually be replaced by server calls
-            Mgr.addRecVideo({
+            bbb.addRecVideo({
                 id: 1,
                 title: 'Green Screen',
                 description: 'Demo',
@@ -244,7 +171,7 @@ var Mgr = (function () {
                 thumbnailSrc: 'video.jpg',
                 tags: ['test']
             });
-            Mgr.addRecVideo({
+            bbb.addRecVideo({
                 id: 2,
                 title: 'Big Buck Bunny',
                 description: 'An animated video',
@@ -254,7 +181,7 @@ var Mgr = (function () {
                 thumbnailSrc: 'bunny.jpg',
                 tags: ['test']
             });
-            Mgr.addRecVideo({
+            bbb.addRecVideo({
                 id: 3,
                 title: 'Indy',
                 description: 'Cars on the track',
@@ -264,7 +191,7 @@ var Mgr = (function () {
                 thumbnailSrc: 'indy.jpg',
                 tags: ['test']
             });
-            Mgr.addRecVideo({
+            bbb.addRecVideo({
                 id: 4,
                 title: 'Dire Wolf Fanclub',
                 description: '???',
@@ -276,20 +203,47 @@ var Mgr = (function () {
             });
         },
         // (Re-)initialize all values except internal element pointers
-        init: function (vidId, tocId, updateEvent, canPlayEvent, ip) {
+        // (Re-)initialize all values
+        init: function(params){
+            this.setVideoId(params.playerId);
+            this.setTOCId(params.tocId);
+            
+            // Default search directory "BBB" for callPage
+            // Careful, cross-origin issues may result if specified
+            var baseUri = params.remoteServer || location.href.substring(0, location.href.lastIndexOf("/BBB/")+5);            
+            this.fetchVideos();
+            this.fetchChapters(baseUri+params.chapterStorage);
+        },
+        
+        fetchChapters: function(endPoint) {
+            var request = new XMLHttpRequest();
+            
             _chapters = [];
             _hasMadeToc = false;
             _hasTocChanged = true; // In event TOC has been output before calling init, this will redraw table
             _curr = -1;
-
-            this.setVideoId(vidId, updateEvent, canPlayEvent);
-            this.setTOCId(tocId);
-            Mgr.fetchBookmarks();
-            Mgr.fetchVideos();
+            
+            request.open("GET",endPoint);
+            request.onreadystatechange = function() {
+                var arr = [];
+                var i=0, numItems = 0;
+                
+                if (request.readyState == 4 && request.status == 200) {
+                    arr = JSON.parse(request.responseText);
+                    numItems = arr.length;
+                    for(i=0; i<numItems; i++) {
+                        bbb.addChapter(arr[i]);
+                    }
+                    
+                    bbb.printTOC();
+                }
+            };
+            request.send();
         },
+        
         // Add a chapter
-        addChapter: function (_c) {
-            _chapters.push(Mgr.Bookmark(_c));
+        addChapter: function(_c){
+            _chapters.push(new bbb.Bookmark(_c));
             _hasTocChanged = true;
         },
         // Add a chapter
@@ -299,11 +253,11 @@ var Mgr = (function () {
         },
         // Add a video
         addRecVideo: function (_v) {
-            _recommended.push(Mgr.Video(_v));
+            _recommended.push(bbb.Video(_v));
         },
         // Set initial video
         setVideo: function (_v) {
-            _video = (Mgr.Video(_v));
+            _video = (bbb.Video(_v));
         },
         // Get initial video
         getVideo: function () {
@@ -324,7 +278,7 @@ var Mgr = (function () {
         },
         // Set statistics
         setStatistics: function (_s) {
-            _stats = (Mgr.Statistics(_s));
+            _stats = (bbb.Statistics(_s));
         },
         // Output video stats
         printVideoStats: function () {
@@ -393,20 +347,20 @@ var Mgr = (function () {
                             srcElem = document.createElement('a');
                             var item = _chapters[i];
 
-                            srcElem.href = 'javascript:Mgr.playChapter(' + i + ');';
+                            srcElem.href = 'javascript:bbb.playChapter(' + i + ');';
                             srcElem.innerHTML = item.getTitle();
                             tr.insertCell(0).appendChild(srcElem);
                             tr.insertCell(1).appendChild(document.createTextNode(item.getDescription()));
                             tr.insertCell(2).appendChild(document.createTextNode(item.getStartTime()));
                             tr.insertCell(3).appendChild(document.createTextNode(item.getEndTime()));
-                            tr.insertCell(4).innerHTML = '<input type="checkbox" onclick="Mgr.removeChapter(' + i + '); Mgr.printTOC();" />';
+                            tr.insertCell(4).innerHTML = '<input type="checkbox" onclick="bbb.removeChapter(' + i + '); bbb.printTOC();" />';
                         }
 
                         tr = this._toc.insertRow(1);
                         tr.colspan = 4;
 
                         srcElem = document.createElement('a');
-                        srcElem.href = 'javascript:Mgr.playChapter(0, 1);';
+                        srcElem.href = 'javascript:bbb.playChapter(0, 1);';
                         srcElem.innerHTML = 'Play All';
                         tr.insertCell(0).appendChild(srcElem);
 
@@ -435,7 +389,7 @@ var Mgr = (function () {
                     vid.addEventListener('timeupdate', function () {
                         if (vid.currentTime >= currChap.getEndTime()) {
                             if (sequential) {
-                                Mgr.playChapter(idx + 1, sequential);
+                                bbb.playChapter(idx + 1, sequential);
                             }
                             else {
                                 vid.pause();
@@ -464,6 +418,7 @@ var Mgr = (function () {
                 ad_on: false,
                 ad_off: false
             };
+            
             var vid = this._vid;
             var duration = vid.duration;
             $.getJSON("http://jsonip.appspot.com?callback=?", function (data) {
@@ -494,7 +449,7 @@ var Mgr = (function () {
                 //Debugging purposes
                 alert('[Statistics]\nIP: ' + stats.ip + '\n25%: ' + stats._25 + '\n50%: ' + stats._50 + '\n75%: ' + stats._75 + '\n90%: ' + stats._90 + '\n100%: ' + stats._100);
                 //Add in cc and add stuff later
-                Mgr.setStatistics({
+                bbb.setStatistics({
                     ip: stats.ip,
                     _25: stats._25,
                     _50: stats._50,
@@ -506,11 +461,11 @@ var Mgr = (function () {
                 if (s) {
                     document.body.removeChild(s);
                 }
-                //Mgr.printVideoStats();
+                //bbb.printVideoStats();
                 if (_stats) {
                     _stats = null;
                 }
-                Mgr.displayRecommendedVideos();
+                bbb.displayRecommendedVideos();
             }
             vid.addEventListener('timeupdate', durationListener, false);
             vid.addEventListener('ended', endListener, false);
@@ -537,8 +492,8 @@ var Mgr = (function () {
                 cont.appendChild(image);
                 // Generate title and duration links that will play the video				
                 var info = document.createElement('div');
-                info.href = 'javascript:Mgr.test();';
-                info.innerHTML = '<a href="javascript:Mgr.playVideo(' + i + ');">' + _recommended[i].getTitle() + ' - ' + _recommended[i].getDuration(); + '</a>';
+                info.href = 'javascript:bbb.test();';
+                info.innerHTML = '<a href="javascript:bbb.playVideo(' + i + ');">' + _recommended[i].getTitle() + ' - ' + _recommended[i].getDuration(); + '</a>';
                 cont.appendChild(info);
             }
         },
@@ -553,8 +508,8 @@ var Mgr = (function () {
             document.body.removeChild(cont);
             _video = _recommended[idx];
             //This is a hack, fix later
-            Mgr.printVideoInfo(false);
-            Mgr.printVideoInfo(true);
+            bbb.printVideoInfo(false);
+            bbb.printVideoInfo(true);
         },
         displayWatermark: function (src, opacity, alpha) {
             //Try and clean up code later :(
@@ -590,3 +545,77 @@ var Mgr = (function () {
         }
     };
 })();
+
+bbb.Bookmark.prototype = {
+  fromJSON: function(str){
+    if (JSON)
+        return new bbb.Bookmark(JSON.parse(str));
+    else {
+        var currStart = -1;
+        var currEnd = 0;
+        var obj = {};
+        
+        while ((currStart = str.indexOf('"', currEnd + 1)) !== -1 && (currEnd = str.indexOf('"', currStart + 1)) !== -1) {
+            // Has found another attribute
+            
+            var attrName = str.substring(currStart + 1, currEnd);
+            var foundAttr = false;
+            var foundSemi = false;
+            var foundType = 0; // 0 = none, 1 = string, 2 = numeric, 3 = float
+            var currItem;
+            
+            // Process value, eagerly assume comma follows when value found
+            while ((currItem = str[++currEnd]) !== '"' || !foundAttr) {
+                if (str[currEnd] === ':') {
+                    foundSemi = true;
+                } else {
+                    if (str[currEnd] === '"') { // Check for strings
+                        if (foundSemi && str[currEnd - 1] !== '\\') {
+                            if (!foundType) {
+                                foundType = 1;
+                                currStart = currEnd;
+                            } else {
+                                obj[attrName] = str.substring(currStart + 1, currEnd);
+                                foundAttr = true;
+                                break; // Go into outer loop to find next attribute
+                            }
+                        }
+                    } else {
+                        if (str[currEnd] === '.') { // Check for decimal for numeric->float data
+                            if (foundType === 2) 
+                                foundType = 3;
+                        } else {
+                            if (str[currEnd] === ' ') {
+                                if (foundType === 2 || foundType === 3) { // Check for end of numeric data
+                                    if (foundType === 2) // Integer
+                                        obj[attrName] = parseInt(str.substring(currStart, currEnd));
+                                    else 
+                                        if (foundType === 3) // Float
+                                            obj[attrName] = parseFloat(str.substring(currStart, currEnd));
+                                    
+                                    foundAttr = true;
+                                    break;
+                                }
+                            } else {
+                                if (!foundType) {
+                                    if (!isNaN(str[currEnd])) {
+                                        currStart = str[currEnd - 1] === '-' ? currEnd - 1 : currEnd;
+                                        foundType = 2; // Numeric, may be upgraded to float later
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        
+        return new bbb.Bookmark(obj);
+    }
+  },
+  equals: function(bkmrk) {
+      return this.getSrc() === bkmrk.getSrc() && this.getTitle() === bkmrk.getTitle() && this.getDescription() === bkmrk.getDescription() &&
+          this.getStartTime() === bkmrk.getStartTime() && this.getEndTime() === bkmrk.getEndTime();
+  }
+};
+
