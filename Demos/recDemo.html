@@ -16,7 +16,7 @@
 
             function init() {
                 Mgr.init("player");	
-            	Mgr.setVideo({id: 1,title: 'Green Screen',description: 'Demo',duration: 24,src: 'video.ogv',rating: 'G',thumbnailSrc: 'video.jpg',tags: ['test']});
+            	Mgr.setVideo({id: 1,title: 'Green Screen',description: 'Demo',duration: '0:24',src: 'video.ogv',rating: 'G',thumbnailSrc: 'video.jpg',tags: ['test']});
 				Mgr.printVideoInfo(true);
 				Mgr.trackStatistics();
 				Mgr.displayWatermark();
@@ -69,5 +69,6 @@
         <button onclick="changeWatermark();">
             Change Watermark
         </button>
+<div style="position: absolute; left: 450px; top: 0px;">This demo showcases the watermark, statistics, and related/recommendation features.<br/><br/>You can use the buttons to toggle between two different watermarks. When a video is finished playing a pop-up message displaying some statistics will be displayed. Finally when the video finishes, a list of related videos will be displayed. You can then click on the title of the video and it will load.<br/><br/>*Note: I still need to re-factor the code so there still may be some bugs.</div>		
     </body>
 </html>
