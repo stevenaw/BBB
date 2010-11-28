@@ -3,26 +3,28 @@
     <head>
         <meta charset="utf-8" />
         <title>HTML5 Video Player</title>
-        <script src="js/video.js" type="text/javascript" charset="utf-8"></script>
         <script src="js/json2.js" type="text/javascript" charset="utf-8"></script>
-        <script src="http://code.jquery.com/jquery-latest.min.js"></script>
+        <script src="http://code.jquery.com/jquery-latest.min.js"></script>		
+        <script src="js/video.js" type="text/javascript" charset="utf-8"></script>
         <script type="text/javascript" src="../BBB.js"></script>
         <script type="text/javascript">
         VideoJS.setupAllWhenReady();
-        
+		
         function addElem(){
-            Mgr.addChapter({
+            bbb.addChapter({
                 src: document.getElementById('bkmrkSrc').value,
                 title: document.getElementById('bkmrkTitle').value,
                 description: document.getElementById('bkmrkDescription').value,
                 startTime: document.getElementById('bkmrkStart').value,
-                endTime: document.getElementById('bkmrkEnd').value});
+                endTime: document.getElementById('bkmrkEnd').value}, true);
                 
-            Mgr.printTOC();
+            bbb.printTOC();
         }
         
         function init(){
-            Mgr.init({playerId: "player", tocId: "tblOfContents", chapterStorage: "server.php"});
+            bbb.init({playerId: "player", tocId: "tblOfContents", chapterStorage: "server.php"});
+            bbb.trackStatistics();
+            bbb.displayWatermark();
         }
         
         function setCookie(name, value, expDays){
@@ -64,7 +66,6 @@
         <link rel="stylesheet" href="css/video-js.css" type="text/css" media="screen" title="Video JS">
     </head>
     <body onload="init()">
-    	<h3>HTML5 Video Chaptering Demo</h3>
         <div id="right" style="float:right; padding-right: 440px;">
             <div id = "panel">
                 <b>Create Chapter</b>
@@ -119,11 +120,13 @@
                 </table>
             </div>
         </div>
+	        <!--<video id="player" class="video-js" src="video.ogv" controls="controls">
+        </video>-->	
         <div class="video-js-box">
-            <video id="player" class="video-js" width="640px" height="264px" data-subtitles="demo-subtitles.ttxt" controls="controls" preload="auto"  >
+            <video id="player" class="video-js" width="300px" height="200px" data-subtitles="demo-subtitles.ttxt" controls="controls" preload="auto"  >
+				<source src="video.ogv" type='video/ogg; codecs="theora, vorbis"' />            	
                 <source src="" type='video/mp4; codecs="avc1.42E01E, mp4a.40.2"' />
                 <source src="" type='video/webm; codecs="vp8, vorbis"' />
-                <source src="http://upload.wikimedia.org/wikipedia/commons/7/75/Big_Buck_Bunny_Trailer_400p.ogg" type='video/ogg; codecs="theora, vorbis"' />
                 <object id="flash_fallback_1" class="vjs-flash-fallback" width="640px" height="264px" type="application/x-shockwave-flash" data="http://releases.flowplayer.org/swf/flowplayer-3.2.1.swf">
                     <param name="movie" value="http://releases.flowplayer.org/swf/flowplayer-3.2.1.swf" /><param name="allowfullscreen" value="true" /><param name="flashvars" value='config={"playlist":["http://video-js.zencoder.com/oceans-clip.png", {"url": "http://video-js.zencoder.com/oceans-clip.mp4","autoPlay":false,"autoBuffering":true}]}' />
                 </object>

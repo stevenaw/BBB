@@ -11,28 +11,28 @@
         VideoJS.setupAllWhenReady();
         
         function addElem() {
-            Mgr.addChapter({
+            bbb.addChapter({
                 src: document.getElementById('bkmrkSrc').value,
                 title: document.getElementById('bkmrkTitle').value,
                 description: document.getElementById('bkmrkDescription').value,
                 startTime: document.getElementById('bkmrkStart').value,
-                endTime: document.getElementById('bkmrkEnd').value});
+                endTime: document.getElementById('bkmrkEnd').value}, true);
                 
-            Mgr.printTOC();
+            bbb.printTOC();
         }
         
         var tests = [
             {
                 title: "JSON Serialization",
                 func: function(){
-                    var book1 = new Mgr.Bookmark({
+                    var book1 = new bbb.Bookmark({
                         src: "localhost",
                         title: "Test1",
                         description: "",
                         startTime: 0,
                         endTime: 500});
                         
-                    var book2 = new Mgr.Bookmark({
+                    var book2 = new bbb.Bookmark({
                         src: "google",
                         title: "Test 2",
                         description: "",
@@ -40,11 +40,11 @@
                         endTime: 1220});
                     
                     var ser = book1.toJSON();
-                    var book3 = Mgr.Bookmark.prototype.fromJSON(ser);
+                    var book3 = bbb.Bookmark.prototype.fromJSON(ser);
                     var book4;
                     
                     ser = book2.toJSON();
-                    book4 = Mgr.Bookmark.prototype.fromJSON(ser);
+                    book4 = bbb.Bookmark.prototype.fromJSON(ser);
                     
                     var assertEquals = function(obj1, obj2) {
                         if (!obj1.equals(obj2)) {
@@ -65,7 +65,7 @@
                 title: "Table of Contents Output",
                 func: function(){
                     try {
-                        Mgr.printTOC();
+                        bbb.printTOC();
                         return true;
                     } catch (e) {
                         alert("Could not output Table of Contents!\n\n Error: \n\n"+e);
@@ -77,16 +77,16 @@
                 title: "Table of Contents Modification",
                 func: function(){
                     try {
-                        Mgr.printTOC();
+                        bbb.printTOC();
                         
-                        Mgr.addChapter({
+                        bbb.addChapter({
                           src: "Some new source",
                           title: "Some new title",
                           description: "Some new description",
                           startTime: 8,
                           endTime: 10});
                           
-                        Mgr.printTOC();
+                        bbb.printTOC();
                         
                         return true;
                     } catch (e) {
@@ -98,7 +98,7 @@
         ];
         
         function init(){
-            Mgr.init({playerId: "player", tocId: "tblOfContents", chapterStorage: "server.php"});
+            bbb.init({playerId: "player", tocId: "tblOfContents", chapterStorage: "server.php"});
         }
         
         function setCookie(name, value, expDays){
