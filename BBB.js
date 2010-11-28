@@ -661,4 +661,3 @@ bbb.Bookmark.prototype = {
           this.getStartTime() === bkmrk.getStartTime() && this.getEndTime() === bkmrk.getEndTime();
   }
 };
-

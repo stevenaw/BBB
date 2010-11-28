@@ -1080,6 +1080,8 @@ var VideoJS = JRClass.extend({
   toggleSubitles: function(isOn) {
     this.showSubs = isOn = !!isOn;
     
+    if (!this.subtitles) return;
+    
     if (!isOn) {
       this.subtitlesDiv.innerHTML = "";
       this.subtitles[this.currentSubtitlePosition].showing = false;
