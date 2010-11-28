@@ -1083,6 +1083,14 @@ var VideoJS = JRClass.extend({
     if (!isOn) {
       this.subtitlesDiv.innerHTML = "";
       this.subtitles[this.currentSubtitlePosition].showing = false;
+    } else {
+      for(var i=0, l=this.subtitles.length;i<l;i++) {
+        var thisSub = this.subtitles[i];
+        if(this.video.currentTime>=thisSub.startTime && this.video.currentTime<=thisSub.endTime) {
+          this.currentSubtitlePosition = i; // Detect current subtitle position
+          break;
+        }
+      }
     }
   },
 
