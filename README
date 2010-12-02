@@ -9,8 +9,10 @@ Original Authors: Steven Weerdenburg, Kevin Lasconia
 
 /////////////////////////////////////////////////////////////////////////////////
 
-VERSION 0.1
-The first release of BBB.js includes functionality for creating video chapters. A chapter is defined as having a title, source URL, start time, and end time. BBB.js also includes functionality that dynamically populates a "table of contents" when a new chapter is created. This table of contents will include a URL for the chapter title. If clicked the selected chapter will play from start to end time. A "Play All" URL will also be generated. If clicked all chapters will play in sequential order. (Order as they were added) BBB.js also includes functions to serialize a Bookmark object to JSON, and convert JSON back into a Bookmark object.
+VERSION 0.2
+The second release of BBB.js includes functionality for creating video chapters. A chapter is defined as having a title, source URL, start time, and end time. BBB.js also includes functionality that dynamically populates a "table of contents" when a new chapter is created. This table of contents will include a URL for the chapter title. If clicked the selected chapter will play from start to end time. A "Play All" URL will also be generated. If clicked all chapters will play in sequential order. (Order as they were added) BBB.js also includes functions to serialize a Bookmark object to JSON, and convert JSON back into a Bookmark object.
+
+Also included is a watermark over the video, statistic tracking, and capability to recommend videos. Data storage may be on the computer using HTML5 local storage or on a remote server which is queried for data. Subtitles are supported in both SRT and TTXT formats.
 
 /////////////////////////////////////////////////////////////////////////////////
 
