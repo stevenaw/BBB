@@ -31,7 +31,16 @@ var bbb = (function(){
           // Impossible to support XHR
           throw new Error("This browser does not support XMLHttpRequest.");
       };
-  }
+    }
+    
+    function addEvent(owner, event, func) {
+      if (owner.addEventListener)
+        owner.addEventListener(event, func, false); // Follow standards if possible
+      else if (owner.attachEvent)
+        owner.attachEvent(event, func); // IE
+      else
+        owner["on"+event] = func; // No DOM 2 support, go old school DOM 0
+    }
 
     var canVideo = !! document.createElement('video').play;
 
@@ -211,12 +220,10 @@ var bbb = (function(){
         // (Re-)initialize all values except internal element pointers
         // (Re-)initialize all values
         init: function(params){
+            params = params || {};
+            
             this.setVideoId(params.playerId);
             this.setTOCId(params.tocId);
-            
-            // Default search directory "BBB" for callPage
-            // Careful, cross-origin issues may result if specified
-            var baseUri = params.remoteServer || location.href.substring(0, location.href.lastIndexOf("/BBB/")+5);
             
             // Default search directory "BBB" for callPage
             // Careful, cross-origin issues may result if specified
@@ -225,6 +232,20 @@ var bbb = (function(){
             
             this.fetchVideos();
             this.fetchChapters(endPoint.fullUri());
+            
+            if (params.statistics)
+              bbb.trackStatistics();
+              
+            if (params.watermark)
+              bbb.displayWatermark();
+        },
+        
+        setupWhenReady: function(params) {
+          var self = this;
+          
+          addEvent(document, "DOMContentLoaded", function() {
+            self.init(params);
+          });
         },
         
         fetchChapters: function(endPoint) {
@@ -248,6 +269,8 @@ var bbb = (function(){
                     }
                     
                     bbb.printTOC();
+                    
+                    bbb.onReady();
                 }
             };
             request.send();
@@ -592,6 +615,8 @@ var bbb = (function(){
         }
     };
 })();
+
+bbb.onReady = function() {};
 
 bbb.Bookmark.prototype = {
   fromJSON: function(str){

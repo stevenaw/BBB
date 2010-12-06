@@ -15,11 +15,9 @@
             VideoJS.setupAllWhenReady();
 
             function init() {
-                bbb.init({playerId: "player", tocId: "tblOfContents", chapterStorage: "server.php"});
+                bbb.init({playerId: "player", tocId: "tblOfContents", chapterStorage: "server.php", statistics: true, watermark: true});
                 bbb.setVideo({id: 1,title: 'Green Screen',description: 'Demo',duration: 24,src: 'video.ogv',rating: 'G',thumbnailSrc: 'video.jpg',tags: ['test']});
                 bbb.printVideoInfo(true);
-                bbb.trackStatistics();
-                bbb.displayWatermark();
             }
 			
             function useDefaultWatermark() {
