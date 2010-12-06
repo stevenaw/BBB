@@ -36,6 +36,42 @@ var bbb = (function(){
     var canVideo = !! document.createElement('video').play;
 
     return {
+        // A module for local storage (Cookies and HTML 5 Local Storage)
+        storage: (function() {
+            return {
+                setCookie: function (name, value, expDays){
+                    var sDate = "";
+                    
+                    if (!name.length) 
+                        throw "name can't be empty";
+                    else {
+                        if (expDays) {
+                            var oDate = new Date();
+                            oDate.setTime(oDate.getTime() + (days * 24 * 60 * 60 * 1000));
+                            sDate = "; expires=" + date.toGMTString();
+                        }
+                        
+                        document.cookie = name + "=" + value + sDate;
+                    }
+                },
+                
+                // return string
+                getCookie: function(name){
+                    if (document.cookie.length > 0) {
+                        var start = document.cookie.indexOf(name + "=");
+                        if (start !== -1) {
+                            start += name.length + 1;
+                            var end = document.cookie.indexOf(";", start);
+                            if (end === -1) 
+                                end = document.cookie.length;
+                            return unescape(document.cookie.substring(start, end));
+                        }
+                    }
+                    return "";
+                }
+            }
+        })(),
+        
         // A Bookmark object for the manager to work with
         Bookmark: function(params) {
             var params = params || {};

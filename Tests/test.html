@@ -94,42 +94,23 @@
                         return false;
                     }
                 }
+            },
+            {
+                title: "Cookie Storage",
+                func: function(){
+                    try {
+                        bbb.storage.setCookie("testCookie", "Hello");
+                        return bbb.storage.getCookie("testCookie") === "Hello";
+                    } catch (e) {
+                        alert("Could not Set or Retrieve Cookies!\n\n Error: \n\n"+e);
+                        return false;
+                    }
+                }
             }
         ];
         
         function init(){
             bbb.init({playerId: "player", tocId: "tblOfContents", chapterStorage: "server.php"});
-        }
-        
-        function setCookie(name, value, expDays){
-            var sDate = "";
-            
-            if (!name.length) 
-                throw "name can't be empty";
-            else {
-                if (expDays) {
-                    var oDate = new Date();
-                    oDate.setTime(oDate.getTime() + (days * 24 * 60 * 60 * 1000));
-                    sDate = "; expires=" + date.toGMTString();
-                }
-                
-                document.cookie = name + "=" + value + sDate;
-            }
-        }
-        
-        // return string
-        function getCookie(name){
-            if (document.cookie.length > 0) {
-                var start = document.cookie.indexOf(name + "=");
-                if (start !== -1) {
-                    start += name.length + 1;
-                    var end = document.cookie.indexOf(";", start);
-                    if (end === -1) 
-                        end = document.cookie.length;
-                    return unescape(document.cookie.substring(start, end));
-                }
-            }
-            return "";
         }
         
         function test(){
