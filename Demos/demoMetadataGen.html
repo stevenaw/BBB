@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8" />
+        <title>HTML5 Video Player</title>
+        <script src="js/json2.js" type="text/javascript" charset="utf-8"></script>
+        <script src="http://code.jquery.com/jquery-latest.min.js"></script>		
+        <script src="js/video.js" type="text/javascript" charset="utf-8"></script>
+        <script type="text/javascript" src="../BBB.js"></script>
+        <script type="text/javascript">
+        VideoJS.setupAllWhenReady();
+        
+        function init(){
+            bbb.init({playerId: "player", tocId: "tblOfContents", chapterStorage: "server.php", metaGenForm: "formDiv"});
+            bbb.trackStatistics();
+            bbb.displayWatermark();
+        } 
+        
+        function setCookie(name, value, expDays){
+            var sDate = "";
+            
+            if (!name.length) 
+                throw "name can't be empty";
+            else {
+                if (expDays) {
+                    var oDate = new Date();
+                    oDate.setTime(oDate.getTime() + (days * 24 * 60 * 60 * 1000));
+                    sDate = "; expires=" + date.toGMTString();
+                }
+                
+                document.cookie = name + "=" + value + sDate;
+            }
+        }
+        
+        // return string
+        function getCookie(name){
+            if (document.cookie.length > 0) {
+                var start = document.cookie.indexOf(name + "=");
+                if (start !== -1) {
+                    start += name.length + 1;
+                    var end = document.cookie.indexOf(";", start);
+                    if (end === -1) 
+                        end = document.cookie.length;
+                    return unescape(document.cookie.substring(start, end));
+                }
+            }
+            return "";
+        }
+        </script>
+        <style type="text/css">
+        
+        </style>
+        <link rel="stylesheet" href="css/video-js.css" type="text/css" media="screen" title="Video JS">
+    </head>
+    <body onload="init()">
+        <div class="video-js-box">
+            <video id="player" class="video-js" width="300px" height="200px" data-subtitles="demo-subtitles.ttxt" controls="controls" preload="auto"  >
+                <source src="video.ogv" type='video/ogg; codecs="theora, vorbis"' />            	
+                <source src="" type='video/mp4; codecs="avc1.42E01E, mp4a.40.2"' />
+                <source src="" type='video/webm; codecs="vp8, vorbis"' />
+                <object id="flash_fallback_1" class="vjs-flash-fallback" width="640px" height="264px" type="application/x-shockwave-flash" data="http://releases.flowplayer.org/swf/flowplayer-3.2.1.swf">
+                    <param name="movie" value="http://releases.flowplayer.org/swf/flowplayer-3.2.1.swf" /><param name="allowfullscreen" value="true" /><param name="flashvars" value='config={"playlist":["http://video-js.zencoder.com/oceans-clip.png", {"url": "http://video-js.zencoder.com/oceans-clip.mp4","autoPlay":false,"autoBuffering":true}]}' />
+                </object>
+            </video>
+        </div>
+        <div id="formDiv">
+        </div>
+        <div>
+          <div style="float:left; width:470px">
+          This demo will showcase functionality that will allow the creation of video chapters. A chapter consists of a title, source, start time, and end time. When a chapter is opened it
+          will change the HTML5 video element's source to the chapter's source, seek to the start time, then play to the end time.<br/><br/>To add a chapter, click the "Toggle Chapter Add"
+          button, input the chapter information in the form, then click the "Add Chapter" button. The table of contents to the right will display all chapters. Click on the title link to
+          open a chapter. Alternatively, click "Play All" to play all chapters sequentially.</div>
+			
+      
+          <div style="float:right;">
+            <table id="tblOfContents"></table>
+          </div>
+        </div>
+    </body>
+</html>
