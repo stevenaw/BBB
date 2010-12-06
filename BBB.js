@@ -31,7 +31,7 @@ var bbb = (function(){
           // Impossible to support XHR
           throw new Error("This browser does not support XMLHttpRequest.");
       };
-  }
+    }
 
     var canVideo = !! document.createElement('video').play;
 
