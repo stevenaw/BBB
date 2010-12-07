@@ -73,7 +73,7 @@ var bbb = (function(){
             var src = "";
             var rating = "";
             var thumbnailSrc = "";
-            var tags = [];
+            var tags = []; 
 
             if (params) {
                 id = params['id'];
