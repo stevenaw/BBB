@@ -9,15 +9,29 @@
         <script type="text/javascript" src="../BBB.js"></script>
         <script type="text/javascript">
         VideoJS.setupAllWhenReady();
+        
+        bbb.onChangeVideo = function(currChap) {
+          document.getElementById('bkmrkSrc').value = currChap.getSrc();
+          document.getElementById('bkmrkTitle').value = currChap.getTitle();
+          document.getElementById('bkmrkDescription').value = currChap.getDescription();
+        };
+        
+        function setTime(timeToSet, isStart) {
+          bbb.chapters.setStartEnd(timeToSet, isStart);
+          printTime();
+        }
+        
+        function printTime() {
+            document.getElementById('spnDisplay').innerHTML = "Chapter goes from "+bbb.chapters.getTempIn().toFixed(2)+ " to "+bbb.chapters.getTempOut().toFixed(2)+" sec";
+        }
 		
         function addElem(){
-            bbb.addChapter({
+            bbb.chapters.makeChapter({
                 src: document.getElementById('bkmrkSrc').value,
                 title: document.getElementById('bkmrkTitle').value,
-                description: document.getElementById('bkmrkDescription').value,
-                startTime: document.getElementById('bkmrkStart').value,
-                endTime: document.getElementById('bkmrkEnd').value}, true);
+                description: document.getElementById('bkmrkDescription').value});
                 
+            bbb.printTime();
             bbb.printTOC();
         }
         
@@ -25,37 +39,7 @@
             bbb.init({playerId: "player", tocId: "tblOfContents", chapterStorage: "server.php"});
             bbb.trackStatistics();
             bbb.displayWatermark();
-        }
-        
-        function setCookie(name, value, expDays){
-            var sDate = "";
-            
-            if (!name.length) 
-                throw "name can't be empty";
-            else {
-                if (expDays) {
-                    var oDate = new Date();
-                    oDate.setTime(oDate.getTime() + (days * 24 * 60 * 60 * 1000));
-                    sDate = "; expires=" + date.toGMTString();
-                }
-                
-                document.cookie = name + "=" + value + sDate;
-            }
-        }
-        
-        // return string
-        function getCookie(name){
-            if (document.cookie.length > 0) {
-                var start = document.cookie.indexOf(name + "=");
-                if (start !== -1) {
-                    start += name.length + 1;
-                    var end = document.cookie.indexOf(";", start);
-                    if (end === -1) 
-                        end = document.cookie.length;
-                    return unescape(document.cookie.substring(start, end));
-                }
-            }
-            return "";
+            printTime();
         }
         </script>
         <style>
@@ -96,18 +80,15 @@
                     </tr>
                     <tr>
                         <td>
-                            Start (sec)
                         </td>
                         <td>
-                            <input type="number" id="bkmrkStart" name="bkmrkStart" min="0" max="2147483647" step="1" />
+                            <input type="button" id="bkmrkStart" name="bkmrkStart" value="Set Start" onclick="setTime(document.getElementById('player').currentTime, true);" />
+                            <input type="button" id="bkmrkEnd" name="bkmrkEnd" value="Set End" onclick="setTime(document.getElementById('player').currentTime, false);" />
                         </td>
                     </tr>
                     <tr>
-                        <td>
-                            End (sec)
-                        </td>
-                        <td>
-                            <input type="number" id="bkmrkEnd" name="bkmrkEnd" min="0" max="2147483647" step="1" />
+                        <td colspan="2">
+                            <span id="spnDisplay" />
                         </td>
                     </tr>
                     <tr>
