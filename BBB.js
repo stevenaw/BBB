@@ -17,6 +17,7 @@ var bbb = (function(){
     var currChap = 0;
     var _playSeq = 0;
     
+    var canVideo = !!document.createElement('video').play;
     var endPoint = {
       root: "",
       service: "",
@@ -42,7 +43,7 @@ var bbb = (function(){
         owner["on"+event] = func; // No DOM 2 support, go old school DOM 0
     }
 
-    var canVideo = !!document.createElement('video').play;
+    
 
     return {
         // A module for local storage (Cookies and HTML 5 Local Storage)
