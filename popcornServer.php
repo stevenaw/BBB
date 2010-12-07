@@ -1,9 +1,8 @@
 <?php
-    define("DEBUG", $_SERVER['SERVER_NAME'] == 'localhost');
+    //define("DEBUG", $_SERVER['SERVER_NAME'] == 'localhost');
+    define("DEBUG", false);
     define("XML_FILE", "webMadeMovies.xml");
-    
-    if (DEBUG)
-      define("XML_OUTPUT", DEBUG ? "output.xml" : XML_FILE);
+    define("XML_OUTPUT", DEBUG ? "output.xml" : XML_FILE);
     
     $resources = (array)NULL;
     $resourceTimeline = (array)NULL;
