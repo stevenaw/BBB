@@ -1,7 +1,5 @@
 <!DOCTYPE html>
-
 <html>
-    
     <head>
         <meta charset="utf-8" />
         <title>
@@ -17,6 +15,7 @@
             bbb.onReady = function () {
               bbb.setVideo({id: 1,title: 'Green Screen',description: 'Demo',duration: 24,src: 'video.ogv',rating: 'G',thumbnailSrc: 'video.jpg',tags: ['test']});
               bbb.printVideoInfo(true);
+              printTime();
             };
             bbb.setupWhenReady({playerId: "player", tocId: "tblOfContents", chapterStorage: "server.php", statistics: true, watermark: true});
 			
@@ -40,7 +39,29 @@
                     document.body.removeChild(wm);
                     bbb.displayWatermark('watermark1.png');
                 }
-            }			
+            }
+            
+            function setTime(timeToSet, isStart) {
+              bbb.chapters.setStartEnd(timeToSet, isStart);
+              printTime();
+            }
+            
+            function printTime() {
+                document.getElementById('spnDisplay').innerHTML = "Chapter goes from "+bbb.chapters.getTempIn().toFixed(2)+ " to "+bbb.chapters.getTempOut().toFixed(2)+" sec";
+            }
+            
+            function addElem(){
+              try {
+                  bbb.chapters.makeChapter({
+                  src: document.getElementById('bkmrkSrc').value,
+                  title: document.getElementById('bkmrkTitle').value,
+                  description: document.getElementById('bkmrkDescription').value});
+              } catch (e) {
+                  alert(e);
+              }
+              printTime();
+              bbb.printTOC();
+            }
         </script>
         <link rel="stylesheet" href="css/video-js.css" type="text/css" media="screen"
         title="Video JS">
@@ -76,18 +97,15 @@
                     </tr>
                     <tr>
                         <td>
-                            Start (sec)
                         </td>
                         <td>
-                            <input type="number" id="bkmrkStart" name="bkmrkStart" min="0" max="2147483647" step="1" />
+                            <input type="button" id="bkmrkStart" name="bkmrkStart" value="Set Start" onclick="setTime(document.getElementById('player').currentTime, true);" />
+                            <input type="button" id="bkmrkEnd" name="bkmrkEnd" value="Set End" onclick="setTime(document.getElementById('player').currentTime, false);" />
                         </td>
                     </tr>
                     <tr>
-                        <td>
-                            End (sec)
-                        </td>
-                        <td>
-                            <input type="number" id="bkmrkEnd" name="bkmrkEnd" min="0" max="2147483647" step="1" />
+                        <td colspan="2">
+                            <span id="spnDisplay" />
                         </td>
                     </tr>
                     <tr>
