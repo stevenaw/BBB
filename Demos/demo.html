@@ -11,14 +11,28 @@
         VideoJS.setupAllWhenReady();
         bbb.setupWhenReady({playerId: "player", tocId: "tblOfContents", chapterStorage: "server.php", statistics: true, watermark: true});
         
+        bbb.onChangeVideo = function(currChap) {
+          document.getElementById('bkmrkSrc').value = currChap.getSrc();
+          document.getElementById('bkmrkTitle').value = currChap.getTitle();
+          document.getElementById('bkmrkDescription').value = currChap.getDescription();
+        };
+        
+        function setTime(timeToSet, isStart) {
+          bbb.chapters.setStartEnd(timeToSet, isStart);
+          printTime();
+        }
+        
+        function printTime() {
+            document.getElementById('spnDisplay').innerHTML = "Chapter goes from "+bbb.chapters.getTempIn().toFixed(2)+ " to "+bbb.chapters.getTempOut().toFixed(2)+" sec";
+        }
+        
         function addElem(){
-            bbb.addChapter({
+            bbb.chapters.makeChapter({
                 src: document.getElementById('bkmrkSrc').value,
                 title: document.getElementById('bkmrkTitle').value,
-                description: document.getElementById('bkmrkDescription').value,
-                startTime: document.getElementById('bkmrkStart').value,
-                endTime: document.getElementById('bkmrkEnd').value}, true);
+                description: document.getElementById('bkmrkDescription').value});
                 
+            bbb.printTime();
             bbb.printTOC();
         }
         </script>
@@ -29,7 +43,7 @@
         </style>
         <link rel="stylesheet" href="css/video-js.css" type="text/css" media="screen" title="Video JS">
     </head>
-    <body>
+    <body onload="printTime();">
         <div id="right" style="float:right; padding-right: 440px;">
             <div id = "panel">
                 <b>Create Chapter</b>
@@ -60,18 +74,15 @@
                     </tr>
                     <tr>
                         <td>
-                            Start (sec)
                         </td>
                         <td>
-                            <input type="number" id="bkmrkStart" name="bkmrkStart" min="0" max="2147483647" step="1" />
+                            <input type="button" id="bkmrkStart" name="bkmrkStart" value="Set Start" onclick="setTime(document.getElementById('player').currentTime, true);" />
+                            <input type="button" id="bkmrkEnd" name="bkmrkEnd" value="Set End" onclick="setTime(document.getElementById('player').currentTime, false);" />
                         </td>
                     </tr>
                     <tr>
-                        <td>
-                            End (sec)
-                        </td>
-                        <td>
-                            <input type="number" id="bkmrkEnd" name="bkmrkEnd" min="0" max="2147483647" step="1" />
+                        <td colspan="2">
+                            <span id="spnDisplay" />
                         </td>
                     </tr>
                     <tr>
@@ -84,8 +95,6 @@
                 </table>
             </div>
         </div>
-	        <!--<video id="player" class="video-js" src="video.ogv" controls="controls">
-        </video>-->	
         <div class="video-js-box">
             <video id="player" class="video-js" width="300px" height="200px" data-subtitles="demo-subtitles.ttxt" controls="controls" preload="auto"  >
 				<source src="video.ogv" type='video/ogg; codecs="theora, vorbis"' />            	

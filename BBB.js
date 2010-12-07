@@ -42,7 +42,7 @@ var bbb = (function(){
         owner["on"+event] = func; // No DOM 2 support, go old school DOM 0
     }
 
-    var canVideo = !! document.createElement('video').play;
+    var canVideo = !!document.createElement('video').play;
 
     return {
         // A module for local storage (Cookies and HTML 5 Local Storage)
@@ -88,11 +88,13 @@ var bbb = (function(){
             var title = params["title"] || "";
             var description = params["description"] || "";
             var src = params["src"] || "";
-            var startTime = parseInt(params["startTime"] || 0);
-            var endTime = parseInt(params["endTime"] || 0);
+            var startTime = parseFloat(params["startTime"] || 0);
+            var endTime = parseFloat(params["endTime"] || 0);
             
             if (startTime < 0 || endTime < 0)
                 throw "Start and end times must be positive!";
+            else if (startTime == endTime)
+                throw "Start and end times can not be the same!";
             else if (startTime < endTime) {
                 startTime = startTime;
                 endTime = endTime;
@@ -258,22 +260,24 @@ var bbb = (function(){
         init: function(params){
             params = params || {};
             
-            this.setVideoId(params.playerId);
-            this.setTOCId(params.tocId);
-            
-            // Default search directory "BBB" for callPage
-            // Careful, cross-origin issues may result if specified
-            endPoint.root = params.remoteServer || location.href.substring(0, location.href.lastIndexOf("/BBB/")+5);
-            endPoint.service = params.chapterStorage || "";
-            
-            this.fetchVideos();
-            this.fetchChapters(endPoint.fullUri());
-            
-            if (params.statistics)
-              bbb.trackStatistics();
-              
-            if (params.watermark)
-              bbb.displayWatermark();
+            if (canVideo) {
+                this.setVideoId(params.playerId);
+                this.setTOCId(params.tocId);
+                
+                // Default search directory "BBB" for callPage
+                // Careful, cross-origin issues may result if specified
+                endPoint.root = params.remoteServer || location.href.substring(0, location.href.lastIndexOf("/BBB/")+5);
+                endPoint.service = params.chapterStorage || "";
+                
+                this.fetchVideos();
+                this.fetchChapters(endPoint.fullUri());
+                
+                if (params.statistics)
+                  bbb.trackStatistics();
+                  
+                if (params.watermark)
+                  bbb.displayWatermark();
+            }
         },
         
         setupWhenReady: function(params) {
@@ -356,6 +360,43 @@ var bbb = (function(){
             
             request.send(params);
         },
+        
+        // Chapters module
+        chapters: (function() {
+            var tempIn= 0;
+            var tempOut= 0;
+            
+            return {
+              setStartEnd: function(timeToSet, isStart) {
+                  if (isStart)
+                    tempIn = timeToSet;
+                  else
+                    tempOut = timeToSet; 
+              },
+              
+              getTempIn: function() {
+                  return tempIn;
+              },
+              
+              getTempOut: function() {
+                  return tempOut;
+              },
+              
+              // obj contains title, description, source
+              // Compliments tempIn and tempOut to produce all information for a chapter
+              makeChapter: function(obj) {
+                obj.startTime = tempIn;
+                obj.endTime = tempOut;
+                
+                // May throw error if params are invalid
+                bbb.addChapter(obj, true);
+                
+                tempIn = 0;
+                tempOut = 0;
+              }
+            }
+        })(),
+        
         // Add a video
         addRecVideo: function (_v) {
             _recommended.push(bbb.Video(_v));
@@ -457,8 +498,8 @@ var bbb = (function(){
                             srcElem.innerHTML = item.getTitle();
                             tr.insertCell(0).appendChild(srcElem);
                             tr.insertCell(1).appendChild(document.createTextNode(item.getDescription()));
-                            tr.insertCell(2).appendChild(document.createTextNode(item.getStartTime()));
-                            tr.insertCell(3).appendChild(document.createTextNode(item.getEndTime()));
+                            tr.insertCell(2).appendChild(document.createTextNode(item.getStartTime().toFixed(2)));
+                            tr.insertCell(3).appendChild(document.createTextNode(item.getEndTime().toFixed(2)));
                             tr.insertCell(4).innerHTML = '<input type="checkbox" onclick="bbb.removeChapter(' + i + '); bbb.printTOC();" />';
                         }
 
@@ -483,6 +524,7 @@ var bbb = (function(){
 
                     _curr = idx;
                     currChap = _chapters[_curr];
+                    bbb.onChangeVideo(currChap);
 
                     vid.addEventListener('loadedmetadata', function () {
                         vid.currentTime = currChap.getStartTime();
@@ -653,6 +695,7 @@ var bbb = (function(){
 })();
 
 bbb.onReady = function() {};
+bbb.onChangeVideo = function(currChap) {};
 
 bbb.Bookmark.prototype = {
   fromJSON: function(str){
