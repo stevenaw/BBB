@@ -43,8 +43,6 @@ var bbb = (function(){
         owner["on"+event] = func; // No DOM 2 support, go old school DOM 0
     }
 
-    
-
     return {
         // A module for local storage (Cookies and HTML 5 Local Storage)
         storage: (function() {
@@ -679,19 +677,6 @@ var bbb = (function(){
               }
             })();*/
             
-            // Basic Objects \\
-            // ------------- \\
-            function ManifestEntry() {
-              this.id = doc.getElementById("resrcId");
-              this.src = doc.getElementById("resrcSrc");
-              this.description = doc.getElementById("resrcDesc");
-            }
-            function TimelineEntry() {
-              this.target = doc.getElementById("timelineTarget").value;
-              this["in"] = currentIn;
-              this.out = currentOut;
-            }
-            
             // Factory of command object generators \\
             // ------------------------------------ \\
             var types = {
@@ -906,11 +891,42 @@ var bbb = (function(){
               })()
             };
             
+            // Formatting \\
+            // ---------- \\
+            function formatTime(t) {
+              var sec = Math.floor(t);
+              
+              // hh:mm:ss:ms
+              return padNum(Math.floor(sec / 3600), 2)+":"+padNum(Math.floor(sec / 60), 2)+":"+padNum(sec, 2)+":"+padNum(Math.round((t-sec)*100), 2);
+            }
+            
+            function padNum(num, len) {
+              var str = '' + num;
+              for(var i=str.length; i<len; i++) {
+                str = '0' + str;
+              }
+             
+              return str;
+            }
+            
+            // Basic Objects \\
+            // ------------- \\
+            function ManifestEntry() {
+              this.id = doc.getElementById("resrcId");
+              this.src = doc.getElementById("resrcSrc");
+              this.description = doc.getElementById("resrcDesc");
+            }
+            function TimelineEntry() {
+              this.target = doc.getElementById("timelineTarget").value;
+              this["in"] = formatTime(currentIn);
+              this.out = formatTime(currentOut);
+            }
+            
             // DOM Maniplation Functions \\
             // ------------------------- \\
             function makeInput(inputType, id, value) {
-              var input = doc.createElement("input"); // Will crash in IE, still finding workaround
-              input["type"] = inputType;
+              var input = doc.createElement("input");
+              input["type"] = inputType; // Will crash in IE 8, but HTML5 video not supported anyways!
               
               input.id = input.name = id;
               
@@ -973,7 +989,7 @@ var bbb = (function(){
               params.push('action='+actionType);
               
               for(obj in manifestData) {
-                params.push("&"+obj+"="+escape(manifestData[obj]));
+                params.push("&"+obj+"="+encodeURIComponent(manifestData[obj]));
               }
               
               xhr.open("POST",endPoint);
@@ -1051,7 +1067,11 @@ var bbb = (function(){
                 else
                   currentOut = vid.currentTime;
               },
-              savePopcorn: function() { sendDataToServer(endPoint.root+SERVER, current.buildManifest(), "add"); },
+              savePopcorn: function() {
+                if (currentIn == currentOut) throw new Error("Start and end time must be different!");
+                
+                sendDataToServer(endPoint.root+SERVER, current.buildManifest(), "add");
+              },
               setupWhenReady: function(formDivId) {
                   var self = bbb.popcornGenerator;
                   var frag = doc.createDocumentFragment();
@@ -1086,7 +1106,13 @@ var bbb = (function(){
                   mainForm.appendChild(frag);
                   
                   showResourceEntry();
-                  addEvent(btnSubmit, "click", self.savePopcorn);
+                  addEvent(btnSubmit, "click", function() {
+                    try {
+                      self.savePopcorn();
+                    } catch (e) {
+                      alert(e);
+                    }
+                  });
                   addEvent(selElem, "change", function() { self.setActive(selElem.value, true); } );
                   
                   // Add to document and set active

@@ -92,32 +92,37 @@
     
     switch($_POST["action"]) {
       case "add":
-        //echo "ADDING:";
-        $resourceXML = $_POST["manifestXML"]; // raw xml
-        $timelineXML = $_POST["timelineXML"]; // raw xml
-        $resourceCat = $_POST["manifestCat"];
-        $timelineCat = $_POST["timelineCat"];
+        $resourceXML = stripslashes($_POST["manifestXML"]); // raw xml
+        $timelineXML = stripslashes($_POST["timelineXML"]); // raw xml
+        $resourceCat = stripslashes($_POST["manifestCat"]);
+        $timelineCat = stripslashes($_POST["timelineCat"]);
         
         $doc = DOMDocument::load(XML_FILE);
         
         // Add the manifest entry if not already there
-        $frag = $doc->createDocumentFragment();
-        $frag->appendXML($resourceXML);
-        addToManifest($doc, $frag, $resourceCat);
+        if ($resourceCat && $resourceXML) {
+          $frag = $doc->createDocumentFragment();
+          $frag->appendXML($resourceXML);
+          addToManifest($doc, $frag, $resourceCat);
+        }
         
         // Add the timeline entry if not already there
-        $frag = $doc->createDocumentFragment();
-        $frag->appendXML($timelineXML);
-        addToTimeline($doc, $frag, $timelineCat);
+        if ($timelineCat && $timelineXML) {
+          $frag = $doc->createDocumentFragment();
+          $frag->appendXML($timelineXML);
+          addToTimeline($doc, $frag, $timelineCat);
+        }
         
-        $doc->save(XML_OUTPUT);
-        
-        if (DEBUG) {
-          $dbgString = "Added: ".date("c")."\n---------------\nManifest: {$resourceXML} \nParent: {$resourceCat} \n\nTimeline: {$timelineXML} \nTimelineParent: {$timelineCat}";
-          file_put_contents("debug.txt", $dbgString.'\n\n', FILE_APPEND);
-          echo $dbgString;
+        if ($doc->save(XML_OUTPUT) !== false) {
+          if (DEBUG) {
+            $dbgString = "Added: ".date("c")."\n---------------\nManifest: {$resourceXML} \nParent: {$resourceCat} \n\nTimeline: {$timelineXML} \nTimelineParent: {$timelineCat}";
+            $dbgString .= "\nFragment: ".$frag->textContent;
+            file_put_contents("debug.txt", $dbgString.'\n\n', FILE_APPEND);
+            echo $dbgString;
+          } else
+            echo "Added to file";
         } else
-          echo "ADDED";
+          echo "Could not add to file";
       break;
     }
 ?>
