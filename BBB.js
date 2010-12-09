@@ -216,8 +216,7 @@ var bbb = (function(){
         },
         
         fetchChapters: function(endPoint) {
-            var request = new XMLHttpRequest();
-            
+            var request = new XMLHttpRequest();	
             _chapters = [];
             _hasMadeToc = false;
             _hasTocChanged = true; // In event TOC has been output before calling init, this will redraw table
@@ -238,7 +237,7 @@ var bbb = (function(){
                     bbb.printTOC();
                 }
             };
-            request.send();
+            //request.send();
         },
         
         // Add a chapter
