@@ -548,6 +548,30 @@ var bbb = (function(){
 				}
 			}
 		},
+		changeOrder: function() {
+            Array.prototype.ordered = function(order) {
+                var arr = this;
+                order = order || this.order;
+                return order.map(function(itm) {
+                    return arr[itm];
+                });
+            };
+
+			var j = 0;
+			var rows = [];
+			// i starts are due to ignore the first 2 rows (title row, and play all row)				
+			for (var i = 2, r = _tocRows.length; i < r; i++) {
+				rows[j] = _tocRows[i].id;
+				j++;
+			}
+
+			var bms = _chapters;
+				bms.order = rows;
+				_chapters = bms.ordered();
+				_hasTocChanged = true;				
+				bbb.printTOC();
+				//alert(_chapters);				
+		},
         trackStatistics: function (ip) {
             var stats = {
                 ip: 0,
