@@ -3,40 +3,24 @@
     <head>
         <meta charset="utf-8" />
         <title>HTML5 Video Player</title>
-        <script src="js/json2.js" type="text/javascript" charset="utf-8"></script>
-        <script src="http://code.jquery.com/jquery-latest.min.js"></script>		
         <script src="js/video.js" type="text/javascript" charset="utf-8"></script>
+        <script src="js/json2.js" type="text/javascript" charset="utf-8"></script>
+        <script src="http://code.jquery.com/jquery-latest.min.js"></script>
         <script type="text/javascript" src="../BBB.js"></script>
         <script type="text/javascript">
         VideoJS.setupAllWhenReady();
-        bbb.setupWhenReady({playerId: "player", tocId: "tblOfContents", chapterStorage: "server.php", statistics: true, watermark: true});
-        
-        bbb.onChangeVideo = function(currChap) {
-          document.getElementById('bkmrkSrc').value = currChap.getSrc();
-          document.getElementById('bkmrkTitle').value = currChap.getTitle();
-          document.getElementById('bkmrkDescription').value = currChap.getDescription();
-        };
-        
-        function setTime(timeToSet, isStart) {
-          bbb.chapters.setStartEnd(timeToSet, isStart);
-          printTime();
-        }
-        
-        function printTime() {
-            document.getElementById('spnDisplay').innerHTML = "Chapter goes from "+bbb.chapters.getTempIn().toFixed(2)+ " to "+bbb.chapters.getTempOut().toFixed(2)+" sec";
-        }
         
         function addElem(){
-            try {
-                bbb.chapters.makeChapter({
+            bbb.addChapter({
                 src: document.getElementById('bkmrkSrc').value,
                 title: document.getElementById('bkmrkTitle').value,
-                description: document.getElementById('bkmrkDescription').value});
-            } catch (e) {
-                alert(e);
-            }
-            printTime();
-            bbb.printTOC();
+                description: document.getElementById('bkmrkDescription').value,
+                startTime: document.getElementById('bkmrkStart').value,
+                endTime: document.getElementById('bkmrkEnd').value}, true);
+        }
+        
+        function init(){
+            bbb.init({playerId: "player", tocId: "tblOfContents", chapterStorage: "server.php"});
         }
         </script>
         <style>
@@ -46,7 +30,8 @@
         </style>
         <link rel="stylesheet" href="css/video-js.css" type="text/css" media="screen" title="Video JS">
     </head>
-    <body onload="printTime();">
+    <body onload="init()">
+    	<h3>HTML5 Video Chaptering Demo</h3>
         <div id="right" style="float:right; padding-right: 440px;">
             <div id = "panel">
                 <b>Create Chapter</b>
@@ -77,15 +62,18 @@
                     </tr>
                     <tr>
                         <td>
+                            Start (sec)
                         </td>
                         <td>
-                            <input type="button" id="bkmrkStart" name="bkmrkStart" value="Set Start" onclick="setTime(document.getElementById('player').currentTime, true);" />
-                            <input type="button" id="bkmrkEnd" name="bkmrkEnd" value="Set End" onclick="setTime(document.getElementById('player').currentTime, false);" />
+                            <input type="number" id="bkmrkStart" name="bkmrkStart" min="0" max="2147483647" step="1" />
                         </td>
                     </tr>
                     <tr>
-                        <td colspan="2">
-                            <span id="spnDisplay" />
+                        <td>
+                            End (sec)
+                        </td>
+                        <td>
+                            <input type="number" id="bkmrkEnd" name="bkmrkEnd" min="0" max="2147483647" step="1" />
                         </td>
                     </tr>
                     <tr>
@@ -99,10 +87,10 @@
             </div>
         </div>
         <div class="video-js-box">
-            <video id="player" class="video-js" width="300px" height="200px" data-subtitles="demo-subtitles.ttxt" controls="controls" preload="auto"  >
-				<source src="video.ogv" type='video/ogg; codecs="theora, vorbis"' />            	
+            <video id="player" class="video-js" width="640px" height="264px" data-subToggle="chkCC" data-subtitles="./demo-subtitles.ttxt" controls="controls" preload="auto"  >
                 <source src="" type='video/mp4; codecs="avc1.42E01E, mp4a.40.2"' />
                 <source src="" type='video/webm; codecs="vp8, vorbis"' />
+                <source src="http://upload.wikimedia.org/wikipedia/commons/7/75/Big_Buck_Bunny_Trailer_400p.ogg" type='video/ogg; codecs="theora, vorbis"' />
                 <object id="flash_fallback_1" class="vjs-flash-fallback" width="640px" height="264px" type="application/x-shockwave-flash" data="http://releases.flowplayer.org/swf/flowplayer-3.2.1.swf">
                     <param name="movie" value="http://releases.flowplayer.org/swf/flowplayer-3.2.1.swf" /><param name="allowfullscreen" value="true" /><param name="flashvars" value='config={"playlist":["http://video-js.zencoder.com/oceans-clip.png", {"url": "http://video-js.zencoder.com/oceans-clip.mp4","autoPlay":false,"autoBuffering":true}]}' />
                 </object>
@@ -112,9 +100,27 @@
             <button>
                 + Toggle Chapter Add
             </button>
+            <span>
+              <input type="checkbox" id="chkCC" />
+              <label for="chkCC">Show Subtitles</label>
+            </span>
             <br/>
             <br/>
-			<div style="float:left; width:470px">This demo will showcase functionality that will allow the creation of video chapters. A chapter consists of a title, source, start time, and end time. When a chapter is opened it will change the HTML5 video element's source to the chapter's source, seek to the start time, then play to the end time.<br/><br/>To add a chapter, click the "Toggle Chapter Add" button, input the chapter information in the form, then click the "Add Chapter" button. The table of contents to the right will display all chapters. Click on the title link to open a chapter. Alternatively, click "Play All" to play all chapters sequentially.</div>
+			<div style="float:left; width:470px">
+      This demo will showcase functionality that will allow the creation of video chapters. A chapter consists of a title, source,
+      start time, and end time. When a chapter is opened it will change the HTML5 video element's source to the chapter's source, seek to the start time, then play to
+      the end time
+      
+      <br/><br/>To add a chapter, click the "Toggle Chapter Add" button, input the chapter information in the form, then click the "Add Chapter" button.
+      The table of contents to the right will display all chapters. Click on the title link to open a chapter. Alternatively, click "Play All" to play all chapters
+      sequentially.
+      
+      <br /><br />
+      
+      This demo also showcases the option to turn subtitles on and off, as well as temporary logging on a remote server of chapter addition/deletion requests. To turn
+      subtitles on and off, use the checkbox located next to "Toggle Chapter Add". While addition and removal of chapters is logged on a remote server, the chapter list
+      will return to default when you reload the page. Also fixed in VideoJS is a captioning bug whereby scrolling back through the video did not update the displayed subtitles.
+      </div>
 			<div style="float:right;">
             <table id="tblOfContents">
             </table></div>

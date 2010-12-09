@@ -9,8 +9,20 @@ Original Authors: Steven Weerdenburg, Kevin Lasconia
 
 /////////////////////////////////////////////////////////////////////////////////
 
-VERSION 0.1
-The first release of BBB.js includes functionality for creating video chapters. A chapter is defined as having a title, source URL, start time, and end time. BBB.js also includes functionality that dynamically populates a "table of contents" when a new chapter is created. This table of contents will include a URL for the chapter title. If clicked the selected chapter will play from start to end time. A "Play All" URL will also be generated. If clicked all chapters will play in sequential order. (Order as they were added) BBB.js also includes functions to serialize a Bookmark object to JSON, and convert JSON back into a Bookmark object.
+VERSION 0.3
+
+The third release of BBB.js includes functionality for creating video chapters. A chapter is defined as having a title, source URL, start time, and end time.
+BBB.js also includes functionality that dynamically populates a "table of contents" when a new chapter is created. This table of contents will include a URL
+for the chapter title. If clicked the selected chapter will play from start to end time. A "Play All" URL will also be generated. If clicked all chapters will
+play in sequential order. (Order as they were added) BBB.js also includes functions to serialize a Bookmark object to JSON, and convert JSON back into a Bookmark
+object.
+
+Also included is a watermark over the video, statistic tracking, and capability to recommend videos. Data storage may be on the computer using HTML5 local
+storage or on a remote server which is queried for data. Subtitles are supported in both SRT and TTXT formats.
+
+New in the third release is the inclusion of metadata generation for use with the popcorn library. A form is displayed dynamically on the web page to fill
+and create entries in a timeline of semantic content. Data types are selectable by drop down box, start and end times use a button to set the current point
+in the video as start or end. This same start/end button behavious has been carried over the existing "New Chapter" functionality.
 
 /////////////////////////////////////////////////////////////////////////////////
 
@@ -21,4 +33,4 @@ Browsers that support the HTML5 <video> tag
 
 NOTES
 - The Demos folder contains a working demo that uses the BBB chaptering functionality with the video.js library
-- Need to find a way to stop/control looping once all chapters are done
+- The Tests folder contains a list of automated tests for testing the BBB framework

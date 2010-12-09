@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8" />
+        <title>
+            BBB Statistics/Rec Demo
+        </title>		
+		<script src="http://code.jquery.com/jquery-latest.min.js"></script>		
+        <script src="js/video.js" type="text/javascript" charset="utf-8">
+        </script>
+        <script type="text/javascript" src="../BBB.js">
+        </script>
+        <script type="text/javascript">
+            VideoJS.setupAllWhenReady();
+            bbb.onReady = function () {
+              bbb.setVideo({id: 1,title: 'Green Screen',description: 'Demo',duration: 24,src: 'video.ogv',rating: 'G',thumbnailSrc: 'video.jpg',tags: ['test']});
+              bbb.printVideoInfo(true);
+              printTime();
+            };
+            bbb.setupWhenReady({playerId: "player", tocId: "tblOfContents", chapterStorage: "server.php", statistics: true, watermark: true});
+			
+            function useDefaultWatermark() {
+                var wm = document.getElementById('watermark');
+                if (!wm) {
+                    document.body.removeChild(wm);
+                }
+                else {
+                    document.body.removeChild(wm);
+                    bbb.displayWatermark();
+                }
+            }
+
+            function changeWatermark() {
+                var wm = document.getElementById('watermark');
+                if (!wm) {
+                    bbb.displayWatermark();
+                }
+                else {
+                    document.body.removeChild(wm);
+                    bbb.displayWatermark('watermark1.png');
+                }
+            }
+            
+            function setTime(timeToSet, isStart) {
+              bbb.chapters.setStartEnd(timeToSet, isStart);
+              printTime();
+            }
+            
+            function printTime() {
+                document.getElementById('spnDisplay').innerHTML = "Chapter goes from "+bbb.chapters.getTempIn().toFixed(2)+ " to "+bbb.chapters.getTempOut().toFixed(2)+" sec";
+            }
+            
+            function addElem(){
+              try {
+                  bbb.chapters.makeChapter({
+                  src: document.getElementById('bkmrkSrc').value,
+                  title: document.getElementById('bkmrkTitle').value,
+                  description: document.getElementById('bkmrkDescription').value});
+              } catch (e) {
+                  alert(e);
+              }
+              printTime();
+              bbb.printTOC();
+            }
+        </script>
+        <link rel="stylesheet" href="css/video-js.css" type="text/css" media="screen"
+        title="Video JS">
+    </head>
+    <body>
+        <div id="right" style="float:right; padding-right: 440px;">
+            <div id = "panel">
+                <b>Create Chapter</b>
+                <table>
+                    <tr>
+                        <td>
+                            Title
+                        </td>
+                        <td>
+                            <input type="text" id="bkmrkTitle" name="bkmrkTitle" />
+                        </td>
+                    </tr>
+					<tr>
+                        <td>
+                            Description
+                        </td>
+                        <td>
+                            <input type="text" id="bkmrkDescription" name="bkmrkDescription" />
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            Source
+                        </td>
+                        <td>
+                            <input type="text" id="bkmrkSrc" name="bkmrkSrc" />
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                        </td>
+                        <td>
+                            <input type="button" id="bkmrkStart" name="bkmrkStart" value="Set Start" onclick="setTime(document.getElementById('player').currentTime, true);" />
+                            <input type="button" id="bkmrkEnd" name="bkmrkEnd" value="Set End" onclick="setTime(document.getElementById('player').currentTime, false);" />
+                        </td>
+                    </tr>
+                    <tr>
+                        <td colspan="2">
+                            <span id="spnDisplay" />
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                        </td>
+                        <td>
+                            <input value="Add Chapter" type="button" id="bkmrkSubmit" name="bkmrkSubmit" onclick="javascript:addElem()"/>
+                        </td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+	      
+        <div class="video-js-box">
+            <video id="player" width="400px" height="200px" style="top:0px; left:0px;" class="video-js" controls="controls" preload="auto">
+                <source src="video.ogv" type='video/ogg; codecs="theora, vorbis"'/>
+                <source src="" type='video/mp4; codecs="avc1.42E01E, mp4a.40.2"' />
+                <source src="" type='video/webm; codecs="vp8, vorbis"' />
+                <object id="flash_fallback_1" class="vjs-flash-fallback" width="640px"
+                height="264px" type="application/x-shockwave-flash" data="http://releases.flowplayer.org/swf/flowplayer-3.2.1.swf">
+                    <param name="movie" value="http://releases.flowplayer.org/swf/flowplayer-3.2.1.swf"
+                    />
+                    <param name="allowfullscreen" value="true" />
+                    <param name="flashvars" value='config={"playlist":["http://video-js.zencoder.com/oceans-clip.png", {"url": "http://video-js.zencoder.com/oceans-clip.mp4","autoPlay":false,"autoBuffering":true}]}'
+                    />
+                </object>
+            </video>
+        </div>
+		        <button onclick="useDefaultWatermark();">
+            Default Watermark
+        </button>
+        <button onclick="changeWatermark();">
+            Change Watermark
+        </button>
+        
+        <div>
+            <button id="btnChapterAdd">
+                + Toggle Chapter Add
+            </button>
+            <br/>
+            <br/>
+			<div style="float:left; width:470px">This demo will showcase functionality that will allow the creation of video chapters. A chapter consists of a title, source, start time, and end time. When a chapter is opened it will change the HTML5 video element's source to the chapter's source, seek to the start time, then play to the end time.<br/><br/>To add a chapter, click the "Toggle Chapter Add" button, input the chapter information in the form, then click the "Add Chapter" button. The table of contents to the right will display all chapters. Click on the title link to open a chapter. Alternatively, click "Play All" to play all chapters sequentially.</div>
+			<div style="float:right;">
+            <table id="tblOfContents">
+            </table></div>
+        </div>
+        <script>
+            $("#btnChapterAdd").click(function(){
+                $("#panel").slideToggle("slow");
+            });
+        </script>
+    </body>
+</html>

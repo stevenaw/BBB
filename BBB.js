@@ -17,6 +17,13 @@ var bbb = (function(){
     var currChap = 0;
     var _playSeq = 0;
     
+    var canVideo = !!document.createElement('video').play;
+    var endPoint = {
+      root: "",
+      service: "",
+      fullUri: function() { return endPoint.root+endPoint.service; }
+    };
+    
     if (typeof XMLHttpRequest == "undefined") {
       XMLHttpRequest = function () {
           try { return new ActiveXObject("Msxml2.XMLHTTP.6.0"); } catch (e) {}
@@ -25,11 +32,54 @@ var bbb = (function(){
           // Impossible to support XHR
           throw new Error("This browser does not support XMLHttpRequest.");
       };
-  }
-
-    var canVideo = !! document.createElement('video').play;
+    }
+    
+    function addEvent(owner, event, func) {
+      if (owner.addEventListener)
+        owner.addEventListener(event, func, false); // Follow standards if possible
+      else if (owner.attachEvent)
+        owner.attachEvent(event, func); // IE
+      else
+        owner["on"+event] = func; // No DOM 2 support, go old school DOM 0
+    }
 
     return {
+        // A module for local storage (Cookies and HTML 5 Local Storage)
+        storage: (function() {
+            return {
+                setCookie: function (name, value, expDays){
+                    var sDate = "";
+                    
+                    if (!name.length)
+                        throw "name can't be empty";
+                    else {
+                        if (expDays) {
+                            var oDate = new Date();
+                            oDate.setTime(oDate.getTime() + (days * 24 * 60 * 60 * 1000));
+                            sDate = "; expires=" + date.toGMTString();
+                        }
+                        
+                        document.cookie = name + "=" + value + sDate;
+                    }
+                },
+                
+                // return string
+                getCookie: function(name){
+                    if (document.cookie.length > 0) {
+                        var start = document.cookie.indexOf(name + "=");
+                        if (start !== -1) {
+                            start += name.length + 1;
+                            var end = document.cookie.indexOf(";", start);
+                            if (end === -1)
+                                end = document.cookie.length;
+                            return unescape(document.cookie.substring(start, end));
+                        }
+                    }
+                    return "";
+                }
+            }
+        })(),
+        
         // A Bookmark object for the manager to work with
         Bookmark: function(params) {
             var params = params || {};
@@ -37,11 +87,13 @@ var bbb = (function(){
             var title = params["title"] || "";
             var description = params["description"] || "";
             var src = params["src"] || "";
-            var startTime = parseInt(params["startTime"] || 0);
-            var endTime = parseInt(params["endTime"] || 0);
+            var startTime = parseFloat(params["startTime"] || 0);
+            var endTime = parseFloat(params["endTime"] || 0);
             
             if (startTime < 0 || endTime < 0)
                 throw "Start and end times must be positive!";
+            else if (startTime == endTime)
+                throw "Start and end times can not be the same!";
             else if (startTime < endTime) {
                 startTime = startTime;
                 endTime = endTime;
@@ -205,18 +257,44 @@ var bbb = (function(){
         // (Re-)initialize all values except internal element pointers
         // (Re-)initialize all values
         init: function(params){
-            this.setVideoId(params.playerId);
-            this.setTOCId(params.tocId);
+            params = params || {};
             
-            // Default search directory "BBB" for callPage
-            // Careful, cross-origin issues may result if specified
-            var baseUri = params.remoteServer || location.href.substring(0, location.href.lastIndexOf("/BBB/")+5);
-            this.fetchVideos();
-            this.fetchChapters(baseUri+params.chapterStorage);
+            if (canVideo) {
+                this.setVideoId(params.playerId);
+                this.setTOCId(params.tocId);
+                
+                // Default search directory "BBB" for callPage
+                // Careful, cross-origin issues may result if specified
+                endPoint.root = params.remoteServer || location.href.substring(0, location.href.lastIndexOf("/BBB/")+5);
+                endPoint.service = params.chapterStorage || "";
+                
+                this.fetchVideos();
+                this.fetchChapters(endPoint.fullUri());
+                
+                if (params.statistics)
+                  bbb.trackStatistics();
+                  
+                if (params.watermark)
+                  bbb.displayWatermark();
+                  
+                
+                if (params.formDivId) {
+                  bbb.popcornGenerator.setupWhenReady(params.formDivId);
+                }
+            }
+        },
+
+        setupWhenReady: function(params) {
+          var self = this;
+          
+          addEvent(document, "DOMContentLoaded", function() {
+            self.init(params);
+          });
         },
         
         fetchChapters: function(endPoint) {
-            var request = new XMLHttpRequest();	
+            var request = new XMLHttpRequest();
+            
             _chapters = [];
             _hasMadeToc = false;
             _hasTocChanged = true; // In event TOC has been output before calling init, this will redraw table
@@ -235,9 +313,11 @@ var bbb = (function(){
                     }
                     
                     bbb.printTOC();
+                    
+                    bbb.onReady();
                 }
             };
-            //request.send();
+            request.send();
         },
         
         // Add a chapter
@@ -250,6 +330,43 @@ var bbb = (function(){
             _chapters.splice(_idx, 1);
             _hasTocChanged = true;
         },
+        
+        // Chapters module
+        chapters: (function() {
+            var tempIn= 0;
+            var tempOut= 0;
+            
+            return {
+              setStartEnd: function(timeToSet, isStart) {
+                  if (isStart)
+                    tempIn = timeToSet;
+                  else
+                    tempOut = timeToSet;
+              },
+              
+              getTempIn: function() {
+                  return tempIn;
+              },
+              
+              getTempOut: function() {
+                  return tempOut;
+              },
+              
+              // obj contains title, description, source
+              // Compliments tempIn and tempOut to produce all information for a chapter
+              makeChapter: function(obj) {
+                obj.startTime = tempIn;
+                obj.endTime = tempOut;
+                
+                // May throw error if params are invalid
+                bbb.addChapter(obj, true);
+                
+                tempIn = 0;
+                tempOut = 0;
+              }
+            }
+        })(),
+        
         // Add a video
         addRecVideo: function (_v) {
             _recommended.push(bbb.Video(_v));
@@ -336,11 +453,11 @@ var bbb = (function(){
                         _hasMadeToc = true;
                     }
 
-                    // Delete existing rows
-                    for (var i = this._toc.rows.length - 1; i > 0; i--)
-                    this._toc.deleteRow(i);
-
                     if (_hasTocChanged) {
+                        // Delete existing rows
+                        for (var i = this._toc.rows.length - 1; i > 0; i--)
+                            this._toc.deleteRow(i);
+                        
                         for (var i = _chapters.length - 1; i >= 0; i--) {
                             tr = this._toc.insertRow(1);
                             srcElem = document.createElement('a');
@@ -350,8 +467,8 @@ var bbb = (function(){
                             srcElem.innerHTML = item.getTitle();
                             tr.insertCell(0).appendChild(srcElem);
                             tr.insertCell(1).appendChild(document.createTextNode(item.getDescription()));
-                            tr.insertCell(2).appendChild(document.createTextNode(item.getStartTime()));
-                            tr.insertCell(3).appendChild(document.createTextNode(item.getEndTime()));
+                            tr.insertCell(2).appendChild(document.createTextNode(item.getStartTime().toFixed(2)));
+                            tr.insertCell(3).appendChild(document.createTextNode(item.getEndTime().toFixed(2)));
                             tr.insertCell(4).innerHTML = '<input type="checkbox" onclick="bbb.removeChapter(' + i + '); bbb.printTOC();" />';
                         }
 
@@ -368,14 +485,14 @@ var bbb = (function(){
                 }
             }
         },
-
         playChapter: function (idx, sequential) {
             if (canVideo) {
                 if (idx !== _curr && idx >= 0 && idx < _chapters.length) {
                     var vid = this._vid;
-
+                    bbb.popcornGenerator.setActiveVideo(vid);
                     _curr = idx;
                     currChap = _chapters[_curr];
+                    bbb.onChangeVideo(currChap);
 
                     vid.addEventListener('loadedmetadata', function () {
                         vid.currentTime = currChap.getStartTime();
@@ -384,7 +501,7 @@ var bbb = (function(){
                     vid.addEventListener('canplay', function () {
                         vid.play();
                     }, true);
-
+                    
                     vid.addEventListener('timeupdate', function () {
                         if (vid.currentTime >= currChap.getEndTime()) {
                             if (sequential) {
@@ -395,7 +512,7 @@ var bbb = (function(){
                             }
                         }
                     }, true);
-
+                    
                     vid.src = currChap.getSrc();
                     vid.load();
                     vid.play();
@@ -541,9 +658,474 @@ var bbb = (function(){
             var alpha = 40;
             watermarkDiv.style.filter = "alpha(opacity=" + alpha + ")";
             document.body.appendChild(watermarkDiv);
-        }
+        },
+        popcornGenerator: (function() {
+            var SERVER = "popcornServer.php"; // Should be const, var for IE support
+            var doc = document;
+            var formMod = "", recMod = "", current = "", timeDisplay = "";
+            var currentIn = 0, currentOut = 0;
+            var vid = 0;
+            //var activeVid = _vid;
+            // Still working on, will be workaround for DOM input element creation in IE
+            /*var isInputTypeQuirk = (function() {
+try {
+var elem = doc.createElement("input");
+elem["type"] = "text";
+return false;
+} catch (e) {
+return true;
+}
+})();*/
+            
+            // Factory of command object generators \\
+            // ------------------------------------ \\
+            var types = {
+              videotag: (function() {
+                var txtTag = makeInput("text", "txtVideoTag");
+                
+                return {
+                  outputHTML: function() {
+                    clearChildren(formMod);
+                    showTimelineEntry('inthisvideo');
+                    recMod.style.display = "none";
+                    
+                    formMod.appendChild(bindLabel(txtTag, 'Tag: '));
+                    //formMod.innerHTML = 'Note: <input id="footText" name="footText" type="text" /><br />';
+                  },
+                  
+                  buildManifest: function() {
+                    var timelineEntry = new TimelineEntry();
+                    
+                    return {
+                        manifestCat: '',
+                        timelineCat: 'resources',
+                        manifestXML: '',
+                        timelineXML: '<videotag in="'+timelineEntry["in"]+'" out="'+timelineEntry.out+'" target="'+timelineEntry.target+'">'+txtTag.value+'</videotag>'
+                    };
+                  }
+                }
+              })(),
+              footnote: (function() {
+                var txtNote = makeInput("text", "footText");
+                
+                return {
+                  outputHTML: function() {
+                    clearChildren(formMod);
+                    showTimelineEntry('footnotediv');
+                    recMod.style.display = "none";
+                    
+                    formMod.appendChild(bindLabel(txtNote, 'Note: '));
+                    //formMod.innerHTML = 'Note: <input id="footText" name="footText" type="text" /><br />';
+                  },
+                  
+                  buildManifest: function() {
+                    var timelineEntry = new TimelineEntry();
+                    
+                    return {
+                        manifestCat: '',
+                        timelineCat: 'footnotes',
+                        manifestXML: '',
+                        timelineXML: '<footnote in="'+timelineEntry["in"]+'" out="'+timelineEntry.out+'" target="'+timelineEntry.target+'">'+txtNote.value+'</footnote>'
+                    };
+                  }
+                }
+              })(),
+              lastfm: (function() {
+                var txtArtist = makeInput("text", "lastFMArtist");
+                
+                return {
+                  outputHTML: function() {
+                    clearChildren(formMod);
+                    showTimelineEntry('lastfmdiv');
+                    recMod.style.display = "none";
+                    
+                    formMod.appendChild(bindLabel(txtArtist, 'Artist: '));
+                    //formMod.innerHTML = 'Artist: <input id="lastFMArtist" name="lastFMArtist" type="text" /><br />';
+                  },
+                  
+                  buildManifest: function() {
+                    var timelineEntry = new TimelineEntry();
+                    
+                    return {
+                        manifestCat: '',
+                        timelineCat: 'resources',
+                        manifestXML: '',
+                        timelineXML: '<wiki in="'+timelineEntry["in"]+'" out="'+timelineEntry.out+'" target="'+timelineEntry.target+
+                                      '" artist="'+txtArtist.value+'"/>'
+                    };
+                  }
+                }
+              })(),
+              twitter: (function() {
+                var controls = {
+                  title: makeInput("text", "twitterTitle"),
+                  source: makeInput("text", "twitterSource"),
+                  width: makeInput("text", "twitterWidth"),
+                  height: makeInput("text", "twitterHeight")
+                };
+                
+                return {
+                  outputHTML: function() {
+                    clearChildren(formMod);
+                    showTimelineEntry('personaltwitter');
+                    recMod.style.display = "none";
+                    
+                    var frag = newLine(bindLabel(controls.title, 'Title: '));
+                    frag.appendChild(newLine(bindLabel(controls.source, 'Source: ')));
+                    frag.appendChild(newLine(bindLabel(controls.width, 'Width: ')));
+                    frag.appendChild(newLine(bindLabel(controls.height, 'Height: ')));
+                    
+                    formMod.appendChild(frag);
+                    //formMod.innerHTML = 'Artist: <input id="lastFMArtist" name="lastFMArtist" type="text" /><br />';
+                  },
+                  
+                  buildManifest: function() {
+                    var timelineEntry = new TimelineEntry();
+                    
+                    return {
+                      manifestCat: '',
+                      timelineCat: 'resources',
+                      manifestXML: '',
+                      timelineXML: '<wiki in="'+timelineEntry["in"]+'" out="'+timelineEntry.out+'" target="'+timelineEntry.target+'"/>'+
+                                    '" title="'+controls.title.value+'" source="'+controls.source.value+'" width="'+controls.width.value+'"/>'+
+                                    '" height="'+controls.height.value+'"/>'
+                  };
+                  }
+                }
+              })(),
+              googlenews: (function() {
+                var txtTopic = makeInput("text", "gNewsTopic");
+                
+                return {
+                  outputHTML: function() {
+                    clearChildren(formMod);
+                    showTimelineEntry('googlenewsdiv');
+                    recMod.style.display = "none";
+                    
+                    formMod.appendChild(bindLabel(txtTopic, 'Topic: '));
+                    //formMod.innerHTML = 'Topic: <input id="gNewsTopic" name="gNewsTopic" type="text" /><br />';
+                  },
+                  
+                  buildManifest: function() {
+                    var timelineEntry = new TimelineEntry();
+                    
+                    return {
+                        manifestCat: '',
+                        timelineCat: 'resources',
+                        manifestXML: '',
+                        timelineXML: '<wiki in="'+timelineEntry["in"]+'" out="'+timelineEntry.out+'" target="'+timelineEntry.target+
+                                     '" topic="'+txtTopic.value+'"/>'
+                    };
+                  }
+                }
+              })(),
+              wiki: (function() {
+                var txtNumWords = makeInput("number", "wikiNumWords");
+                txtNumWords.step = 1;
+                txtNumWords.min = 1;
+                
+                return {
+                  outputHTML: function() {
+                    clearChildren(formMod);
+                    showTimelineEntry('wikidiv');
+                    recMod.style.display = "block";
+                    
+                    formMod.appendChild(bindLabel(txtNumWords, 'Number of Words: '));
+                    
+                    //formMod.innerHTML = '# Words: <input id="wikiNumWords" name="wikiNumWords" type="number" step="1" min="1" /><br />';
+                  },
+                  
+                  buildManifest: function() {
+                    var reSrc = new ManifestEntry();
+                    var timelineEntry = new TimelineEntry();
+                    
+                    return {
+                        manifestCat: 'articles',
+                        timelineCat: 'resources',
+                        manifestXML: '<resource id="'+reSrc.id.value+'" src="'+reSrc.src.value+'" description="'+reSrc.description.value+'"/>',
+                        timelineXML: '<wiki in="'+timelineEntry["in"]+'" out="'+timelineEntry.out+'" target="'+timelineEntry.target+
+                                      '" resourceid="'+reSrc.id.value+'" numberOfWords="'+txtNumWords.value+'"/>'
+                    };
+                  }
+                }
+              })(),
+              flickr: (function() {
+                var controls = {
+                  numberofimages: makeInput("number", "flickrNumImgs"),
+                  userid: makeInput("text", "flickrUserId"),
+                  padding: makeInput("number", "flickrPadding")
+                };
+                
+                controls.numberofimages.step = controls.padding.step = 1;
+                controls.numberofimages.min = controls.padding.min = 1;
+                
+                return {
+                  outputHTML: function() {
+                    clearChildren(formMod);
+                    showTimelineEntry('personalflickr');
+                    recMod.style.display = "none";
+                    
+                    var frag = newLine(bindLabel(controls.numberofimages, '# Images: '));
+                    frag.appendChild(newLine(bindLabel(controls.userid, 'User ID: ')));
+                    frag.appendChild(newLine(bindLabel(controls.padding, 'Padding: ')));
+                    
+                    formMod.appendChild(frag);
+                    
+                    //formMod.innerHTML = '# Images: <input id="flickrNumImgs" name="flickrNumImgs" type="number" step="1" min="1" /><br />'
+                    // +'User ID: <input id="flickrUserId" name="flickrUserId" type="text" /><br />'
+                    // +'Padding: <input id="flickrPadding" name="flickrPadding" type="number" step="1" min="1" /><br />';
+                  },
+                  buildManifest: function() {
+                    var timelineEntry = new TimelineEntry();
+                    
+                    return {
+                        manifestCat: '',
+                        timelineCat: 'resources',
+                        manifestXML: '',
+                        timelineXML: '<flickr in="'+timelineEntry["in"]+'" out="'+timelineEntry.out+'" target="'+timelineEntry.target+
+                                      '" numberofimages="'+controls.numberofimages.value+'" userid="'+controls.userid.value+
+                                      '" padding="'+controls.padding.value+'px"/>'
+                    };
+                  }
+                }
+              })()
+            };
+            
+            // Formatting \\
+            // ---------- \\
+            function formatTime(t) {
+              var sec = Math.floor(t);
+              
+              // hh:mm:ss:ms
+              return padNum(Math.floor(sec / 3600), 2)+":"+padNum(Math.floor(sec / 60), 2)+":"+padNum(sec, 2)+":"+padNum(Math.round((t-sec)*100), 2);
+            }
+            
+            function padNum(num, len) {
+              var str = '' + num;
+              for(var i=str.length; i<len; i++) {
+                str = '0' + str;
+              }
+             
+              return str;
+            }
+            
+            // Basic Objects \\
+            // ------------- \\
+            function ManifestEntry() {
+              this.id = doc.getElementById("resrcId");
+              this.src = doc.getElementById("resrcSrc");
+              this.description = doc.getElementById("resrcDesc");
+            }
+            function TimelineEntry() {
+              this.target = doc.getElementById("timelineTarget").value;
+              this["in"] = formatTime(currentIn);
+              this.out = formatTime(currentOut);
+            }
+            
+            // DOM Maniplation Functions \\
+            // ------------------------- \\
+            function makeInput(inputType, id, value) {
+              var input = doc.createElement("input");
+              input["type"] = inputType; // Will crash in IE 8, but HTML5 video not supported anyways!
+              
+              input.id = input.name = id;
+              
+              if (value)
+                input.value = value;
+              
+              return input;
+            }
+            function bindLabel(input, labelText) {
+              var frag = doc.createDocumentFragment();
+              var lbl = doc.createElement('label');
+              
+              lbl["for"] = input.id;
+              lbl.style.display= "block";
+              lbl.style.cssFloat = "left";
+              lbl.style.width= "200px";
+              lbl.appendChild(doc.createTextNode(labelText));
+              
+              frag.appendChild(lbl);
+              frag.appendChild(input);
+              return frag;
+            }
+            function newLine(frag) {
+              if (!frag || !frag.nodeType)
+                return doc.createElement('br');
+                
+              switch (frag.nodeType) {
+                case 1: // Element Node
+                case 3: // Text Node
+                  var fgmt = doc.createDocumentFragment();
+                  fgmt.appendChild(frag);
+                  fgmt.appendChild(doc.createElement('br'));
+                  return fgmt;
+                break;
+                
+                case 11: // Doc Fragment
+                  frag.appendChild(doc.createElement("br"));
+                  return frag;
+                break;
+                
+                default:
+                  return doc.createElement('br');
+                  break;
+              }
+              
+            }
+            function clearChildren(node) {
+              while (node.hasChildNodes()) {
+                node.removeChild(node.lastChild);
+              }
+            }
+            
+            // XHR, Remoting and Events \\
+            // ------------------------ \\
+            function sendDataToServer(endPoint, manifestData, actionType) {
+              var xhr = new XMLHttpRequest();
+              var params = [];
+              
+              // Build query string
+              params.push('action='+actionType);
+              
+              for(obj in manifestData) {
+                params.push("&"+obj+"="+encodeURIComponent(manifestData[obj]));
+              }
+              
+              xhr.open("POST",endPoint);
+              xhr.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+              xhr.onreadystatechange = function() {
+                  if (xhr.readyState == 4 && xhr.status == 200) {
+                    if (xhr.responseText)
+                      alert(xhr.responseText);
+                  }
+              };
+              
+              xhr.send(params.join(''));
+            }
+            
+            // Form Display \\
+            // ------------ \\
+            function showTimelineEntry(targetDiv) {
+              var frag = doc.createDocumentFragment();
+              var btnSetStart = makeInput("button", "timelineIn", "Set Start");
+              var btnSetEnd = makeInput("button", "timelineOut", "Set End");
+              var gen = bbb.popcornGenerator;
+              
+              addEvent(btnSetStart, "click", function() { gen.setTimeFromVideo(true); showStartEnd(); } );
+              addEvent(btnSetEnd, "click", function() { gen.setTimeFromVideo(false); showStartEnd(); } );
+             
+              if (!timeDisplay) {
+                timeDisplay = doc.createElement('span');
+              }
+              
+              showStartEnd();
+              frag.appendChild(btnSetStart);
+              frag.appendChild(btnSetEnd);
+              frag.appendChild(timeDisplay);
+              frag.appendChild(doc.createElement('br'));
+              frag.appendChild(makeInput("hidden", "timelineTarget", targetDiv));
+              formMod.appendChild(frag);
+              
+              /*formMod.innerHTML = 'TIMELINE<br />'+
+'<input type="button" id="timelineIn" name="timelineIn" value="Set Start" />'+
+'<input type="button" id="timelineOut" name="timelineOut" value="Set End" /><br />'+
+'Target: <input type="text" id="timelineTarget" name="timelineTarget" /><br />';*/
+            }
+            
+            function showStartEnd() {
+              timeDisplay.innerHTML = "Chapter from: "+currentIn.toFixed(2)+" to "+currentOut.toFixed(2);
+            }
+            
+            function showResourceEntry() {
+              // Output generic data entry
+              var frag = doc.createDocumentFragment();
+              frag.appendChild(newLine(bindLabel(makeInput("text", "resrcId"), "Resource ID: ")));
+              frag.appendChild(newLine(bindLabel(makeInput("text", "resrcSrc"), "URL: ")));
+              frag.appendChild(newLine(bindLabel(makeInput("text", "resrcDesc"), "Description: ")));
+              recMod.appendChild(frag);
+              
+              /*doc.getElementById(mainEntryDivId).innerHTML = 'RESOURCE<br />'+
+'ID: <input type="text" id="resrcId" name="resrcId" /><br />'+
+'Source: <input type="text" id="resrcSrc" name="resrcSrc" /><br />'+
+'Description: <input type="text" id="resrcDesc" name="resrcDesc" /><br />';*/
+            }
+            // Publically Returned Object \\
+            // -------------------------- \\
+            return {
+              setActive: function(key, updateUI) {
+                current = types[key];
+                if (updateUI)
+                  current.outputHTML();
+              },
+              setActiveVideo: function(v) {
+                vid = v;
+              },
+              setTimeFromVideo: function(isStart) {
+                if (isStart)
+                  currentIn = vid.currentTime;
+                else
+                  currentOut = vid.currentTime;
+              },
+              savePopcorn: function() {
+                if (currentIn == currentOut) throw new Error("Start and end time must be different!");
+                
+                sendDataToServer(endPoint.root+SERVER, current.buildManifest(), "add");
+              },
+              setupWhenReady: function(formDivId) {
+                  var self = bbb.popcornGenerator;
+                  var frag = doc.createDocumentFragment();
+                  var mainForm = doc.createElement('form');
+                  var btnSubmit = makeInput("button", "metadataSubmit", "ADD");
+                  var selElem = doc.createElement("select");
+                  
+                  mainForm.id = "metadataForm";
+                  mainForm.method = "post";
+                  mainForm.action = "?action=add";
+                  
+                  formMod = doc.createElement('div');
+                  formMod.id = formMod.name = 'popMetadataEntry';
+                  
+                  recMod = doc.createElement('div');
+                  recMod.id = formMod.name = 'popMainDataEntry';
+                  selElem.id = selElem.name = "selMetaType";
+                  
+                  // Build selection box and hook in events
+                  selElem.innerHTML = '<option value="wiki">Wikipedia</option>'+
+                    '<option value="flickr">Flickr</option>'+
+                    '<option value="googlenews">Google News</option>'+
+                    '<option value="lastfm">LastFM</option>'+
+                    '<option value="twitter">Twitter</option>'+
+                    '<option value="videotag">Video Tag</option>'+
+                    '<option value="footnote">Footnote</option>';
+                  
+                  frag.appendChild(bindLabel(selElem, "Type: "));
+                  frag.appendChild(recMod);
+                  frag.appendChild(formMod);
+                  frag.appendChild(btnSubmit);
+                  mainForm.appendChild(frag);
+                  
+                  showResourceEntry();
+                  addEvent(btnSubmit, "click", function() {
+                    try {
+                      self.savePopcorn();
+                    } catch (e) {
+                      alert(e);
+                    }
+                  });
+                  addEvent(selElem, "change", function() { self.setActive(selElem.value, true); } );
+                  
+                  // Add to document and set active
+                  doc.getElementById(formDivId).appendChild(mainForm);
+                  self.setActive(selElem.value, true);
+              }
+            };
+        })()
     };
 })();
+
+bbb.onReady = function() {};
+bbb.onChangeVideo = function(currChap) {};
 
 bbb.Bookmark.prototype = {
   fromJSON: function(str){
@@ -617,4 +1199,3 @@ bbb.Bookmark.prototype = {
           this.getStartTime() === bkmrk.getStartTime() && this.getEndTime() === bkmrk.getEndTime();
   }
 };
-

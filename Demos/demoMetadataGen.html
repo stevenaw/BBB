@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8" />
+        <title>HTML5 Video Player</title>
+        <script src="js/json2.js" type="text/javascript" charset="utf-8"></script>
+        <script src="http://code.jquery.com/jquery-latest.min.js"></script>		
+        <script src="js/video.js" type="text/javascript" charset="utf-8"></script>
+        <script type="text/javascript" src="../BBB.js"></script>
+        <script type="text/javascript">
+        VideoJS.setupAllWhenReady();
+        bbb.setupWhenReady({playerId: "player", tocId: "tblOfContents", chapterStorage: "server.php", formDivId: "formDiv", statistics: true, watermark: true});
+        
+        </script>
+        <style type="text/css">
+          div.rightCol {
+            float:right;
+            width: 500px;
+          }
+        </style>
+        <link rel="stylesheet" href="css/video-js.css" type="text/css" media="screen" title="Video JS">
+    </head>
+    <body>
+        <div id="formDiv" class="rightCol">
+        </div>
+        
+        <div class="video-js-box">
+            <video id="player" class="video-js" width="300px" height="200px" data-subtitles="demo-subtitles.ttxt" controls="controls" preload="auto"  >
+                <source src="video.ogv" type='video/ogg; codecs="theora, vorbis"' />            	
+                <source src="" type='video/mp4; codecs="avc1.42E01E, mp4a.40.2"' />
+                <source src="" type='video/webm; codecs="vp8, vorbis"' />
+                <object id="flash_fallback_1" class="vjs-flash-fallback" width="640px" height="264px" type="application/x-shockwave-flash" data="http://releases.flowplayer.org/swf/flowplayer-3.2.1.swf">
+                    <param name="movie" value="http://releases.flowplayer.org/swf/flowplayer-3.2.1.swf" /><param name="allowfullscreen" value="true" /><param name="flashvars" value='config={"playlist":["http://video-js.zencoder.com/oceans-clip.png", {"url": "http://video-js.zencoder.com/oceans-clip.mp4","autoPlay":false,"autoBuffering":true}]}' />
+                </object>
+            </video>
+        </div>
+        
+        <div>
+          <div style="float:left; width:470px">
+            <p>
+            This demo will showcase functionality that will allow the creation of metadata for use by the semantic video tool Popcorn.js. Popcorn allows for information
+            to be pulled from various web sources and placed into a timeline to run alongside a playing HTML5 video. There are various types of metadata, each with their
+            own fields. Click "Set Start" and "Set End" to set the start and end times in the timeline, and click "ADD" to add the data to the timeline
+            </p>
+            <p>
+              Existing chapter playing functionality remains in tact, but chapter creation has been taken out of this demo.
+            </p>
+          </div>
+          
+          <div class="rightCol">
+            <table id="tblOfContents"></table>
+          </div>
+        </div>
+    </body>
+</html>
