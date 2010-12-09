@@ -1,11 +1,12 @@
 /*
-* BBB v0.2
+* BBB v0.3
 * By Steven Weerdenburg and Kevin Lasconia
-* Last Modification: 11/16/2010
+* Last Modification: 12/08/2010
 */
 var bbb = (function(){
     var _chapters = []; // Array of Chapters/Bookmarks
     var _recommended = []; // Array of recommended videos
+	var _tocRows = []; // Array for the table of contents table rows
     var _video;
     var _stats; // Statistics object
     var _vid = 0,
@@ -211,8 +212,8 @@ var bbb = (function(){
                 }
             }
         },
-        fetchVideos: function () {
-            // Eventually be replaced by server calls
+        fetchVideos: function () {		
+            // Eventually be replaced by server calls			
             bbb.addRecVideo({
                 id: 1,
                 title: 'Green Screen',
@@ -270,14 +271,14 @@ var bbb = (function(){
                 
                 this.fetchVideos();
                 this.fetchChapters(endPoint.fullUri());
-                
+				                
                 if (params.statistics)
                   bbb.trackStatistics();
                   
-                if (params.watermark)
+                if (params.watermark) {
                   bbb.displayWatermark();
+				}
                   
-                
                 if (params.formDivId) {
                   bbb.popcornGenerator.setupWhenReady(params.formDivId);
                 }
@@ -313,7 +314,6 @@ var bbb = (function(){
                     }
                     
                     bbb.printTOC();
-                    
                     bbb.onReady();
                 }
             };
@@ -360,7 +360,7 @@ var bbb = (function(){
                 
                 // May throw error if params are invalid
                 bbb.addChapter(obj, true);
-                
+		                
                 tempIn = 0;
                 tempOut = 0;
               }
@@ -450,6 +450,11 @@ var bbb = (function(){
                         th.innerHTML = 'Delete';
                         tr.appendChild(th);
 
+						// Adding in class attribute for tr.
+						// The nodrop nodrag class is required to disable the tr from being dragable.
+						// Since it is tr that contains the titles it should not move
+						tr.setAttribute('class', 'nodrop nodrag');
+						
                         _hasMadeToc = true;
                     }
 
@@ -462,7 +467,8 @@ var bbb = (function(){
                             tr = this._toc.insertRow(1);
                             srcElem = document.createElement('a');
                             var item = _chapters[i];
-
+							// Adding in id attribute for tr, required for drag and drop sorting
+							tr.setAttribute('id', i);
                             srcElem.href = 'javascript:bbb.playChapter(' + i + ');';
                             srcElem.innerHTML = item.getTitle();
                             tr.insertCell(0).appendChild(srcElem);
@@ -479,8 +485,23 @@ var bbb = (function(){
                         srcElem.href = 'javascript:bbb.playChapter(0, 1);';
                         srcElem.innerHTML = 'Play All';
                         tr.insertCell(0).appendChild(srcElem);
-
+						// Adding in class attribute for tr.
+						// The nodrop nodrag class is required to disable the tr from being dragable.
+						// Since it is tr that contains the play all button it should not move					
+						tr.setAttribute('class', 'nodrop nodrag');
+						
                         _hasTocChanged = false;
+
+						$("#tblOfContents").tableDnD({
+							onDragClass: "myDragClass",
+							onDrop: function(table, row) {
+								_tocRows = table.tBodies[0].rows;
+								//var debugStr = "Row dropped was " + row.id + ". New order: ";
+								//for (var i = 2; i < _tocRows.length; i++) {
+									//alert(_tocRows[i].id + " ");
+								//}
+							}
+						});						
                     }
                 }
             }
@@ -519,7 +540,14 @@ var bbb = (function(){
                 }
             }
         },
-
+		checkOrder: function() {
+			if (_tocRows) {
+				// i starts at 2 to ignore the first 2 rows (titles and play all rows)
+				for (var i = 2, rows = _tocRows.length; i < rows; i++) {
+					alert(_tocRows[i].id + " ");				
+				}
+			}
+		},
         trackStatistics: function (ip) {
             var stats = {
                 ip: 0,
