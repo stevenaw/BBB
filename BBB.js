@@ -3,10 +3,10 @@
 * By Steven Weerdenburg and Kevin Lasconia
 * Last Modification: 12/08/2010
 */
-var bbb = (function(){
+var bbb = (function () {
     var _chapters = []; // Array of Chapters/Bookmarks
     var _recommended = []; // Array of recommended videos
-	var _tocRows = []; // Array for the table of contents table rows
+    var _tocRows = []; // Array for the table of contents table rows
     var _video;
     var _stats; // Statistics object
     var _vid = 0,
@@ -17,84 +17,126 @@ var bbb = (function(){
     var _curr = -1;
     var currChap = 0;
     var _playSeq = 0;
-    
-    var canVideo = !!document.createElement('video').play;
+
+    var canVideo = !! document.createElement('video').play;
     var endPoint = {
-      root: "",
-      service: "",
-      fullUri: function() { return endPoint.root+endPoint.service; }
+        root: "",
+        service: "",
+        fullUri: function () {
+            return endPoint.root + endPoint.service;
+        }
     };
-    
+
     if (typeof XMLHttpRequest == "undefined") {
-      XMLHttpRequest = function () {
-          try { return new ActiveXObject("Msxml2.XMLHTTP.6.0"); } catch (e) {}
-          try { return new ActiveXObject("Msxml2.XMLHTTP.3.0"); } catch (f) {}
-          try { return new ActiveXObject("Msxml2.XMLHTTP"); } catch (g) {}
-          // Impossible to support XHR
-          throw new Error("This browser does not support XMLHttpRequest.");
-      };
+        XMLHttpRequest = function () {
+            try {
+                return new ActiveXObject("Msxml2.XMLHTTP.6.0");
+            } catch (e) {}
+            try {
+                return new ActiveXObject("Msxml2.XMLHTTP.3.0");
+            } catch (f) {}
+            try {
+                return new ActiveXObject("Msxml2.XMLHTTP");
+            } catch (g) {}
+            // Impossible to support XHR
+            throw new Error("This browser does not support XMLHttpRequest.");
+        };
     }
-    
+
     function addEvent(owner, event, func) {
-      if (owner.addEventListener)
-        owner.addEventListener(event, func, false); // Follow standards if possible
-      else if (owner.attachEvent)
-        owner.attachEvent(event, func); // IE
-      else
-        owner["on"+event] = func; // No DOM 2 support, go old school DOM 0
+        if (owner.addEventListener) owner.addEventListener(event, func, false); // Follow standards if possible
+        else if (owner.attachEvent) owner.attachEvent(event, func); // IE
+        else owner["on" + event] = func; // No DOM 2 support, go old school DOM 0
     }
 
     return {
         // A module for local storage (Cookies and HTML 5 Local Storage)
-        storage: (function() {
+        storage: (function () {
+            // Add prototype method to Object that allow it to set and get JSON objects
+            Storage.prototype.setObject = function (key, value) {
+                this.setItem(key, JSON.stringify(value));
+            }
+            Storage.prototype.getObject = function (key) {
+                return this.getItem(key) && JSON.parse(this.getItem(key));
+            }
             return {
-                setCookie: function (name, value, expDays){
+                setCookie: function (name, value, expDays) {
                     var sDate = "";
-                    
-                    if (!name.length)
-                        throw "name can't be empty";
+
+                    if (!name.length) throw "name can't be empty";
                     else {
                         if (expDays) {
                             var oDate = new Date();
                             oDate.setTime(oDate.getTime() + (days * 24 * 60 * 60 * 1000));
                             sDate = "; expires=" + date.toGMTString();
                         }
-                        
+
                         document.cookie = name + "=" + value + sDate;
                     }
                 },
-                
                 // return string
-                getCookie: function(name){
+                getCookie: function (name) {
                     if (document.cookie.length > 0) {
                         var start = document.cookie.indexOf(name + "=");
                         if (start !== -1) {
                             start += name.length + 1;
                             var end = document.cookie.indexOf(";", start);
-                            if (end === -1)
-                                end = document.cookie.length;
+                            if (end === -1) end = document.cookie.length;
                             return unescape(document.cookie.substring(start, end));
                         }
                     }
                     return "";
+                },
+                setLocalStorage: function () {
+                    if (!Storage.prototype.getObject) {
+                        Storage.prototype.setObject = function (key, value) {
+                            this.setItem(key, JSON.stringify(value));
+                        }
+                    }
+                    localStorage.clear(); // remove later			
+                    if (typeof(localStorage) == 'undefined') {
+                        alert('Your browser does not supper HTML5 Local Storage. Please upgrade.');
+                    }
+                    else {
+                        try {
+                            localStorage.clear(); //remove this later
+                            for (var i = 0, l = _chapters.length; i < l; i++) {
+                                localStorage.setObject('BBB-Bookmark-Obj-' + i, _chapters[i]);
+                            }
+                        }
+                        catch (e) {
+                            if (e == QUOTA_EXCEEDED_ERR) {
+                                alert('Data cannot be saved, quote exceeded.');
+                            }
+                        }
+                    }
+                },
+                getLocalStorage: function () {
+                    if (!Storage.prototype.getObject) {
+                        Storage.prototype.getObject = function (key) {
+                            return this.getItem(key) && JSON.parse(this.getItem(key));
+                        }
+                    }
+                    for (var i = 0, l = localStorage.length - 1; i <= l; i++) {
+                        var value = localStorage.getObject('BBB-Bookmark-Obj-' + i);
+                        alert(value);
+                    }
                 }
             }
         })(),
-        
+
         // A Bookmark object for the manager to work with
-        Bookmark: function(params) {
+        Bookmark: function (params) {
             var params = params || {};
-            
+
             var title = params["title"] || "";
             var description = params["description"] || "";
             var src = params["src"] || "";
             var startTime = parseFloat(params["startTime"] || 0);
             var endTime = parseFloat(params["endTime"] || 0);
-            
-            if (startTime < 0 || endTime < 0)
-                throw "Start and end times must be positive!";
-            else if (startTime == endTime)
-                throw "Start and end times can not be the same!";
+
+            if (startTime < 0 || endTime < 0) throw "Start and end times must be positive!";
+            else if (startTime == endTime) throw "Start and end times can not be the same!";
             else if (startTime < endTime) {
                 startTime = startTime;
                 endTime = endTime;
@@ -102,16 +144,20 @@ var bbb = (function(){
                 endTime = startTime;
                 startTime = endTime;
             }
-            
-            this.getTitle = function() { return title; },
-            this.getDescription= function() { return description; },
-            this.getSrc = function() { return src; },
-            this.getStartTime = function() { return startTime; },
-            this.getEndTime = function() { return endTime; },
-            this.toString = function(){
+
+            this.getTitle = function () {
+                return title;
+            }, this.getDescription = function () {
+                return description;
+            }, this.getSrc = function () {
+                return src;
+            }, this.getStartTime = function () {
+                return startTime;
+            }, this.getEndTime = function () {
+                return endTime;
+            }, this.toString = function () {
                 return "Source: " + src + "\nTitle: " + title + "\nDescription: " + description + "\nStart Time: " + startTime + "\nEnd Time: " + endTime;
-            },
-            this.toJSON = function(){
+            }, this.toJSON = function () {
                 return '{ "src": "' + src + '", "title": "' + title + '", "description": "' + description + '", "startTime": ' + startTime + ', "endTime": ' + endTime + ' }';
             }
         },
@@ -212,7 +258,7 @@ var bbb = (function(){
                 }
             }
         },
-        fetchVideos: function () {		
+        fetchVideos: function () {
             // Eventually be replaced by server calls			
             bbb.addRecVideo({
                 id: 1,
@@ -257,71 +303,71 @@ var bbb = (function(){
         },
         // (Re-)initialize all values except internal element pointers
         // (Re-)initialize all values
-        init: function(params){
+        init: function (params) {
             params = params || {};
-            
+
             if (canVideo) {
                 this.setVideoId(params.playerId);
                 this.setTOCId(params.tocId);
-                
+
                 // Default search directory "BBB" for callPage
                 // Careful, cross-origin issues may result if specified
-                endPoint.root = params.remoteServer || location.href.substring(0, location.href.lastIndexOf("/BBB/")+5);
+                endPoint.root = params.remoteServer || location.href.substring(0, location.href.lastIndexOf("/BBB/") + 5);
                 endPoint.service = params.chapterStorage || "";
-                
+
                 this.fetchVideos();
                 this.fetchChapters(endPoint.fullUri());
-				                
-                if (params.statistics)
-                  bbb.trackStatistics();
-                  
+
+                if (params.statistics) bbb.trackStatistics();
+
                 if (params.watermark) {
-                  bbb.displayWatermark();
-				}
-                  
+                    bbb.displayWatermark();
+                }
+
                 if (params.formDivId) {
-                  bbb.popcornGenerator.setupWhenReady(params.formDivId);
+                    bbb.popcornGenerator.setupWhenReady(params.formDivId);
                 }
             }
         },
 
-        setupWhenReady: function(params) {
-          var self = this;
-          
-          addEvent(document, "DOMContentLoaded", function() {
-            self.init(params);
-          });
+        setupWhenReady: function (params) {
+            var self = this;
+
+            addEvent(document, "DOMContentLoaded", function () {
+                self.init(params);
+            });
         },
-        
-        fetchChapters: function(endPoint) {
+
+        fetchChapters: function (endPoint) {
             var request = new XMLHttpRequest();
-            
+
             _chapters = [];
             _hasMadeToc = false;
             _hasTocChanged = true; // In event TOC has been output before calling init, this will redraw table
             _curr = -1;
-            
-            request.open("GET",endPoint);
-            request.onreadystatechange = function() {
+
+            request.open("GET", endPoint);
+            request.onreadystatechange = function () {
                 var arr = [];
-                var i=0, numItems = 0;
-                
+                var i = 0,
+                    numItems = 0;
+
                 if (request.readyState == 4 && request.status == 200) {
                     arr = JSON.parse(request.responseText);
                     numItems = arr.length;
-                    for(i=0; i<numItems; i++) {
+                    for (i = 0; i < numItems; i++) {
                         bbb.addChapter(arr[i]);
                     }
-                    
+
                     bbb.printTOC();
                     bbb.onReady();
                 }
             };
             request.send();
         },
-        
+
         // Add a chapter
-        addChapter: function(_c){
+        addChapter: function (_c) {
             _chapters.push(new bbb.Bookmark(_c));
             _hasTocChanged = true;
         },
@@ -330,43 +376,41 @@ var bbb = (function(){
             _chapters.splice(_idx, 1);
             _hasTocChanged = true;
         },
-        
+
         // Chapters module
-        chapters: (function() {
-            var tempIn= 0;
-            var tempOut= 0;
-            
+        chapters: (function () {
+            var tempIn = 0;
+            var tempOut = 0;
+
             return {
-              setStartEnd: function(timeToSet, isStart) {
-                  if (isStart)
-                    tempIn = timeToSet;
-                  else
-                    tempOut = timeToSet;
-              },
-              
-              getTempIn: function() {
-                  return tempIn;
-              },
-              
-              getTempOut: function() {
-                  return tempOut;
-              },
-              
-              // obj contains title, description, source
-              // Compliments tempIn and tempOut to produce all information for a chapter
-              makeChapter: function(obj) {
-                obj.startTime = tempIn;
-                obj.endTime = tempOut;
-                
-                // May throw error if params are invalid
-                bbb.addChapter(obj, true);
-		                
-                tempIn = 0;
-                tempOut = 0;
-              }
+                setStartEnd: function (timeToSet, isStart) {
+                    if (isStart) tempIn = timeToSet;
+                    else tempOut = timeToSet;
+                },
+
+                getTempIn: function () {
+                    return tempIn;
+                },
+
+                getTempOut: function () {
+                    return tempOut;
+                },
+
+                // obj contains title, description, source
+                // Compliments tempIn and tempOut to produce all information for a chapter
+                makeChapter: function (obj) {
+                    obj.startTime = tempIn;
+                    obj.endTime = tempOut;
+
+                    // May throw error if params are invalid
+                    bbb.addChapter(obj, true);
+
+                    tempIn = 0;
+                    tempOut = 0;
+                }
             }
         })(),
-        
+
         // Add a video
         addRecVideo: function (_v) {
             _recommended.push(bbb.Video(_v));
@@ -450,25 +494,25 @@ var bbb = (function(){
                         th.innerHTML = 'Delete';
                         tr.appendChild(th);
 
-						// Adding in class attribute for tr.
-						// The nodrop nodrag class is required to disable the tr from being dragable.
-						// Since it is tr that contains the titles it should not move
-						tr.setAttribute('class', 'nodrop nodrag');
-						
+                        // Adding in class attribute for tr.
+                        // The nodrop nodrag class is required to disable the tr from being dragable.
+                        // Since it is tr that contains the titles it should not move
+                        tr.setAttribute('class', 'nodrop nodrag');
+
                         _hasMadeToc = true;
                     }
 
                     if (_hasTocChanged) {
                         // Delete existing rows
                         for (var i = this._toc.rows.length - 1; i > 0; i--)
-                            this._toc.deleteRow(i);
-                        
+                        this._toc.deleteRow(i);
+
                         for (var i = _chapters.length - 1; i >= 0; i--) {
                             tr = this._toc.insertRow(1);
                             srcElem = document.createElement('a');
                             var item = _chapters[i];
-							// Adding in id attribute for tr, required for drag and drop sorting
-							tr.setAttribute('id', i);
+                            // Adding in id attribute for tr, required for drag and drop sorting
+                            tr.setAttribute('id', i);
                             srcElem.href = 'javascript:bbb.playChapter(' + i + ');';
                             srcElem.innerHTML = item.getTitle();
                             tr.insertCell(0).appendChild(srcElem);
@@ -485,23 +529,19 @@ var bbb = (function(){
                         srcElem.href = 'javascript:bbb.playChapter(0, 1);';
                         srcElem.innerHTML = 'Play All';
                         tr.insertCell(0).appendChild(srcElem);
-						// Adding in class attribute for tr.
-						// The nodrop nodrag class is required to disable the tr from being dragable.
-						// Since it is tr that contains the play all button it should not move					
-						tr.setAttribute('class', 'nodrop nodrag');
-						
+                        // Adding in class attribute for tr.
+                        // The nodrop nodrag class is required to disable the tr from being dragable.
+                        // Since it is tr that contains the play all button it should not move					
+                        tr.setAttribute('class', 'nodrop nodrag');
+
                         _hasTocChanged = false;
 
-						$("#tblOfContents").tableDnD({
-							onDragClass: "myDragClass",
-							onDrop: function(table, row) {
-								_tocRows = table.tBodies[0].rows;
-								//var debugStr = "Row dropped was " + row.id + ". New order: ";
-								//for (var i = 2; i < _tocRows.length; i++) {
-									//alert(_tocRows[i].id + " ");
-								//}
-							}
-						});						
+                        $("#tblOfContents").tableDnD({
+                            onDragClass: "myDragClass",
+                            onDrop: function (table, row) {
+                                _tocRows = table.tBodies[0].rows;
+                            }
+                        });
                     }
                 }
             }
@@ -522,7 +562,7 @@ var bbb = (function(){
                     vid.addEventListener('canplay', function () {
                         vid.play();
                     }, true);
-                    
+
                     vid.addEventListener('timeupdate', function () {
                         if (vid.currentTime >= currChap.getEndTime()) {
                             if (sequential) {
@@ -533,45 +573,47 @@ var bbb = (function(){
                             }
                         }
                     }, true);
-                    
+
                     vid.src = currChap.getSrc();
                     vid.load();
                     vid.play();
                 }
             }
         },
-		checkOrder: function() {
-			if (_tocRows) {
-				// i starts at 2 to ignore the first 2 rows (titles and play all rows)
-				for (var i = 2, rows = _tocRows.length; i < rows; i++) {
-					alert(_tocRows[i].id + " ");				
-				}
-			}
-		},
-		changeOrder: function() {
-            Array.prototype.ordered = function(order) {
+        checkOrder: function () {
+            if (_tocRows) {
+                // i starts at 2 to ignore the first 2 rows (titles and play all rows)
+                for (var i = 2, rows = _tocRows.length; i < rows; i++) {
+                    alert(_tocRows[i].id + " ");
+                }
+            }
+        },
+        changeOrder: function () {
+            Array.prototype.ordered = function (order) {
                 var arr = this;
                 order = order || this.order;
-                return order.map(function(itm) {
+                return order.map(function (itm) {
                     return arr[itm];
                 });
             };
 
-			var j = 0;
-			var rows = [];
-			// i starts are due to ignore the first 2 rows (title row, and play all row)				
-			for (var i = 2, r = _tocRows.length; i < r; i++) {
-				rows[j] = _tocRows[i].id;
-				j++;
-			}
+            // Re-factor this
+            if (_tocRows.length != 0) {
+                var j = 0;
+                var rows = [];
+                // i starts are due to ignore the first 2 rows (title row, and play all row)				
+                for (var i = 2, r = _tocRows.length; i < r; i++) {
+                    rows[j] = _tocRows[i].id;
+                    j++;
+                }
 
-			var bms = _chapters;
-				bms.order = rows;
-				_chapters = bms.ordered();
-				_hasTocChanged = true;				
-				bbb.printTOC();
-				//alert(_chapters);				
-		},
+                var bms = _chapters;
+                bms.order = rows;
+                _chapters = bms.ordered();
+                _hasTocChanged = true;
+                bbb.printTOC();
+            }
+        },
         trackStatistics: function (ip) {
             var stats = {
                 ip: 0,
@@ -586,7 +628,7 @@ var bbb = (function(){
                 ad_on: false,
                 ad_off: false
             };
-            
+
             var vid = this._vid;
             var duration = vid.duration;
             $.getJSON("http://jsonip.appspot.com?callback=?", function (data) {
@@ -711,15 +753,19 @@ var bbb = (function(){
             watermarkDiv.style.filter = "alpha(opacity=" + alpha + ")";
             document.body.appendChild(watermarkDiv);
         },
-        popcornGenerator: (function() {
+        popcornGenerator: (function () {
             var SERVER = "popcornServer.php"; // Should be const, var for IE support
             var doc = document;
-            var formMod = "", recMod = "", current = "", timeDisplay = "";
-            var currentIn = 0, currentOut = 0;
+            var formMod = "",
+                recMod = "",
+                current = "",
+                timeDisplay = "";
+            var currentIn = 0,
+                currentOut = 0;
             var vid = 0;
             //var activeVid = _vid;
             // Still working on, will be workaround for DOM input element creation in IE
-            /*var isInputTypeQuirk = (function() {
+/*var isInputTypeQuirk = (function() {
 try {
 var elem = doc.createElement("input");
 elem["type"] = "text";
@@ -728,376 +774,388 @@ return false;
 return true;
 }
 })();*/
-            
+
             // Factory of command object generators \\
             // ------------------------------------ \\
             var types = {
-              videotag: (function() {
-                var txtTag = makeInput("text", "txtVideoTag");
-                
-                return {
-                  outputHTML: function() {
-                    clearChildren(formMod);
-                    showTimelineEntry('inthisvideo');
-                    recMod.style.display = "none";
-                    
-                    formMod.appendChild(bindLabel(txtTag, 'Tag: '));
-                    //formMod.innerHTML = 'Note: <input id="footText" name="footText" type="text" /><br />';
-                  },
-                  
-                  buildManifest: function() {
-                    var timelineEntry = new TimelineEntry();
-                    
+                videotag: (function () {
+                    var txtTag = makeInput("text", "txtVideoTag");
+
                     return {
-                        manifestCat: '',
-                        timelineCat: 'resources',
-                        manifestXML: '',
-                        timelineXML: '<videotag in="'+timelineEntry["in"]+'" out="'+timelineEntry.out+'" target="'+timelineEntry.target+'">'+txtTag.value+'</videotag>'
+                        outputHTML: function () {
+                            clearChildren(formMod);
+                            showTimelineEntry('inthisvideo');
+                            recMod.style.display = "none";
+
+                            formMod.appendChild(bindLabel(txtTag, 'Tag: '));
+                            //formMod.innerHTML = 'Note: <input id="footText" name="footText" type="text" /><br />';
+                        },
+
+                        buildManifest: function () {
+                            var timelineEntry = new TimelineEntry();
+
+                            return {
+                                manifestCat: '',
+                                timelineCat: 'resources',
+                                manifestXML: '',
+                                timelineXML: '<videotag in="' + timelineEntry["in"] + '" out="' + timelineEntry.out + '" target="' + timelineEntry.target + '">' + txtTag.value + '</videotag>'
+                            };
+                        }
+                    }
+                })(),
+                footnote: (function () {
+                    var txtNote = makeInput("text", "footText");
+
+                    return {
+                        outputHTML: function () {
+                            clearChildren(formMod);
+                            showTimelineEntry('footnotediv');
+                            recMod.style.display = "none";
+
+                            formMod.appendChild(bindLabel(txtNote, 'Note: '));
+                            //formMod.innerHTML = 'Note: <input id="footText" name="footText" type="text" /><br />';
+                        },
+
+                        buildManifest: function () {
+                            var timelineEntry = new TimelineEntry();
+
+                            return {
+                                manifestCat: '',
+                                timelineCat: 'footnotes',
+                                manifestXML: '',
+                                timelineXML: '<footnote in="' + timelineEntry["in"] + '" out="' + timelineEntry.out + '" target="' + timelineEntry.target + '">' + txtNote.value + '</footnote>'
+                            };
+                        }
+                    }
+                })(),
+                lastfm: (function () {
+                    var txtArtist = makeInput("text", "lastFMArtist");
+
+                    return {
+                        outputHTML: function () {
+                            clearChildren(formMod);
+                            showTimelineEntry('lastfmdiv');
+                            recMod.style.display = "none";
+
+                            formMod.appendChild(bindLabel(txtArtist, 'Artist: '));
+                            //formMod.innerHTML = 'Artist: <input id="lastFMArtist" name="lastFMArtist" type="text" /><br />';
+                        },
+
+                        buildManifest: function () {
+                            var timelineEntry = new TimelineEntry();
+
+                            return {
+                                manifestCat: '',
+                                timelineCat: 'resources',
+                                manifestXML: '',
+                                timelineXML: '<wiki in="' + timelineEntry["in"] + '" out="' + timelineEntry.out + '" target="' + timelineEntry.target + '" artist="' + txtArtist.value + '"/>'
+                            };
+                        }
+                    }
+                })(),
+                twitter: (function () {
+                    var controls = {
+                        title: makeInput("text", "twitterTitle"),
+                        source: makeInput("text", "twitterSource"),
+                        width: makeInput("text", "twitterWidth"),
+                        height: makeInput("text", "twitterHeight")
                     };
-                  }
-                }
-              })(),
-              footnote: (function() {
-                var txtNote = makeInput("text", "footText");
-                
-                return {
-                  outputHTML: function() {
-                    clearChildren(formMod);
-                    showTimelineEntry('footnotediv');
-                    recMod.style.display = "none";
-                    
-                    formMod.appendChild(bindLabel(txtNote, 'Note: '));
-                    //formMod.innerHTML = 'Note: <input id="footText" name="footText" type="text" /><br />';
-                  },
-                  
-                  buildManifest: function() {
-                    var timelineEntry = new TimelineEntry();
-                    
+
                     return {
-                        manifestCat: '',
-                        timelineCat: 'footnotes',
-                        manifestXML: '',
-                        timelineXML: '<footnote in="'+timelineEntry["in"]+'" out="'+timelineEntry.out+'" target="'+timelineEntry.target+'">'+txtNote.value+'</footnote>'
+                        outputHTML: function () {
+                            clearChildren(formMod);
+                            showTimelineEntry('personaltwitter');
+                            recMod.style.display = "none";
+
+                            var frag = newLine(bindLabel(controls.title, 'Title: '));
+                            frag.appendChild(newLine(bindLabel(controls.source, 'Source: ')));
+                            frag.appendChild(newLine(bindLabel(controls.width, 'Width: ')));
+                            frag.appendChild(newLine(bindLabel(controls.height, 'Height: ')));
+
+                            formMod.appendChild(frag);
+                            //formMod.innerHTML = 'Artist: <input id="lastFMArtist" name="lastFMArtist" type="text" /><br />';
+                        },
+
+                        buildManifest: function () {
+                            var timelineEntry = new TimelineEntry();
+
+                            return {
+                                manifestCat: '',
+                                timelineCat: 'resources',
+                                manifestXML: '',
+                                timelineXML: '<wiki in="' + timelineEntry["in"] + '" out="' + timelineEntry.out + '" target="' + timelineEntry.target + '"/>' + '" title="' + controls.title.value + '" source="' + controls.source.value + '" width="' + controls.width.value + '"/>' + '" height="' + controls.height.value + '"/>'
+                            };
+                        }
+                    }
+                })(),
+                googlenews: (function () {
+                    var txtTopic = makeInput("text", "gNewsTopic");
+
+                    return {
+                        outputHTML: function () {
+                            clearChildren(formMod);
+                            showTimelineEntry('googlenewsdiv');
+                            recMod.style.display = "none";
+
+                            formMod.appendChild(bindLabel(txtTopic, 'Topic: '));
+                            //formMod.innerHTML = 'Topic: <input id="gNewsTopic" name="gNewsTopic" type="text" /><br />';
+                        },
+
+                        buildManifest: function () {
+                            var timelineEntry = new TimelineEntry();
+
+                            return {
+                                manifestCat: '',
+                                timelineCat: 'resources',
+                                manifestXML: '',
+                                timelineXML: '<wiki in="' + timelineEntry["in"] + '" out="' + timelineEntry.out + '" target="' + timelineEntry.target + '" topic="' + txtTopic.value + '"/>'
+                            };
+                        }
+                    }
+                })(),
+                wiki: (function () {
+                    var txtNumWords = makeInput("number", "wikiNumWords");
+                    txtNumWords.step = 1;
+                    txtNumWords.min = 1;
+
+                    return {
+                        outputHTML: function () {
+                            clearChildren(formMod);
+                            showTimelineEntry('wikidiv');
+                            recMod.style.display = "block";
+
+                            formMod.appendChild(bindLabel(txtNumWords, 'Number of Words: '));
+
+                            //formMod.innerHTML = '# Words: <input id="wikiNumWords" name="wikiNumWords" type="number" step="1" min="1" /><br />';
+                        },
+
+                        buildManifest: function () {
+                            var reSrc = new ManifestEntry();
+                            var timelineEntry = new TimelineEntry();
+
+                            return {
+                                manifestCat: 'articles',
+                                timelineCat: 'resources',
+                                manifestXML: '<resource id="' + reSrc.id.value + '" src="' + reSrc.src.value + '" description="' + reSrc.description.value + '"/>',
+                                timelineXML: '<wiki in="' + timelineEntry["in"] + '" out="' + timelineEntry.out + '" target="' + timelineEntry.target + '" resourceid="' + reSrc.id.value + '" numberOfWords="' + txtNumWords.value + '"/>'
+                            };
+                        }
+                    }
+                })(),
+                flickr: (function () {
+                    var controls = {
+                        numberofimages: makeInput("number", "flickrNumImgs"),
+                        userid: makeInput("text", "flickrUserId"),
+                        padding: makeInput("number", "flickrPadding")
                     };
-                  }
-                }
-              })(),
-              lastfm: (function() {
-                var txtArtist = makeInput("text", "lastFMArtist");
-                
-                return {
-                  outputHTML: function() {
-                    clearChildren(formMod);
-                    showTimelineEntry('lastfmdiv');
-                    recMod.style.display = "none";
-                    
-                    formMod.appendChild(bindLabel(txtArtist, 'Artist: '));
-                    //formMod.innerHTML = 'Artist: <input id="lastFMArtist" name="lastFMArtist" type="text" /><br />';
-                  },
-                  
-                  buildManifest: function() {
-                    var timelineEntry = new TimelineEntry();
-                    
+
+                    controls.numberofimages.step = controls.padding.step = 1;
+                    controls.numberofimages.min = controls.padding.min = 1;
+
                     return {
-                        manifestCat: '',
-                        timelineCat: 'resources',
-                        manifestXML: '',
-                        timelineXML: '<wiki in="'+timelineEntry["in"]+'" out="'+timelineEntry.out+'" target="'+timelineEntry.target+
-                                      '" artist="'+txtArtist.value+'"/>'
-                    };
-                  }
-                }
-              })(),
-              twitter: (function() {
-                var controls = {
-                  title: makeInput("text", "twitterTitle"),
-                  source: makeInput("text", "twitterSource"),
-                  width: makeInput("text", "twitterWidth"),
-                  height: makeInput("text", "twitterHeight")
-                };
-                
-                return {
-                  outputHTML: function() {
-                    clearChildren(formMod);
-                    showTimelineEntry('personaltwitter');
-                    recMod.style.display = "none";
-                    
-                    var frag = newLine(bindLabel(controls.title, 'Title: '));
-                    frag.appendChild(newLine(bindLabel(controls.source, 'Source: ')));
-                    frag.appendChild(newLine(bindLabel(controls.width, 'Width: ')));
-                    frag.appendChild(newLine(bindLabel(controls.height, 'Height: ')));
-                    
-                    formMod.appendChild(frag);
-                    //formMod.innerHTML = 'Artist: <input id="lastFMArtist" name="lastFMArtist" type="text" /><br />';
-                  },
-                  
-                  buildManifest: function() {
-                    var timelineEntry = new TimelineEntry();
-                    
-                    return {
-                      manifestCat: '',
-                      timelineCat: 'resources',
-                      manifestXML: '',
-                      timelineXML: '<wiki in="'+timelineEntry["in"]+'" out="'+timelineEntry.out+'" target="'+timelineEntry.target+'"/>'+
-                                    '" title="'+controls.title.value+'" source="'+controls.source.value+'" width="'+controls.width.value+'"/>'+
-                                    '" height="'+controls.height.value+'"/>'
-                  };
-                  }
-                }
-              })(),
-              googlenews: (function() {
-                var txtTopic = makeInput("text", "gNewsTopic");
-                
-                return {
-                  outputHTML: function() {
-                    clearChildren(formMod);
-                    showTimelineEntry('googlenewsdiv');
-                    recMod.style.display = "none";
-                    
-                    formMod.appendChild(bindLabel(txtTopic, 'Topic: '));
-                    //formMod.innerHTML = 'Topic: <input id="gNewsTopic" name="gNewsTopic" type="text" /><br />';
-                  },
-                  
-                  buildManifest: function() {
-                    var timelineEntry = new TimelineEntry();
-                    
-                    return {
-                        manifestCat: '',
-                        timelineCat: 'resources',
-                        manifestXML: '',
-                        timelineXML: '<wiki in="'+timelineEntry["in"]+'" out="'+timelineEntry.out+'" target="'+timelineEntry.target+
-                                     '" topic="'+txtTopic.value+'"/>'
-                    };
-                  }
-                }
-              })(),
-              wiki: (function() {
-                var txtNumWords = makeInput("number", "wikiNumWords");
-                txtNumWords.step = 1;
-                txtNumWords.min = 1;
-                
-                return {
-                  outputHTML: function() {
-                    clearChildren(formMod);
-                    showTimelineEntry('wikidiv');
-                    recMod.style.display = "block";
-                    
-                    formMod.appendChild(bindLabel(txtNumWords, 'Number of Words: '));
-                    
-                    //formMod.innerHTML = '# Words: <input id="wikiNumWords" name="wikiNumWords" type="number" step="1" min="1" /><br />';
-                  },
-                  
-                  buildManifest: function() {
-                    var reSrc = new ManifestEntry();
-                    var timelineEntry = new TimelineEntry();
-                    
-                    return {
-                        manifestCat: 'articles',
-                        timelineCat: 'resources',
-                        manifestXML: '<resource id="'+reSrc.id.value+'" src="'+reSrc.src.value+'" description="'+reSrc.description.value+'"/>',
-                        timelineXML: '<wiki in="'+timelineEntry["in"]+'" out="'+timelineEntry.out+'" target="'+timelineEntry.target+
-                                      '" resourceid="'+reSrc.id.value+'" numberOfWords="'+txtNumWords.value+'"/>'
-                    };
-                  }
-                }
-              })(),
-              flickr: (function() {
-                var controls = {
-                  numberofimages: makeInput("number", "flickrNumImgs"),
-                  userid: makeInput("text", "flickrUserId"),
-                  padding: makeInput("number", "flickrPadding")
-                };
-                
-                controls.numberofimages.step = controls.padding.step = 1;
-                controls.numberofimages.min = controls.padding.min = 1;
-                
-                return {
-                  outputHTML: function() {
-                    clearChildren(formMod);
-                    showTimelineEntry('personalflickr');
-                    recMod.style.display = "none";
-                    
-                    var frag = newLine(bindLabel(controls.numberofimages, '# Images: '));
-                    frag.appendChild(newLine(bindLabel(controls.userid, 'User ID: ')));
-                    frag.appendChild(newLine(bindLabel(controls.padding, 'Padding: ')));
-                    
-                    formMod.appendChild(frag);
-                    
-                    //formMod.innerHTML = '# Images: <input id="flickrNumImgs" name="flickrNumImgs" type="number" step="1" min="1" /><br />'
-                    // +'User ID: <input id="flickrUserId" name="flickrUserId" type="text" /><br />'
-                    // +'Padding: <input id="flickrPadding" name="flickrPadding" type="number" step="1" min="1" /><br />';
-                  },
-                  buildManifest: function() {
-                    var timelineEntry = new TimelineEntry();
-                    
-                    return {
-                        manifestCat: '',
-                        timelineCat: 'resources',
-                        manifestXML: '',
-                        timelineXML: '<flickr in="'+timelineEntry["in"]+'" out="'+timelineEntry.out+'" target="'+timelineEntry.target+
-                                      '" numberofimages="'+controls.numberofimages.value+'" userid="'+controls.userid.value+
-                                      '" padding="'+controls.padding.value+'px"/>'
-                    };
-                  }
-                }
-              })()
+                        outputHTML: function () {
+                            clearChildren(formMod);
+                            showTimelineEntry('personalflickr');
+                            recMod.style.display = "none";
+
+                            var frag = newLine(bindLabel(controls.numberofimages, '# Images: '));
+                            frag.appendChild(newLine(bindLabel(controls.userid, 'User ID: ')));
+                            frag.appendChild(newLine(bindLabel(controls.padding, 'Padding: ')));
+
+                            formMod.appendChild(frag);
+
+                            //formMod.innerHTML = '# Images: <input id="flickrNumImgs" name="flickrNumImgs" type="number" step="1" min="1" /><br />'
+                            // +'User ID: <input id="flickrUserId" name="flickrUserId" type="text" /><br />'
+                            // +'Padding: <input id="flickrPadding" name="flickrPadding" type="number" step="1" min="1" /><br />';
+                        },
+                        buildManifest: function () {
+                            var timelineEntry = new TimelineEntry();
+
+                            return {
+                                manifestCat: '',
+                                timelineCat: 'resources',
+                                manifestXML: '',
+                                timelineXML: '<flickr in="' + timelineEntry["in"] + '" out="' + timelineEntry.out + '" target="' + timelineEntry.target + '" numberofimages="' + controls.numberofimages.value + '" userid="' + controls.userid.value + '" padding="' + controls.padding.value + 'px"/>'
+                            };
+                        }
+                    }
+                })()
             };
-            
+
             // Formatting \\
             // ---------- \\
+
+
             function formatTime(t) {
-              var sec = Math.floor(t);
-              
-              // hh:mm:ss:ms
-              return padNum(Math.floor(sec / 3600), 2)+":"+padNum(Math.floor(sec / 60), 2)+":"+padNum(sec, 2)+":"+padNum(Math.round((t-sec)*100), 2);
+                var sec = Math.floor(t);
+
+                // hh:mm:ss:ms
+                return padNum(Math.floor(sec / 3600), 2) + ":" + padNum(Math.floor(sec / 60), 2) + ":" + padNum(sec, 2) + ":" + padNum(Math.round((t - sec) * 100), 2);
             }
-            
+
             function padNum(num, len) {
-              var str = '' + num;
-              for(var i=str.length; i<len; i++) {
-                str = '0' + str;
-              }
-             
-              return str;
+                var str = '' + num;
+                for (var i = str.length; i < len; i++) {
+                    str = '0' + str;
+                }
+
+                return str;
             }
-            
+
             // Basic Objects \\
             // ------------- \\
+
+
             function ManifestEntry() {
-              this.id = doc.getElementById("resrcId");
-              this.src = doc.getElementById("resrcSrc");
-              this.description = doc.getElementById("resrcDesc");
+                this.id = doc.getElementById("resrcId");
+                this.src = doc.getElementById("resrcSrc");
+                this.description = doc.getElementById("resrcDesc");
             }
+
             function TimelineEntry() {
-              this.target = doc.getElementById("timelineTarget").value;
-              this["in"] = formatTime(currentIn);
-              this.out = formatTime(currentOut);
+                this.target = doc.getElementById("timelineTarget").value;
+                this["in"] = formatTime(currentIn);
+                this.out = formatTime(currentOut);
             }
-            
+
             // DOM Maniplation Functions \\
             // ------------------------- \\
+
+
             function makeInput(inputType, id, value) {
-              var input = doc.createElement("input");
-              input["type"] = inputType; // Will crash in IE 8, but HTML5 video not supported anyways!
-              
-              input.id = input.name = id;
-              
-              if (value)
-                input.value = value;
-              
-              return input;
+                var input = doc.createElement("input");
+                input["type"] = inputType; // Will crash in IE 8, but HTML5 video not supported anyways!
+                input.id = input.name = id;
+
+                if (value) input.value = value;
+
+                return input;
             }
+
             function bindLabel(input, labelText) {
-              var frag = doc.createDocumentFragment();
-              var lbl = doc.createElement('label');
-              
-              lbl["for"] = input.id;
-              lbl.style.display= "block";
-              lbl.style.cssFloat = "left";
-              lbl.style.width= "200px";
-              lbl.appendChild(doc.createTextNode(labelText));
-              
-              frag.appendChild(lbl);
-              frag.appendChild(input);
-              return frag;
+                var frag = doc.createDocumentFragment();
+                var lbl = doc.createElement('label');
+
+                lbl["for"] = input.id;
+                lbl.style.display = "block";
+                lbl.style.cssFloat = "left";
+                lbl.style.width = "200px";
+                lbl.appendChild(doc.createTextNode(labelText));
+
+                frag.appendChild(lbl);
+                frag.appendChild(input);
+                return frag;
             }
+
             function newLine(frag) {
-              if (!frag || !frag.nodeType)
-                return doc.createElement('br');
-                
-              switch (frag.nodeType) {
-                case 1: // Element Node
-                case 3: // Text Node
-                  var fgmt = doc.createDocumentFragment();
-                  fgmt.appendChild(frag);
-                  fgmt.appendChild(doc.createElement('br'));
-                  return fgmt;
-                break;
-                
-                case 11: // Doc Fragment
-                  frag.appendChild(doc.createElement("br"));
-                  return frag;
-                break;
-                
+                if (!frag || !frag.nodeType) return doc.createElement('br');
+
+                switch (frag.nodeType) {
+                case 1:
+                    // Element Node
+                case 3:
+                    // Text Node
+                    var fgmt = doc.createDocumentFragment();
+                    fgmt.appendChild(frag);
+                    fgmt.appendChild(doc.createElement('br'));
+                    return fgmt;
+                    break;
+
+                case 11:
+                    // Doc Fragment
+                    frag.appendChild(doc.createElement("br"));
+                    return frag;
+                    break;
+
                 default:
-                  return doc.createElement('br');
-                  break;
-              }
-              
+                    return doc.createElement('br');
+                    break;
+                }
+
             }
+
             function clearChildren(node) {
-              while (node.hasChildNodes()) {
-                node.removeChild(node.lastChild);
-              }
+                while (node.hasChildNodes()) {
+                    node.removeChild(node.lastChild);
+                }
             }
-            
+
             // XHR, Remoting and Events \\
             // ------------------------ \\
+
+
             function sendDataToServer(endPoint, manifestData, actionType) {
-              var xhr = new XMLHttpRequest();
-              var params = [];
-              
-              // Build query string
-              params.push('action='+actionType);
-              
-              for(obj in manifestData) {
-                params.push("&"+obj+"="+encodeURIComponent(manifestData[obj]));
-              }
-              
-              xhr.open("POST",endPoint);
-              xhr.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
-              xhr.onreadystatechange = function() {
-                  if (xhr.readyState == 4 && xhr.status == 200) {
-                    if (xhr.responseText)
-                      alert(xhr.responseText);
-                  }
-              };
-              
-              xhr.send(params.join(''));
+                var xhr = new XMLHttpRequest();
+                var params = [];
+
+                // Build query string
+                params.push('action=' + actionType);
+
+                for (obj in manifestData) {
+                    params.push("&" + obj + "=" + encodeURIComponent(manifestData[obj]));
+                }
+
+                xhr.open("POST", endPoint);
+                xhr.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+                xhr.onreadystatechange = function () {
+                    if (xhr.readyState == 4 && xhr.status == 200) {
+                        if (xhr.responseText) alert(xhr.responseText);
+                    }
+                };
+
+                xhr.send(params.join(''));
             }
-            
+
             // Form Display \\
             // ------------ \\
+
+
             function showTimelineEntry(targetDiv) {
-              var frag = doc.createDocumentFragment();
-              var btnSetStart = makeInput("button", "timelineIn", "Set Start");
-              var btnSetEnd = makeInput("button", "timelineOut", "Set End");
-              var gen = bbb.popcornGenerator;
-              
-              addEvent(btnSetStart, "click", function() { gen.setTimeFromVideo(true); showStartEnd(); } );
-              addEvent(btnSetEnd, "click", function() { gen.setTimeFromVideo(false); showStartEnd(); } );
-             
-              if (!timeDisplay) {
-                timeDisplay = doc.createElement('span');
-              }
-              
-              showStartEnd();
-              frag.appendChild(btnSetStart);
-              frag.appendChild(btnSetEnd);
-              frag.appendChild(timeDisplay);
-              frag.appendChild(doc.createElement('br'));
-              frag.appendChild(makeInput("hidden", "timelineTarget", targetDiv));
-              formMod.appendChild(frag);
-              
-              /*formMod.innerHTML = 'TIMELINE<br />'+
+                var frag = doc.createDocumentFragment();
+                var btnSetStart = makeInput("button", "timelineIn", "Set Start");
+                var btnSetEnd = makeInput("button", "timelineOut", "Set End");
+                var gen = bbb.popcornGenerator;
+
+                addEvent(btnSetStart, "click", function () {
+                    gen.setTimeFromVideo(true);
+                    showStartEnd();
+                });
+                addEvent(btnSetEnd, "click", function () {
+                    gen.setTimeFromVideo(false);
+                    showStartEnd();
+                });
+
+                if (!timeDisplay) {
+                    timeDisplay = doc.createElement('span');
+                }
+
+                showStartEnd();
+                frag.appendChild(btnSetStart);
+                frag.appendChild(btnSetEnd);
+                frag.appendChild(timeDisplay);
+                frag.appendChild(doc.createElement('br'));
+                frag.appendChild(makeInput("hidden", "timelineTarget", targetDiv));
+                formMod.appendChild(frag);
+
+/*formMod.innerHTML = 'TIMELINE<br />'+
 '<input type="button" id="timelineIn" name="timelineIn" value="Set Start" />'+
 '<input type="button" id="timelineOut" name="timelineOut" value="Set End" /><br />'+
 'Target: <input type="text" id="timelineTarget" name="timelineTarget" /><br />';*/
             }
-            
+
             function showStartEnd() {
-              timeDisplay.innerHTML = "Chapter from: "+currentIn.toFixed(2)+" to "+currentOut.toFixed(2);
+                timeDisplay.innerHTML = "Chapter from: " + currentIn.toFixed(2) + " to " + currentOut.toFixed(2);
             }
-            
+
             function showResourceEntry() {
-              // Output generic data entry
-              var frag = doc.createDocumentFragment();
-              frag.appendChild(newLine(bindLabel(makeInput("text", "resrcId"), "Resource ID: ")));
-              frag.appendChild(newLine(bindLabel(makeInput("text", "resrcSrc"), "URL: ")));
-              frag.appendChild(newLine(bindLabel(makeInput("text", "resrcDesc"), "Description: ")));
-              recMod.appendChild(frag);
-              
-              /*doc.getElementById(mainEntryDivId).innerHTML = 'RESOURCE<br />'+
+                // Output generic data entry
+                var frag = doc.createDocumentFragment();
+                frag.appendChild(newLine(bindLabel(makeInput("text", "resrcId"), "Resource ID: ")));
+                frag.appendChild(newLine(bindLabel(makeInput("text", "resrcSrc"), "URL: ")));
+                frag.appendChild(newLine(bindLabel(makeInput("text", "resrcDesc"), "Description: ")));
+                recMod.appendChild(frag);
+
+/*doc.getElementById(mainEntryDivId).innerHTML = 'RESOURCE<br />'+
 'ID: <input type="text" id="resrcId" name="resrcId" /><br />'+
 'Source: <input type="text" id="resrcSrc" name="resrcSrc" /><br />'+
 'Description: <input type="text" id="resrcDesc" name="resrcDesc" /><br />';*/
@@ -1105,135 +1163,125 @@ return true;
             // Publically Returned Object \\
             // -------------------------- \\
             return {
-              setActive: function(key, updateUI) {
-                current = types[key];
-                if (updateUI)
-                  current.outputHTML();
-              },
-              setActiveVideo: function(v) {
-                vid = v;
-              },
-              setTimeFromVideo: function(isStart) {
-                if (isStart)
-                  currentIn = vid.currentTime;
-                else
-                  currentOut = vid.currentTime;
-              },
-              savePopcorn: function() {
-                if (currentIn == currentOut) throw new Error("Start and end time must be different!");
-                
-                sendDataToServer(endPoint.root+SERVER, current.buildManifest(), "add");
-              },
-              setupWhenReady: function(formDivId) {
-                  var self = bbb.popcornGenerator;
-                  var frag = doc.createDocumentFragment();
-                  var mainForm = doc.createElement('form');
-                  var btnSubmit = makeInput("button", "metadataSubmit", "ADD");
-                  var selElem = doc.createElement("select");
-                  
-                  mainForm.id = "metadataForm";
-                  mainForm.method = "post";
-                  mainForm.action = "?action=add";
-                  
-                  formMod = doc.createElement('div');
-                  formMod.id = formMod.name = 'popMetadataEntry';
-                  
-                  recMod = doc.createElement('div');
-                  recMod.id = formMod.name = 'popMainDataEntry';
-                  selElem.id = selElem.name = "selMetaType";
-                  
-                  // Build selection box and hook in events
-                  selElem.innerHTML = '<option value="wiki">Wikipedia</option>'+
-                    '<option value="flickr">Flickr</option>'+
-                    '<option value="googlenews">Google News</option>'+
-                    '<option value="lastfm">LastFM</option>'+
-                    '<option value="twitter">Twitter</option>'+
-                    '<option value="videotag">Video Tag</option>'+
-                    '<option value="footnote">Footnote</option>';
-                  
-                  frag.appendChild(bindLabel(selElem, "Type: "));
-                  frag.appendChild(recMod);
-                  frag.appendChild(formMod);
-                  frag.appendChild(btnSubmit);
-                  mainForm.appendChild(frag);
-                  
-                  showResourceEntry();
-                  addEvent(btnSubmit, "click", function() {
-                    try {
-                      self.savePopcorn();
-                    } catch (e) {
-                      alert(e);
-                    }
-                  });
-                  addEvent(selElem, "change", function() { self.setActive(selElem.value, true); } );
-                  
-                  // Add to document and set active
-                  doc.getElementById(formDivId).appendChild(mainForm);
-                  self.setActive(selElem.value, true);
-              }
+                setActive: function (key, updateUI) {
+                    current = types[key];
+                    if (updateUI) current.outputHTML();
+                },
+                setActiveVideo: function (v) {
+                    vid = v;
+                },
+                setTimeFromVideo: function (isStart) {
+                    if (isStart) currentIn = vid.currentTime;
+                    else currentOut = vid.currentTime;
+                },
+                savePopcorn: function () {
+                    if (currentIn == currentOut) throw new Error("Start and end time must be different!");
+
+                    sendDataToServer(endPoint.root + SERVER, current.buildManifest(), "add");
+                },
+                setupWhenReady: function (formDivId) {
+                    var self = bbb.popcornGenerator;
+                    var frag = doc.createDocumentFragment();
+                    var mainForm = doc.createElement('form');
+                    var btnSubmit = makeInput("button", "metadataSubmit", "ADD");
+                    var selElem = doc.createElement("select");
+
+                    mainForm.id = "metadataForm";
+                    mainForm.method = "post";
+                    mainForm.action = "?action=add";
+
+                    formMod = doc.createElement('div');
+                    formMod.id = formMod.name = 'popMetadataEntry';
+
+                    recMod = doc.createElement('div');
+                    recMod.id = formMod.name = 'popMainDataEntry';
+                    selElem.id = selElem.name = "selMetaType";
+
+                    // Build selection box and hook in events
+                    selElem.innerHTML = '<option value="wiki">Wikipedia</option>' + '<option value="flickr">Flickr</option>' + '<option value="googlenews">Google News</option>' + '<option value="lastfm">LastFM</option>' + '<option value="twitter">Twitter</option>' + '<option value="videotag">Video Tag</option>' + '<option value="footnote">Footnote</option>';
+
+                    frag.appendChild(bindLabel(selElem, "Type: "));
+                    frag.appendChild(recMod);
+                    frag.appendChild(formMod);
+                    frag.appendChild(btnSubmit);
+                    mainForm.appendChild(frag);
+
+                    showResourceEntry();
+                    addEvent(btnSubmit, "click", function () {
+                        try {
+                            self.savePopcorn();
+                        } catch (e) {
+                            alert(e);
+                        }
+                    });
+                    addEvent(selElem, "change", function () {
+                        self.setActive(selElem.value, true);
+                    });
+
+                    // Add to document and set active
+                    doc.getElementById(formDivId).appendChild(mainForm);
+                    self.setActive(selElem.value, true);
+                }
             };
         })()
     };
 })();
 
-bbb.onReady = function() {};
-bbb.onChangeVideo = function(currChap) {};
+bbb.onReady = function () {};
+bbb.onChangeVideo = function (currChap) {};
 
 bbb.Bookmark.prototype = {
-  fromJSON: function(str){
-    if (JSON)
-        return new bbb.Bookmark(JSON.parse(str));
-    else {
-        var currStart = -1;
-        var currEnd = 0;
-        var obj = {};
-        
-        while ((currStart = str.indexOf('"', currEnd + 1)) !== -1 && (currEnd = str.indexOf('"', currStart + 1)) !== -1) {
-            // Has found another attribute
-            
-            var attrName = str.substring(currStart + 1, currEnd);
-            var foundAttr = false;
-            var foundSemi = false;
-            var foundType = 0; // 0 = none, 1 = string, 2 = numeric, 3 = float
-            var currItem;
-            
-            // Process value, eagerly assume comma follows when value found
-            while ((currItem = str[++currEnd]) !== '"' || !foundAttr) {
-                if (str[currEnd] === ':') {
-                    foundSemi = true;
-                } else {
-                    if (str[currEnd] === '"') { // Check for strings
-                        if (foundSemi && str[currEnd - 1] !== '\\') {
-                            if (!foundType) {
-                                foundType = 1;
-                                currStart = currEnd;
-                            } else {
-                                obj[attrName] = str.substring(currStart + 1, currEnd);
-                                foundAttr = true;
-                                break; // Go into outer loop to find next attribute
-                            }
-                        }
+    fromJSON: function (str) {
+        if (JSON) return new bbb.Bookmark(JSON.parse(str));
+        else {
+            var currStart = -1;
+            var currEnd = 0;
+            var obj = {};
+
+            while ((currStart = str.indexOf('"', currEnd + 1)) !== -1 && (currEnd = str.indexOf('"', currStart + 1)) !== -1) {
+                // Has found another attribute
+                var attrName = str.substring(currStart + 1, currEnd);
+                var foundAttr = false;
+                var foundSemi = false;
+                var foundType = 0; // 0 = none, 1 = string, 2 = numeric, 3 = float
+                var currItem;
+
+                // Process value, eagerly assume comma follows when value found
+                while ((currItem = str[++currEnd]) !== '"' || !foundAttr) {
+                    if (str[currEnd] === ':') {
+                        foundSemi = true;
                     } else {
-                        if (str[currEnd] === '.') { // Check for decimal for numeric->float data
-                            if (foundType === 2)
-                                foundType = 3;
-                        } else {
-                            if (str[currEnd] === ' ') {
-                                if (foundType === 2 || foundType === 3) { // Check for end of numeric data
-                                    if (foundType === 2) // Integer
-                                        obj[attrName] = parseInt(str.substring(currStart, currEnd));
-                                    else
-                                        if (foundType === 3) // Float
-                                            obj[attrName] = parseFloat(str.substring(currStart, currEnd));
-                                    
-                                    foundAttr = true;
-                                    break;
-                                }
-                            } else {
+                        if (str[currEnd] === '"') { // Check for strings
+                            if (foundSemi && str[currEnd - 1] !== '\\') {
                                 if (!foundType) {
-                                    if (!isNaN(str[currEnd])) {
-                                        currStart = str[currEnd - 1] === '-' ? currEnd - 1 : currEnd;
-                                        foundType = 2; // Numeric, may be upgraded to float later
+                                    foundType = 1;
+                                    currStart = currEnd;
+                                } else {
+                                    obj[attrName] = str.substring(currStart + 1, currEnd);
+                                    foundAttr = true;
+                                    break; // Go into outer loop to find next attribute
+                                }
+                            }
+                        } else {
+                            if (str[currEnd] === '.') { // Check for decimal for numeric->float data
+                                if (foundType === 2) foundType = 3;
+                            } else {
+                                if (str[currEnd] === ' ') {
+                                    if (foundType === 2 || foundType === 3) { // Check for end of numeric data
+                                        if (foundType === 2) // Integer
+                                        obj[attrName] = parseInt(str.substring(currStart, currEnd));
+                                        else if (foundType === 3) // Float
+                                        obj[attrName] = parseFloat(str.substring(currStart, currEnd));
+
+                                        foundAttr = true;
+                                        break;
+                                    }
+                                } else {
+                                    if (!foundType) {
+                                        if (!isNaN(str[currEnd])) {
+                                            currStart = str[currEnd - 1] === '-' ? currEnd - 1 : currEnd;
+                                            foundType = 2; // Numeric, may be upgraded to float later
+                                        }
                                     }
                                 }
                             }
@@ -1241,13 +1289,11 @@ bbb.Bookmark.prototype = {
                     }
                 }
             }
+
+            return new bbb.Bookmark(obj);
         }
-        
-        return new bbb.Bookmark(obj);
+    },
+    equals: function (bkmrk) {
+        return this.getSrc() === bkmrk.getSrc() && this.getTitle() === bkmrk.getTitle() && this.getDescription() === bkmrk.getDescription() && this.getStartTime() === bkmrk.getStartTime() && this.getEndTime() === bkmrk.getEndTime();
     }
-  },
-  equals: function(bkmrk) {
-      return this.getSrc() === bkmrk.getSrc() && this.getTitle() === bkmrk.getTitle() && this.getDescription() === bkmrk.getDescription() &&
-          this.getStartTime() === bkmrk.getStartTime() && this.getEndTime() === bkmrk.getEndTime();
-  }
 };
