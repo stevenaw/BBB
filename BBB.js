@@ -52,7 +52,7 @@ var bbb = (function () {
     return {
         // A module for local storage (Cookies and HTML 5 Local Storage)
         storage: (function () {
-            // Add prototype method to Object that allow it to set and get JSON objects
+            // Add prototype method to Storage Object that allows it to set and get JSON objects
             Storage.prototype.setObject = function (key, value) {
                 this.setItem(key, JSON.stringify(value));
             }
@@ -87,17 +87,17 @@ var bbb = (function () {
                     }
                     return "";
                 },
-                setLocalStorage: function () {
-                    if (!Storage.prototype.getObject) {
-                        Storage.prototype.setObject = function (key, value) {
-                            this.setItem(key, JSON.stringify(value));
-                        }
-                    }
-                    localStorage.clear(); // remove later			
+				//HTML5 Local Storage
+                setLocalStorage: function () {		
                     if (typeof(localStorage) == 'undefined') {
                         alert('Your browser does not supper HTML5 Local Storage. Please upgrade.');
                     }
                     else {
+						if (!Storage.prototype.getObject) {
+							Storage.prototype.setObject = function (key, value) {
+								this.setItem(key, JSON.stringify(value));
+							}
+						}					
                         try {
                             localStorage.clear(); //remove this later
                             for (var i = 0, l = _chapters.length; i < l; i++) {
@@ -112,15 +112,20 @@ var bbb = (function () {
                     }
                 },
                 getLocalStorage: function () {
-                    if (!Storage.prototype.getObject) {
-                        Storage.prototype.getObject = function (key) {
-                            return this.getItem(key) && JSON.parse(this.getItem(key));
-                        }
+                    if (typeof(localStorage) == 'undefined') {
+                        alert('Your browser does not supper HTML5 Local Storage. Please upgrade.');
                     }
-                    for (var i = 0, l = localStorage.length - 1; i <= l; i++) {
-                        var value = localStorage.getObject('BBB-Bookmark-Obj-' + i);
-                        alert(value);
-                    }
+					else {
+						if (!Storage.prototype.getObject) {
+							Storage.prototype.getObject = function (key) {
+								return this.getItem(key) && JSON.parse(this.getItem(key));
+							}
+						}
+						for (var i = 0, l = localStorage.length - 1; i <= l; i++) {
+							var value = localStorage.getObject('BBB-Bookmark-Obj-' + i);
+							alert(value);
+						}
+					}
                 }
             }
         })(),
