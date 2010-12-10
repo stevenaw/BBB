@@ -1,7 +1,7 @@
 /*
- * 	BBB v0.2
+ * 	BBB v0.3
  * 		By Steven Weerdenburg and Kevin Lasconia
- * 		Last Modification: 11/16/2010
+ * 		Last Modification: 12/09/2010
  */
 var bbb = (function(){
     var _chapters = []; // Array of Chapters/Bookmarks
@@ -305,7 +305,9 @@ var bbb = (function(){
                 var arr = [];
                 var i=0, numItems = 0;
                 
-                if (request.readyState == 4 && request.status == 200) {
+                if (request.readyState === 4) {
+                  if (request.status === 200) {
+                    
                     arr = JSON.parse(request.responseText);
                     numItems = arr.length;
                     for(i=0; i<numItems; i++) {
@@ -313,8 +315,12 @@ var bbb = (function(){
                     }
                     
                     bbb.printTOC();
-                    
                     bbb.onReady();
+                  } else if (request.status === 404) {
+                    bbb.onError("Could not find bookmark server");
+                  } else if (request.status === 405) {
+                    bbb.onError("Permission denied to bookmark server");
+                  }
                 }
             };
             request.send();
@@ -665,17 +671,14 @@ var bbb = (function(){
             var formMod = "", recMod = "", current = "", timeDisplay = "";
             var currentIn = 0, currentOut = 0;
             var vid = 0;
-            //var activeVid = _vid;
-            // Still working on, will be workaround for DOM input element creation in IE
-            /*var isInputTypeQuirk = (function() {
-              try {
-                var elem = doc.createElement("input");
-                elem["type"] = "text";
-                return false;
-              } catch (e) {
-                return true;
-              }
-            })();*/
+            
+            var isQuirk;
+            try {
+              doc.createElement('<input type="text">'); // Will not throw IE 5-8
+              isQuirk = true;
+            } catch (e) {
+              isQuirk = false;
+            }
             
             // Factory of command object generators \\
             // ------------------------------------ \\
@@ -925,8 +928,13 @@ var bbb = (function(){
             // DOM Maniplation Functions \\
             // ------------------------- \\
             function makeInput(inputType, id, value) {
-              var input = doc.createElement("input");
-              input["type"] = inputType; // Will crash in IE 8, but HTML5 video not supported anyways!
+              if (isQuirk === true) {
+                var input = doc.createElement('<input type="'+inputType+'">');
+              } else {
+                var input = doc.createElement('input');
+                input["type"] = inputType;
+              }
+              //var input = makeInputType(inputType);
               
               input.id = input.name = id;
               
@@ -935,6 +943,7 @@ var bbb = (function(){
               
               return input;
             }
+            
             function bindLabel(input, labelText) {
               var frag = doc.createDocumentFragment();
               var lbl = doc.createElement('label');
@@ -995,10 +1004,13 @@ var bbb = (function(){
               xhr.open("POST",endPoint);
               xhr.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
               xhr.onreadystatechange = function() {
-                  if (xhr.readyState == 4 && xhr.status == 200) {
-                    if (xhr.responseText)
-                      alert(xhr.responseText);
-                  }
+                if (request.status === 200) {
+                  alert("Successfully saved");
+                } else if (request.status === 404) {
+                  bbb.onError("Could not find server");
+                } else if (request.status === 405) {
+                  bbb.onError("Permission denied to bookmark server");
+                }
               };
               
               xhr.send(params.join(''));
@@ -1126,6 +1138,7 @@ var bbb = (function(){
 
 bbb.onReady = function() {};
 bbb.onChangeVideo = function(currChap) {};
+bbb.onError = function(e) { alert(e); };
 
 bbb.Bookmark.prototype = {
   fromJSON: function(str){
