@@ -285,11 +285,11 @@ var bbb = (function(){
         },
 
         setupWhenReady: function(params) {
-          var self = this;
+          //var self = this;
           
           addEvent(document, "DOMContentLoaded", function() {
-            self.init(params);
-          });
+            this.init(params);
+          }.bind(this));
         },
         
         fetchChapters: function(endPoint) {
@@ -475,7 +475,7 @@ var bbb = (function(){
                             tr.insertCell(1).appendChild(document.createTextNode(item.getDescription()));
                             tr.insertCell(2).appendChild(document.createTextNode(item.getStartTime().toFixed(2)));
                             tr.insertCell(3).appendChild(document.createTextNode(item.getEndTime().toFixed(2)));
-                            tr.insertCell(4).innerHTML = '<input type="checkbox" onclick="bbb.removeChapter(' + i + '); bbb.printTOC();" />';
+                            tr.insertCell(4).innerHTML = '<input type="button" value="X" onclick="bbb.removeChapter(' + i + '); bbb.printTOC();" />';
                         }
 
                         tr = this._toc.insertRow(1);
@@ -666,18 +666,17 @@ var bbb = (function(){
             document.body.appendChild(watermarkDiv);
         },
         popcornGenerator: (function() {
-            var SERVER = "popcornServer.php"; // Should be const, var for IE support
+            var SERVER = "popcornServer.php"; // Should be const, var for IE <= 8 support
             var doc = document;
-            var formMod = "", recMod = "", current = "", timeDisplay = "";
-            var currentIn = 0, currentOut = 0;
-            var vid = 0;
+            var formMod = 0, recMod = 0, current = 0, timeDisplay = 0, vid = 0; // DOM Elements
+            var currentIn = 0, currentOut = 0; // Float
+            var floor = Math.floor, round = Math.round;
             
-            var isQuirk;
             try {
               doc.createElement('<input type="text">'); // Will not throw IE 5-8
-              isQuirk = true;
+              var isQuirk = true;
             } catch (e) {
-              isQuirk = false;
+              var isQuirk = false;
             }
             
             // Factory of command object generators \\
@@ -897,12 +896,11 @@ var bbb = (function(){
             // Formatting \\
             // ---------- \\
             function formatTime(t) {
-              var sec = Math.floor(t);
+              var sec = floor(t);
               
               // hh:mm:ss:ms
-              return padNum(Math.floor(sec / 3600), 2)+":"+padNum(Math.floor(sec / 60), 2)+":"+padNum(sec, 2)+":"+padNum(Math.round((t-sec)*100), 2);
+              return padNum(floor(sec / 3600), 2)+":"+padNum(floor(sec / 60), 2)+":"+padNum(sec, 2)+":"+padNum(round((t-sec)*100), 2);
             }
-            
             function padNum(num, len) {
               var str = '' + num;
               for(var i=str.length; i<len; i++) {
@@ -943,7 +941,6 @@ var bbb = (function(){
               
               return input;
             }
-            
             function bindLabel(input, labelText) {
               var frag = doc.createDocumentFragment();
               var lbl = doc.createElement('label');
@@ -962,25 +959,18 @@ var bbb = (function(){
               if (!frag || !frag.nodeType)
                 return doc.createElement('br');
                 
-              switch (frag.nodeType) {
-                case 1: // Element Node
-                case 3: // Text Node
-                  var fgmt = doc.createDocumentFragment();
-                  fgmt.appendChild(frag);
-                  fgmt.appendChild(doc.createElement('br'));
-                  return fgmt;
-                break;
-                
-                case 11: // Doc Fragment
-                  frag.appendChild(doc.createElement("br"));
-                  return frag;
-                break;
-                
-                default:
-                  return doc.createElement('br');
-                  break;
-              }
+              var nt = frag.nodeType;
               
+              if (nt === 1 || nt === 3) {
+                var fgmt = doc.createDocumentFragment();
+                fgmt.appendChild(frag);
+                fgmt.appendChild(doc.createElement('br'));
+              } else if (nt === 11) {
+                frag.appendChild(doc.createElement("br"));
+                return frag;
+              } else {
+                return doc.createElement('br');
+              }              
             }
             function clearChildren(node) {
               while (node.hasChildNodes()) {
@@ -1004,12 +994,14 @@ var bbb = (function(){
               xhr.open("POST",endPoint);
               xhr.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
               xhr.onreadystatechange = function() {
-                if (request.status === 200) {
-                  alert("Successfully saved");
-                } else if (request.status === 404) {
-                  bbb.onError("Could not find server");
-                } else if (request.status === 405) {
-                  bbb.onError("Permission denied to bookmark server");
+                if (xhr.readyState === 4) {
+                  if (xhr.status === 200) {
+                    alert("Successfully saved");
+                  } else if (xhr.status === 404) {
+                    bbb.onError("Could not find server");
+                  } else if (xhr.status === 405) {
+                    bbb.onError("Permission denied to bookmark server");
+                  }
                 }
               };
               
@@ -1044,7 +1036,6 @@ var bbb = (function(){
                     '<input type="button" id="timelineOut" name="timelineOut" value="Set End" /><br />'+
                     'Target: <input type="text" id="timelineTarget" name="timelineTarget" /><br />';*/
             }
-            
             function showStartEnd() {
               timeDisplay.innerHTML = "Chapter from: "+currentIn.toFixed(2)+" to "+currentOut.toFixed(2);
             }
@@ -1080,7 +1071,7 @@ var bbb = (function(){
                   currentOut = vid.currentTime;
               },
               savePopcorn: function() {
-                if (currentIn == currentOut) throw new Error("Start and end time must be different!");
+                if (currentIn === currentOut) throw new Error("Start and end time must be different!");
                 
                 sendDataToServer(endPoint.root+SERVER, current.buildManifest(), "add");
               },
@@ -1213,3 +1204,15 @@ bbb.Bookmark.prototype = {
   }
 };
 
+/* Borrowed from Video.JS 2.0.1, renamed "context" to "bind" for JS 1.8.5/ECMAScript 5 compliance */
+// Allows for binding context to functions
+// when using in event listeners and timeouts
+if (!Function.prototype.bind) {
+  Function.prototype.bind = function(obj){
+    var method = this,
+    temp = function(){
+      return method.apply(obj, arguments);
+    };
+    return temp;
+  };
+}
