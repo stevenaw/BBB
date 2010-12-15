@@ -1,7 +1,7 @@
 /*
 * BBB v0.3
 * By Steven Weerdenburg and Kevin Lasconia
-* Last Modification: 12/08/2010
+* Last Modification: 12/15/2010
 */
 var bbb = (function () {
     var _chapters = []; // Array of Chapters/Bookmarks
@@ -316,7 +316,11 @@ var bbb = (function () {
                 if (params.statistics) bbb.trackStatistics();
 
                 if (params.watermark) {
-                    bbb.displayWatermark();
+                    if (params.watermarkText) {
+                        bbb.displayWatermark(params.watermarkText);
+                    } else {
+                        bbb.displayWatermark();
+                    }
                 }
 
                 if (params.formDivId) {
@@ -336,9 +340,6 @@ var bbb = (function () {
                     var bmJSON = JSON.parse(str);
                     bbb.storage.setLocalStorage(bmJSON);
                     bbb.storage.getLocalStorage();
-/*localStorage.setItem('klasconia', JSON.stringify(bmJSON[0]));
-					var a = localStorage.getItem('klasconia');
-					bbb.addChapter(JSON.parse(a));*/
                     bbb.printTOC();
                     bbb.onReady();
                 }
@@ -378,7 +379,7 @@ var bbb = (function () {
                     bbb.onReady();
                 }
             };
-            //request.send();
+            request.send();
         },
 
         // Add a chapter
@@ -511,7 +512,7 @@ var bbb = (function () {
                         th = document.createElement('th');
                         th.innerHTML = '';
                         tr.appendChild(th);
-																	
+
                         // Adding in class attribute for tr.
                         // The nodrop nodrag class is required to disable the tr from being dragable.
                         // Since it is tr that contains the titles it should not move
@@ -547,8 +548,8 @@ var bbb = (function () {
                             $(this.cells[0]).addClass('showDragHandle');
                         }, function () {
                             $(this.cells[0]).removeClass('showDragHandle');
-                        });						
-						
+                        });
+
                         tr = this._toc.insertRow(1);
                         tr.colspan = 4;
 
@@ -561,8 +562,8 @@ var bbb = (function () {
                         srcElem.href = 'javascript:bbb.playChapter(0, 1);';
                         srcElem.innerHTML = 'Play All';
                         tr.insertCell(0).appendChild(srcElem);
-						
-						srcElem = document.createElement('div');
+
+                        srcElem = document.createElement('div');
                         srcElem.innerHTML = '&nbsp;&nbsp;';
                         tr.insertCell(0).appendChild(srcElem);
 
@@ -570,7 +571,7 @@ var bbb = (function () {
                         // The nodrop nodrag class is required to disable the tr from being dragable.
                         // Since it is tr that contains the play all button it should not move					
                         tr.setAttribute('class', 'nodrop nodrag');
-						
+
                         _hasTocChanged = false;
 
                         $("#tblOfContents").tableDnD({
@@ -778,29 +779,33 @@ var bbb = (function () {
             bbb.printVideoInfo(false);
             bbb.printVideoInfo(true);
         },
-        displayWatermark: function (src, opacity, alpha) {
+        displayWatermark: function (text) {
+            var waterMarkText = text;
             var vid = this._vid;
             // Position of video player
             var videoTop = parseInt(vid.style.top);
             var videoLeft = parseInt(vid.style.left);
-			// Create canvas element
-			var canvas = document.createElement('canvas');
-			canvas.setAttribute('id', 'bbbWatermark');
-			// Position watermark canvas based on video player left/top attributes			
+            // Create canvas element
+            var canvas = document.createElement('canvas');
+            canvas.setAttribute('id', 'bbbWatermark');
+            // Position watermark canvas based on video player left/top attributes			
             canvas.style.position = 'absolute';
             canvas.style.left = videoLeft + -25 + 'px';
-            canvas.style.top = videoTop + 10 + 'px';			
-			// Get context and fill in text			
-			context = canvas.getContext('2d');
-			context.fillStyle = "rgba(255, 255, 255, 0.3)";  
-			context.strokeStyle = 'black';
-			context.font = '30pt Verdana';
-			context.fillText('BBB', 50, 50);
-			context.strokeText('BBB', 50, 50);
-			context.fill();
-			context.stroke();
-			
-			document.body.appendChild(canvas);
+            canvas.style.top = videoTop + 10 + 'px';
+            // Get context and fill in text			
+            context = canvas.getContext('2d');
+            context.fillStyle = "rgba(255, 255, 255, 0.3)";
+            context.strokeStyle = 'black';
+            context.font = '30pt Verdana';
+            if (!text) {
+                waterMarkText = 'BBB';
+            }
+            context.fillText(waterMarkText, 50, 50);
+            context.strokeText(waterMarkText, 50, 50);
+            context.fill();
+            context.stroke();
+
+            document.body.appendChild(canvas);
         },
         popcornGenerator: (function () {
             var SERVER = "popcornServer.php"; // Should be const, var for IE support
