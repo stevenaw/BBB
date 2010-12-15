@@ -255,46 +255,6 @@ var bbb = (function () {
         },
         fetchVideos: function () {
             // Eventually be replaced by server calls			
-            bbb.addRecVideo({
-                id: 1,
-                title: 'Green Screen',
-                description: 'Demo',
-                duration: '0:10',
-                src: 'http://matrix.senecac.on.ca/~kclascon/DPS909/d4/video.ogv',
-                rating: 'G',
-                thumbnailSrc: 'video.jpg',
-                tags: ['test']
-            });
-            bbb.addRecVideo({
-                id: 2,
-                title: 'Big Buck Bunny',
-                description: 'An animated video',
-                duration: '0:32',
-                src: 'http://upload.wikimedia.org/wikipedia/commons/7/75/Big_Buck_Bunny_Trailer_400p.ogg',
-                rating: 'G',
-                thumbnailSrc: 'bunny.jpg',
-                tags: ['test']
-            });
-            bbb.addRecVideo({
-                id: 3,
-                title: 'Indy',
-                description: 'Cars on the track',
-                duration: '0:24',
-                src: 'http://jbuckley.ca/~hoops/indy.ogv',
-                rating: 'G',
-                thumbnailSrc: 'indy.jpg',
-                tags: ['test']
-            });
-            bbb.addRecVideo({
-                id: 4,
-                title: 'Dire Wolf Fanclub',
-                description: '???',
-                duration: '2:28',
-                src: 'http://jbuckley.ca/~hoops/DireWolfFanClub.ogv',
-                rating: 'G',
-                thumbnailSrc: 'dwfc.jpg',
-                tags: ['test']
-            });
         },
         // (Re-)initialize all values except internal element pointers
         // (Re-)initialize all values
@@ -335,10 +295,6 @@ var bbb = (function () {
                 }
 
                 if (params.html5LocalStorage) {
-                    var str = '[ { "src": "Big_Buck_Bunny_Trailer_400p.ogg", "title": "Big Buck Bunny", "description": "An animated video", "startTime": 5, "endTime": 8 },{ "src": "DireWolfFanClub.ogv", "title": "Dire Wolf Fan Club", "description": "An unusual video", "startTime": 5, "endTime": 8 },{ "src": "elephant.ogv", "title": "Elephants Dream", "description": "Elephants", "startTime": 5, "endTime": 8 },{ "src": "nym.ogv", "title": "Kinetic Art", "description": "Domino fun", "startTime": 5, "endTime": 8 },{ "src": "Stephen_Fry-Happy_Birthday_GNU-hq_600px_780kbit.ogv", "title": "Freedom Fry", "description": "Happy B-Day", "startTime": 5, "endTime": 8 } ]';
-
-                    var bmJSON = JSON.parse(str);
-                    bbb.storage.setLocalStorage(bmJSON);
                     bbb.storage.getLocalStorage();
                     bbb.printTOC();
                     bbb.onReady();
@@ -676,19 +632,8 @@ var bbb = (function () {
             }
         },
         trackStatistics: function (ip) {
-            var stats = {
-                ip: 0,
-                onLoad: false,
-                _25: false,
-                _50: false,
-                _75: false,
-                _90: false,
-                _100: false,
-                cc_on: false,
-                cc_off: false,
-                ad_on: false,
-                ad_off: false
-            };
+            var stats = {ip: 0,onLoad: false,_25: false,_50: false,_75: false,_90: false,_100: false,cc_on: false,cc_off: false,ad_on: false,ad_off: false
+        };
 
             var vid = this._vid;
             var duration = vid.duration;
@@ -714,8 +659,6 @@ var bbb = (function () {
 
             var endListener = function () {
                 stats._100 = true;
-                //Debugging purposes
-                alert('[Statistics]\nIP: ' + stats.ip + '\n25%: ' + stats._25 + '\n50%: ' + stats._50 + '\n75%: ' + stats._75 + '\n90%: ' + stats._90 + '\n100%: ' + stats._100);
                 //Add in cc and add stuff later
                 bbb.setStatistics({
                     ip: stats.ip,
