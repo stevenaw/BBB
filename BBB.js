@@ -18,6 +18,11 @@ var bbb = (function () {
     var currChap = 0;
     var _playSeq = 0;
 
+    var _time = 0;
+    var _totalTime = 0;
+    var _startTimeline = 0;
+    var _timeLineEnabled = 0;
+
     var canVideo = !! document.createElement('video').play;
     var endPoint = {
         root: "",
@@ -52,13 +57,6 @@ var bbb = (function () {
     return {
         // A module for local storage (Cookies and HTML 5 Local Storage)
         storage: (function () {
-            // Add prototype method to Storage Object that allows it to set and get JSON objects
-            Storage.prototype.setObject = function (key, value) {
-                this.setItem(key, JSON.stringify(value));
-            }
-            Storage.prototype.getObject = function (key) {
-                return this.getItem(key) && JSON.parse(this.getItem(key));
-            }
             return {
                 setCookie: function (name, value, expDays) {
                     var sDate = "";
@@ -87,24 +85,17 @@ var bbb = (function () {
                     }
                     return "";
                 },
-				//HTML5 Local Storage
-                setLocalStorage: function () {		
+                //HTML5 Local Storage
+                setLocalStorage: function (bmJSON) {
                     if (typeof(localStorage) == 'undefined') {
                         alert('Your browser does not supper HTML5 Local Storage. Please upgrade.');
-                    }
-                    else {
-						if (!Storage.prototype.getObject) {
-							Storage.prototype.setObject = function (key, value) {
-								this.setItem(key, JSON.stringify(value));
-							}
-						}					
+                    } else {
                         try {
                             localStorage.clear(); //remove this later
-                            for (var i = 0, l = _chapters.length; i < l; i++) {
-                                localStorage.setObject('BBB-Bookmark-Obj-' + i, _chapters[i]);
+                            for (var i = 0, l = bmJSON.length; i < l; i++) {
+                                localStorage.setItem('BBB-Bookmark-Obj-' + i, JSON.stringify(bmJSON[i]));
                             }
-                        }
-                        catch (e) {
+                        } catch (e) {
                             if (e == QUOTA_EXCEEDED_ERR) {
                                 alert('Data cannot be saved, quote exceeded.');
                             }
@@ -114,18 +105,17 @@ var bbb = (function () {
                 getLocalStorage: function () {
                     if (typeof(localStorage) == 'undefined') {
                         alert('Your browser does not supper HTML5 Local Storage. Please upgrade.');
+                    } else {
+                        for (var i = 0, l = localStorage.length - 1; i <= l; i++) {
+                            var value = localStorage.getItem('BBB-Bookmark-Obj-' + i);
+                            if (value != null) {
+                                bbb.addChapter(JSON.parse(value));
+                            }
+                        }
                     }
-					else {
-						if (!Storage.prototype.getObject) {
-							Storage.prototype.getObject = function (key) {
-								return this.getItem(key) && JSON.parse(this.getItem(key));
-							}
-						}
-						for (var i = 0, l = localStorage.length - 1; i <= l; i++) {
-							var value = localStorage.getObject('BBB-Bookmark-Obj-' + i);
-							alert(value);
-						}
-					}
+                },
+                checkLocalStorage: function () {
+
                 }
             }
         })(),
@@ -332,6 +322,26 @@ var bbb = (function () {
                 if (params.formDivId) {
                     bbb.popcornGenerator.setupWhenReady(params.formDivId);
                 }
+
+                if (params.timeline) {
+                    _timeLineEnabled = 1;
+                    $("#progressbar").progressbar({
+                        value: 0
+                    });
+                }
+
+                if (params.html5LocalStorage) {
+                    var str = '[ { "src": "Big_Buck_Bunny_Trailer_400p.ogg", "title": "Big Buck Bunny", "description": "An animated video", "startTime": 5, "endTime": 8 },{ "src": "DireWolfFanClub.ogv", "title": "Dire Wolf Fan Club", "description": "An unusual video", "startTime": 5, "endTime": 8 },{ "src": "elephant.ogv", "title": "Elephants Dream", "description": "Elephants", "startTime": 5, "endTime": 8 },{ "src": "nym.ogv", "title": "Kinetic Art", "description": "Domino fun", "startTime": 5, "endTime": 8 },{ "src": "Stephen_Fry-Happy_Birthday_GNU-hq_600px_780kbit.ogv", "title": "Freedom Fry", "description": "Happy B-Day", "startTime": 5, "endTime": 8 } ]';
+
+                    var bmJSON = JSON.parse(str);
+                    bbb.storage.setLocalStorage(bmJSON);
+                    bbb.storage.getLocalStorage();
+/*localStorage.setItem('klasconia', JSON.stringify(bmJSON[0]));
+					var a = localStorage.getItem('klasconia');
+					bbb.addChapter(JSON.parse(a));*/
+                    bbb.printTOC();
+                    bbb.onReady();
+                }
             }
         },
 
@@ -368,7 +378,7 @@ var bbb = (function () {
                     bbb.onReady();
                 }
             };
-            request.send();
+            //request.send();
         },
 
         // Add a chapter
@@ -435,8 +445,7 @@ var bbb = (function () {
                 info.setAttribute('id', 'vidInfo');
                 info.innerHTML = '<b>Video Information</b><br/>Title: ' + _video.getTitle() + '<br/>Description: ' + _video.getDescription() + '<br/>Duration: ' + _video.getDuration() + ' sec' + '<br/>Rating: ' + _video.getRating();
                 document.body.appendChild(info);
-            }
-            else {
+            } else {
                 var existing = document.getElementById('vidInfo');
                 document.body.removeChild(existing);
             }
@@ -480,6 +489,10 @@ var bbb = (function () {
 
                         // DOM approach for tables (IE doesn't like tr.innerHTML)
                         th = document.createElement('th');
+                        th.innerHTML = "";
+                        tr.appendChild(th);
+
+                        th = document.createElement('th');
                         th.innerHTML = "Chapter Title";
                         tr.appendChild(th);
 
@@ -496,9 +509,9 @@ var bbb = (function () {
                         tr.appendChild(th);
 
                         th = document.createElement('th');
-                        th.innerHTML = 'Delete';
+                        th.innerHTML = '';
                         tr.appendChild(th);
-
+																	
                         // Adding in class attribute for tr.
                         // The nodrop nodrag class is required to disable the tr from being dragable.
                         // Since it is tr that contains the titles it should not move
@@ -517,35 +530,54 @@ var bbb = (function () {
                             srcElem = document.createElement('a');
                             var item = _chapters[i];
                             // Adding in id attribute for tr, required for drag and drop sorting
+                            tr.insertCell(0);
                             tr.setAttribute('id', i);
                             srcElem.href = 'javascript:bbb.playChapter(' + i + ');';
                             srcElem.innerHTML = item.getTitle();
-                            tr.insertCell(0).appendChild(srcElem);
-                            tr.insertCell(1).appendChild(document.createTextNode(item.getDescription()));
-                            tr.insertCell(2).appendChild(document.createTextNode(item.getStartTime().toFixed(2)));
-                            tr.insertCell(3).appendChild(document.createTextNode(item.getEndTime().toFixed(2)));
-                            tr.insertCell(4).innerHTML = '<input type="checkbox" onclick="bbb.removeChapter(' + i + '); bbb.printTOC();" />';
+                            //tr.insertCell(0);
+                            tr.insertCell(1).appendChild(srcElem);
+                            tr.insertCell(2).appendChild(document.createTextNode(item.getDescription()));
+                            tr.insertCell(3).appendChild(document.createTextNode(item.getStartTime().toFixed(2)));
+                            tr.insertCell(4).appendChild(document.createTextNode(item.getEndTime().toFixed(2)));
+                            //Changed delete checkboxes to links
+                            tr.insertCell(5).innerHTML = '<a href="javascript:bbb.removeChapter(' + i + '); bbb.printTOC();">Delete</a>';
                         }
 
+                        $("#tblOfContents tr").hover(function () {
+                            $(this.cells[0]).addClass('showDragHandle');
+                        }, function () {
+                            $(this.cells[0]).removeClass('showDragHandle');
+                        });						
+						
                         tr = this._toc.insertRow(1);
                         tr.colspan = 4;
+
+                        srcElem = document.createElement('a');
+                        srcElem.href = 'javascript:bbb.changeOrder();';
+                        srcElem.innerHTML = 'Update Order';
+                        tr.insertCell(0).appendChild(srcElem);
 
                         srcElem = document.createElement('a');
                         srcElem.href = 'javascript:bbb.playChapter(0, 1);';
                         srcElem.innerHTML = 'Play All';
                         tr.insertCell(0).appendChild(srcElem);
+						
+						srcElem = document.createElement('div');
+                        srcElem.innerHTML = '&nbsp;&nbsp;';
+                        tr.insertCell(0).appendChild(srcElem);
+
                         // Adding in class attribute for tr.
                         // The nodrop nodrag class is required to disable the tr from being dragable.
                         // Since it is tr that contains the play all button it should not move					
                         tr.setAttribute('class', 'nodrop nodrag');
-
+						
                         _hasTocChanged = false;
 
                         $("#tblOfContents").tableDnD({
                             onDragClass: "myDragClass",
                             onDrop: function (table, row) {
                                 _tocRows = table.tBodies[0].rows;
-                            }
+                            },
                         });
                     }
                 }
@@ -570,11 +602,18 @@ var bbb = (function () {
 
                     vid.addEventListener('timeupdate', function () {
                         if (vid.currentTime >= currChap.getEndTime()) {
-                            if (sequential) {
-                                bbb.playChapter(idx + 1, sequential);
-                            }
-                            else {
+                            // Minor fix to sequential playing bug
+                            if (sequential && idx !== _chapters.length && _curr !== _chapters.length - 1) {
+                                bbb.playChapter(idx++, sequential);
+                            } else {
                                 vid.pause();
+                                if (_curr === _chapters.length - 1) {
+                                    if (_timeLineEnabled === 1) {
+                                        $("#progressbar").progressbar({
+                                            value: 100
+                                        });
+                                    }
+                                }
                             }
                         }
                     }, true);
@@ -582,7 +621,26 @@ var bbb = (function () {
                     vid.src = currChap.getSrc();
                     vid.load();
                     vid.play();
+                    if (_startTimeline !== 0) {
+                        bbb.testChapterProgress();
+                    }
+                    // Flag to signal start
+                    _startTimeline = 1;
                 }
+            }
+        },
+        // Testing progress
+        testChapterProgress: function () {
+            if (_timeLineEnabled === 1) {
+                _totalTime = 0;
+                for (var i = 0, l = _chapters.length; i < l; i++) {
+                    _totalTime += _chapters[i].getEndTime() - _chapters[i].getStartTime();
+                }
+                _time += _chapters[_curr].getEndTime() - _chapters[_curr].getStartTime();
+                var timePercent = (_time / _totalTime) * 100;
+                $("#progressbar").progressbar({
+                    value: timePercent
+                });
             }
         },
         checkOrder: function () {
@@ -594,13 +652,12 @@ var bbb = (function () {
             }
         },
         changeOrder: function () {
-            Array.prototype.ordered = function (order) {
-                var arr = this;
-                order = order || this.order;
+            // Replaced previous Array.Prototype.ordered implementation
+            orderedArray = function (arr, order) {
                 return order.map(function (itm) {
-                    return arr[itm];
+                    return arr[itm]
                 });
-            };
+            }
 
             // Re-factor this
             if (_tocRows.length != 0) {
@@ -612,9 +669,7 @@ var bbb = (function () {
                     j++;
                 }
 
-                var bms = _chapters;
-                bms.order = rows;
-                _chapters = bms.ordered();
+                _chapters = new orderedArray(_chapters, rows);
                 _hasTocChanged = true;
                 bbb.printTOC();
             }
@@ -643,16 +698,13 @@ var bbb = (function () {
                 if (parseInt(vid.currentTime, 10) === parseInt(duration * 0.25, 10)) {
                     vid.removeEventListener('timeupdate', durationListener, false);
                     stats._25 = true;
-                }
-                else if (parseInt(vid.currentTime, 10) === parseInt(duration * 0.50, 10)) {
+                } else if (parseInt(vid.currentTime, 10) === parseInt(duration * 0.50, 10)) {
                     vid.removeEventListener('timeupdate', durationListener, false);
                     stats._50 = true;
-                }
-                else if (parseInt(vid.currentTime, 10) === parseInt(duration * 0.75, 10)) {
+                } else if (parseInt(vid.currentTime, 10) === parseInt(duration * 0.75, 10)) {
                     vid.removeEventListener('timeupdate', durationListener, false);
                     stats._75 = true;
-                }
-                else if (parseInt(vid.currentTime, 10) === parseInt(duration * 0.90, 10)) {
+                } else if (parseInt(vid.currentTime, 10) === parseInt(duration * 0.90, 10)) {
                     vid.removeEventListener('timeupdate', durationListener, false);
                     stats._90 = true;
                 }
@@ -727,36 +779,28 @@ var bbb = (function () {
             bbb.printVideoInfo(true);
         },
         displayWatermark: function (src, opacity, alpha) {
-            //Try and clean up code later :(
             var vid = this._vid;
             // Position of video player
             var videoTop = parseInt(vid.style.top);
             var videoLeft = parseInt(vid.style.left);
-            // Create div element
-            var watermarkDiv = document.createElement('div');
-            // Set div attributes
-            watermarkDiv.setAttribute('id', 'watermark');
-            watermarkDiv.className = 'watermark';
-            watermarkDiv.style.position = 'absolute';
-            watermarkDiv.style.left = videoLeft + 5 + 'px';
-            watermarkDiv.style.top = videoTop + 5 + 'px';
-            // Width and height will be hard-coded for now, will re-factor later
-            watermarkDiv.style.width = 150 + 'px';
-            watermarkDiv.style.height = 70 + 'px';
-            // If image source is not specificed, default image will be used
-            if (!src) {
-                watermarkDiv.style.backgroundImage = 'url("watermark.png")';
-            }
-            else {
-                watermarkDiv.style.backgroundImage = 'url("' + src + '")';
-            }
-            watermarkDiv.style.backgroundRepeat = "no-repeat";
-            // Arbitrary zIndex value to ensure watermark is above video player
-            watermarkDiv.style.zIndex = 100;
-            watermarkDiv.style.opacity = 0.4;
-            var alpha = 40;
-            watermarkDiv.style.filter = "alpha(opacity=" + alpha + ")";
-            document.body.appendChild(watermarkDiv);
+			// Create canvas element
+			var canvas = document.createElement('canvas');
+			canvas.setAttribute('id', 'bbbWatermark');
+			// Position watermark canvas based on video player left/top attributes			
+            canvas.style.position = 'absolute';
+            canvas.style.left = videoLeft + -25 + 'px';
+            canvas.style.top = videoTop + 10 + 'px';			
+			// Get context and fill in text			
+			context = canvas.getContext('2d');
+			context.fillStyle = "rgba(255, 255, 255, 0.3)";  
+			context.strokeStyle = 'black';
+			context.font = '30pt Verdana';
+			context.fillText('BBB', 50, 50);
+			context.strokeText('BBB', 50, 50);
+			context.fill();
+			context.stroke();
+			
+			document.body.appendChild(canvas);
         },
         popcornGenerator: (function () {
             var SERVER = "popcornServer.php"; // Should be const, var for IE support
@@ -990,7 +1034,6 @@ return true;
             // Formatting \\
             // ---------- \\
 
-
             function formatTime(t) {
                 var sec = Math.floor(t);
 
@@ -1010,7 +1053,6 @@ return true;
             // Basic Objects \\
             // ------------- \\
 
-
             function ManifestEntry() {
                 this.id = doc.getElementById("resrcId");
                 this.src = doc.getElementById("resrcSrc");
@@ -1025,7 +1067,6 @@ return true;
 
             // DOM Maniplation Functions \\
             // ------------------------- \\
-
 
             function makeInput(inputType, id, value) {
                 var input = doc.createElement("input");
@@ -1088,7 +1129,6 @@ return true;
             // XHR, Remoting and Events \\
             // ------------------------ \\
 
-
             function sendDataToServer(endPoint, manifestData, actionType) {
                 var xhr = new XMLHttpRequest();
                 var params = [];
@@ -1113,7 +1153,6 @@ return true;
 
             // Form Display \\
             // ------------ \\
-
 
             function showTimelineEntry(targetDiv) {
                 var frag = doc.createDocumentFragment();
