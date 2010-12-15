@@ -1,3 +1,29 @@
+if (typeof XMLHttpRequest === "undefined") {
+  XMLHttpRequest = function () {
+      try { return new ActiveXObject("Msxml2.XMLHTTP.6.0"); } catch (e) {}
+      try { return new ActiveXObject("Msxml2.XMLHTTP.3.0"); } catch (f) {}
+      try { return new ActiveXObject("Msxml2.XMLHTTP"); } catch (g) {}
+      // Impossible to support XHR
+      throw new Error("This browser does not support XMLHttpRequest.");
+  };
+}
+    
+function requireBBB(fileRef) {
+  if (typeof(bbb) === 'undefined') { // No record of global BBB, must've been forgotten on test page
+    var xhr = new XMLHttpRequest();
+    
+    xhr.onreadystatechange = function() {
+      if (xhr.readyState===4) {
+        eval(xhr.responseText); // Execute BBB.js
+      }
+    }
+    xhr.open("GET", fileRef, false); // Not async, test code below depends on having global bbb object
+    xhr.send(null);
+  }
+}
+
+requireBBB('../BBB.js');
+
 bbb.testing = (function() {
   var tests = [];
   
@@ -10,13 +36,10 @@ bbb.testing = (function() {
       var l = tests.length;
       var success = true;
       var noPassed = 0;
-      var currTest = 0;
       
-      for(var i=0;i<l; i++) {
-        currTest = tests[i];
-        
+      for(var i=0;i<l; i++) {        
         try {
-          success = currTest.func();
+          success = tests[i].func();
           
           if (success) noPassed++;
           else alert(success.title+" failed");
