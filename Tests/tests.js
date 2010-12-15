@@ -8,8 +8,8 @@ if (typeof XMLHttpRequest === "undefined") {
   };
 }
     
-function requireBBB(fileRef) {
-  if (typeof(bbb) === 'undefined') { // No record of global BBB, must've been forgotten on test page
+function require(fileRef, windowVar) {
+  if (!window[windowVar]) { // No record of global BBB, must've been forgotten on test page
     var xhr = new XMLHttpRequest();
     
     xhr.onreadystatechange = function() {
@@ -22,7 +22,7 @@ function requireBBB(fileRef) {
   }
 }
 
-requireBBB('../BBB.js');
+require('../BBB.js', 'bbb');
 
 bbb.testing = (function() {
   var tests = [];
