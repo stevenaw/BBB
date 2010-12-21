@@ -1,9 +1,9 @@
 /*
-* BBB v0.3
-* By Steven Weerdenburg and Kevin Lasconia
-* Last Modification: 12/15/2010
-*/
-var bbb = (function () {
+ * 	BBB v0.3.1
+ * 		By Steven Weerdenburg and Kevin Lasconia
+ * 		Last Modification: 12/14/2010
+ */
+bbb = (function(){
     var _chapters = []; // Array of Chapters/Bookmarks
     var _recommended = []; // Array of recommended videos
     var _tocRows = []; // Array for the table of contents table rows

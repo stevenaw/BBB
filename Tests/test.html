@@ -6,7 +6,7 @@
         <script src="../Demos/js/video.js" type="text/javascript" charset="utf-8"></script>
         <script src="../Demos/js/json2.js" type="text/javascript" charset="utf-8"></script>
         <script src="http://code.jquery.com/jquery-latest.min.js"></script>
-        <script type="text/javascript" src="../BBB.js"></script>
+        <!-- <script type="text/javascript" src="../BBB.js"></script> -->
         <script type="text/javascript" src="./tests.js"></script>
         <script type="text/javascript">
         VideoJS.setupAllWhenReady();
@@ -22,8 +22,6 @@
                 
             bbb.printTOC();
         }
-        
-        bbb.testing.test();
         </script>
         <style>
             #panel {
@@ -32,7 +30,7 @@
         </style>
         <link rel="stylesheet" href="../Demos/css/video-js.css" type="text/css" media="screen" title="Video JS">
     </head>
-    <body onload="init()">
+    <body>
     	<h3>HTML5 Video Chaptering Demo</h3>
         <div id="right" style="float:right; padding-right: 440px;">
             <div id = "panel">
@@ -102,7 +100,7 @@
             <button id="chapterAdd">
                 + Toggle Chapter Add
             </button>
-            <button onclick="test();">Run all Tests</button>
+            <button onclick="bbb.testing.test();">Run all Tests</button>
             <br/>
             <br/>
 			<div style="float:left; width:470px">This page will house a suite of tests which can be run to test the functionality of the BBB Player</div>
