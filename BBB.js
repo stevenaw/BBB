@@ -301,13 +301,13 @@ var bbb = (function () {
                 }
             }
         },
-
-        setupWhenReady: function (params) {
-            var self = this;
-
-            addEvent(document, "DOMContentLoaded", function () {
-                self.init(params);
-            });
+        
+        setupWhenReady: function(params) {
+          //var self = this;
+          
+          addEvent(document, "DOMContentLoaded", function() {
+            this.init(params);
+          }.bind(this));
         },
 
         fetchChapters: function (endPoint) {
@@ -321,10 +321,11 @@ var bbb = (function () {
             request.open("GET", endPoint);
             request.onreadystatechange = function () {
                 var arr = [];
-                var i = 0,
-                    numItems = 0;
-
-                if (request.readyState == 4 && request.status == 200) {
+                var i=0, numItems = 0;
+                
+                if (request.readyState === 4) {
+                  if (request.status === 200) {
+                  
                     arr = JSON.parse(request.responseText);
                     numItems = arr.length;
                     for (i = 0; i < numItems; i++) {
@@ -333,6 +334,11 @@ var bbb = (function () {
 
                     bbb.printTOC();
                     bbb.onReady();
+                  } else if (request.status === 404) {
+                    bbb.onError("Could not find bookmark server");
+                  } else if (request.status === 405) {
+                    bbb.onError("Permission denied to bookmark server");
+                  }
                 }
             };
             request.send();
@@ -491,6 +497,7 @@ var bbb = (function () {
                             tr.setAttribute('id', i);
                             srcElem.href = 'javascript:bbb.playChapter(' + i + ');';
                             srcElem.innerHTML = item.getTitle();
+                            
                             //tr.insertCell(0);
                             tr.insertCell(1).appendChild(srcElem);
                             tr.insertCell(2).appendChild(document.createTextNode(item.getDescription()));
@@ -750,28 +757,21 @@ var bbb = (function () {
 
             document.body.appendChild(canvas);
         },
-        popcornGenerator: (function () {
-            var SERVER = "popcornServer.php"; // Should be const, var for IE support
+        
+        popcornGenerator: (function() {
+            var SERVER = "popcornServer.php"; // Should be const, var for IE <= 8 support
             var doc = document;
-            var formMod = "",
-                recMod = "",
-                current = "",
-                timeDisplay = "";
-            var currentIn = 0,
-                currentOut = 0;
-            var vid = 0;
-            //var activeVid = _vid;
-            // Still working on, will be workaround for DOM input element creation in IE
-/*var isInputTypeQuirk = (function() {
-try {
-var elem = doc.createElement("input");
-elem["type"] = "text";
-return false;
-} catch (e) {
-return true;
-}
-})();*/
-
+            var formMod = 0, recMod = 0, current = 0, timeDisplay = 0, vid = 0; // DOM Elements
+            var currentIn = 0, currentOut = 0; // Float
+            var floor = Math.floor, round = Math.round;
+            
+            try {
+              doc.createElement('<input type="text">'); // Will not throw IE 5-8
+              var isQuirk = true;
+            } catch (e) {
+              var isQuirk = false;
+            }
+            
             // Factory of command object generators \\
             // ------------------------------------ \\
             var types = {
@@ -983,12 +983,11 @@ return true;
             // ---------- \\
 
             function formatTime(t) {
-                var sec = Math.floor(t);
-
-                // hh:mm:ss:ms
-                return padNum(Math.floor(sec / 3600), 2) + ":" + padNum(Math.floor(sec / 60), 2) + ":" + padNum(sec, 2) + ":" + padNum(Math.round((t - sec) * 100), 2);
+              var sec = floor(t);
+              
+              // hh:mm:ss:ms
+              return padNum(floor(sec / 3600), 2)+":"+padNum(floor(sec / 60), 2)+":"+padNum(sec, 2)+":"+padNum(round((t-sec)*100), 2);
             }
-
             function padNum(num, len) {
                 var str = '' + num;
                 for (var i = str.length; i < len; i++) {
@@ -1017,13 +1016,20 @@ return true;
             // ------------------------- \\
 
             function makeInput(inputType, id, value) {
-                var input = doc.createElement("input");
-                input["type"] = inputType; // Will crash in IE 8, but HTML5 video not supported anyways!
-                input.id = input.name = id;
-
-                if (value) input.value = value;
-
-                return input;
+              if (isQuirk === true) {
+                var input = doc.createElement('<input type="'+inputType+'">');
+              } else {
+                var input = doc.createElement('input');
+                input["type"] = inputType;
+              }
+              //var input = makeInputType(inputType);
+              
+              input.id = input.name = id;
+              
+              if (value)
+                input.value = value;
+              
+              return input;
             }
 
             function bindLabel(input, labelText) {
@@ -1042,30 +1048,21 @@ return true;
             }
 
             function newLine(frag) {
-                if (!frag || !frag.nodeType) return doc.createElement('br');
-
-                switch (frag.nodeType) {
-                case 1:
-                    // Element Node
-                case 3:
-                    // Text Node
-                    var fgmt = doc.createDocumentFragment();
-                    fgmt.appendChild(frag);
-                    fgmt.appendChild(doc.createElement('br'));
-                    return fgmt;
-                    break;
-
-                case 11:
-                    // Doc Fragment
-                    frag.appendChild(doc.createElement("br"));
-                    return frag;
-                    break;
-
-                default:
-                    return doc.createElement('br');
-                    break;
-                }
-
+              if (!frag || !frag.nodeType)
+                return doc.createElement('br');
+                
+              var nt = frag.nodeType;
+              
+              if (nt === 1 || nt === 3) {
+                var fgmt = doc.createDocumentFragment();
+                fgmt.appendChild(frag);
+                fgmt.appendChild(doc.createElement('br'));
+              } else if (nt === 11) {
+                frag.appendChild(doc.createElement("br"));
+                return frag;
+              } else {
+                return doc.createElement('br');
+              }
             }
 
             function clearChildren(node) {
@@ -1078,25 +1075,31 @@ return true;
             // ------------------------ \\
 
             function sendDataToServer(endPoint, manifestData, actionType) {
-                var xhr = new XMLHttpRequest();
-                var params = [];
-
-                // Build query string
-                params.push('action=' + actionType);
-
-                for (obj in manifestData) {
-                    params.push("&" + obj + "=" + encodeURIComponent(manifestData[obj]));
+              var xhr = new XMLHttpRequest();
+              var params = [];
+              
+              // Build query string
+              params.push('action='+actionType);
+              
+              for(obj in manifestData) {
+                params.push("&"+obj+"="+encodeURIComponent(manifestData[obj]));
+              }
+              
+              xhr.open("POST",endPoint);
+              xhr.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+              xhr.onreadystatechange = function() {
+                if (xhr.readyState === 4) {
+                  if (xhr.status === 200) {
+                    alert("Successfully saved");
+                  } else if (xhr.status === 404) {
+                    bbb.onError("Could not find server");
+                  } else if (xhr.status === 405) {
+                    bbb.onError("Permission denied to bookmark server");
+                  }
                 }
-
-                xhr.open("POST", endPoint);
-                xhr.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
-                xhr.onreadystatechange = function () {
-                    if (xhr.readyState == 4 && xhr.status == 200) {
-                        if (xhr.responseText) alert(xhr.responseText);
-                    }
-                };
-
-                xhr.send(params.join(''));
+              };
+              
+              xhr.send(params.join(''));
             }
 
             // Form Display \\
@@ -1134,7 +1137,7 @@ return true;
 '<input type="button" id="timelineOut" name="timelineOut" value="Set End" /><br />'+
 'Target: <input type="text" id="timelineTarget" name="timelineTarget" /><br />';*/
             }
-
+            
             function showStartEnd() {
                 timeDisplay.innerHTML = "Chapter from: " + currentIn.toFixed(2) + " to " + currentOut.toFixed(2);
             }
@@ -1155,72 +1158,80 @@ return true;
             // Publically Returned Object \\
             // -------------------------- \\
             return {
-                setActive: function (key, updateUI) {
-                    current = types[key];
-                    if (updateUI) current.outputHTML();
-                },
-                setActiveVideo: function (v) {
-                    vid = v;
-                },
-                setTimeFromVideo: function (isStart) {
-                    if (isStart) currentIn = vid.currentTime;
-                    else currentOut = vid.currentTime;
-                },
-                savePopcorn: function () {
-                    if (currentIn == currentOut) throw new Error("Start and end time must be different!");
-
-                    sendDataToServer(endPoint.root + SERVER, current.buildManifest(), "add");
-                },
-                setupWhenReady: function (formDivId) {
-                    var self = bbb.popcornGenerator;
-                    var frag = doc.createDocumentFragment();
-                    var mainForm = doc.createElement('form');
-                    var btnSubmit = makeInput("button", "metadataSubmit", "ADD");
-                    var selElem = doc.createElement("select");
-
-                    mainForm.id = "metadataForm";
-                    mainForm.method = "post";
-                    mainForm.action = "?action=add";
-
-                    formMod = doc.createElement('div');
-                    formMod.id = formMod.name = 'popMetadataEntry';
-
-                    recMod = doc.createElement('div');
-                    recMod.id = formMod.name = 'popMainDataEntry';
-                    selElem.id = selElem.name = "selMetaType";
-
-                    // Build selection box and hook in events
-                    selElem.innerHTML = '<option value="wiki">Wikipedia</option>' + '<option value="flickr">Flickr</option>' + '<option value="googlenews">Google News</option>' + '<option value="lastfm">LastFM</option>' + '<option value="twitter">Twitter</option>' + '<option value="videotag">Video Tag</option>' + '<option value="footnote">Footnote</option>';
-
-                    frag.appendChild(bindLabel(selElem, "Type: "));
-                    frag.appendChild(recMod);
-                    frag.appendChild(formMod);
-                    frag.appendChild(btnSubmit);
-                    mainForm.appendChild(frag);
-
-                    showResourceEntry();
-                    addEvent(btnSubmit, "click", function () {
-                        try {
-                            self.savePopcorn();
-                        } catch (e) {
-                            alert(e);
-                        }
-                    });
-                    addEvent(selElem, "change", function () {
-                        self.setActive(selElem.value, true);
-                    });
-
-                    // Add to document and set active
-                    doc.getElementById(formDivId).appendChild(mainForm);
-                    self.setActive(selElem.value, true);
-                }
+              setActive: function(key, updateUI) {
+                current = types[key];
+                if (updateUI)
+                  current.outputHTML();
+              },
+              setActiveVideo: function(v) {
+                vid = v;
+              },
+              setTimeFromVideo: function(isStart) {
+                if (isStart)
+                  currentIn = vid.currentTime;
+                else
+                  currentOut = vid.currentTime;
+              },
+              savePopcorn: function() {
+                if (currentIn === currentOut) throw new Error("Start and end time must be different!");
+                
+                sendDataToServer(endPoint.root+SERVER, current.buildManifest(), "add");
+              },
+              setupWhenReady: function(formDivId) {
+                  var self = bbb.popcornGenerator;
+                  var frag = doc.createDocumentFragment();
+                  var mainForm = doc.createElement('form');
+                  var btnSubmit = makeInput("button", "metadataSubmit", "ADD");
+                  var selElem = doc.createElement("select");
+                  
+                  mainForm.id = "metadataForm";
+                  mainForm.method = "post";
+                  mainForm.action = "?action=add";
+                  
+                  formMod = doc.createElement('div');
+                  formMod.id = formMod.name = 'popMetadataEntry';
+                  
+                  recMod = doc.createElement('div');
+                  recMod.id = formMod.name = 'popMainDataEntry';
+                  selElem.id = selElem.name = "selMetaType";
+                  
+                  // Build selection box and hook in events
+                  selElem.innerHTML = '<option value="wiki">Wikipedia</option>'+
+                    '<option value="flickr">Flickr</option>'+
+                    '<option value="googlenews">Google News</option>'+
+                    '<option value="lastfm">LastFM</option>'+
+                    '<option value="twitter">Twitter</option>'+
+                    '<option value="videotag">Video Tag</option>'+
+                    '<option value="footnote">Footnote</option>';
+                  
+                  frag.appendChild(bindLabel(selElem, "Type: "));
+                  frag.appendChild(recMod);
+                  frag.appendChild(formMod);
+                  frag.appendChild(btnSubmit);
+                  mainForm.appendChild(frag);
+                  
+                  showResourceEntry();
+                  addEvent(btnSubmit, "click", function() {
+                    try {
+                      self.savePopcorn();
+                    } catch (e) {
+                      alert(e);
+                    }
+                  });
+                  addEvent(selElem, "change", function() { self.setActive(selElem.value, true); } );
+                  
+                  // Add to document and set active
+                  doc.getElementById(formDivId).appendChild(mainForm);
+                  self.setActive(selElem.value, true);
+              }
             };
         })()
     };
 })();
 
-bbb.onReady = function () {};
-bbb.onChangeVideo = function (currChap) {};
+bbb.onReady = function() {};
+bbb.onChangeVideo = function(currChap) {};
+bbb.onError = function(e) { alert(e); };
 
 bbb.Bookmark.prototype = {
     fromJSON: function (str) {
@@ -1289,3 +1300,16 @@ bbb.Bookmark.prototype = {
         return this.getSrc() === bkmrk.getSrc() && this.getTitle() === bkmrk.getTitle() && this.getDescription() === bkmrk.getDescription() && this.getStartTime() === bkmrk.getStartTime() && this.getEndTime() === bkmrk.getEndTime();
     }
 };
+
+/* Borrowed from Video.JS 2.0.1, renamed "context" to "bind" for JS 1.8.5/ECMAScript 5 compliance */
+// Allows for binding context to functions
+// when using in event listeners and timeouts
+if (!Function.prototype.bind) {
+  Function.prototype.bind = function(obj){
+    var method = this,
+    temp = function(){
+      return method.apply(obj, arguments);
+    };
+    return temp;
+  };
+}
