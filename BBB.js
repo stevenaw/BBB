@@ -1,7 +1,7 @@
 /*
  * 	BBB v0.3.1
  * 		By Steven Weerdenburg and Kevin Lasconia
- * 		Last Modification: 12/14/2010
+ * 		Last Modification: 12/15/2010
  */
 bbb = (function(){
     var _chapters = []; // Array of Chapters/Bookmarks
@@ -303,8 +303,6 @@ bbb = (function(){
         },
         
         setupWhenReady: function(params) {
-          //var self = this;
-          
           addEvent(document, "DOMContentLoaded", function() {
             this.init(params);
           }.bind(this));
