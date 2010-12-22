@@ -10,7 +10,7 @@ tr.myDragClass td {
     color: white;
     background-color: black;
 }
-			
+
 td.dragHandle {
     
 }
@@ -20,4 +20,33 @@ td.showDragHandle {
 	background-repeat: no-repeat;
 	background-position: center center;
 	cursor: move;
+}
+
+td.tocTime {
+  text-align: right;
+}
+
+.inputField {
+  width: 150px;
+  margin-top: 5px;
+}
+
+.lblField {
+  width: 150px;
+}
+
+.btnField {
+  margin-top: 5px;
+}
+
+span.frmTitle {
+  font-weight: bold;
+  display: block;
+}
+
+.inputForm {
+  margin-left: 40px;
+  float: right;
+  background: #DDEEEE;
+  padding: 10px;
 }

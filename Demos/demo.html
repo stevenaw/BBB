@@ -6,24 +6,30 @@
         <title>
             HTML5 Video Player
         </title>
-        <script src="js/json2.js" type="text/javascript" charset="utf-8">
-        </script>
-        <script src="http://code.jquery.com/jquery-latest.min.js">
-        </script>
-        <script src="js/video.js" type="text/javascript" charset="utf-8">
-        </script>
-        <script type="text/javascript" src="../BBB.js">
-        </script>
-        <script src="../jquery.tablednd_0_5.js">
-        </script>
+        <link rel="stylesheet" href="css/video-js.css" type="text/css" media="screen" title="Video JS">
+        <link rel="stylesheet" href="bbb.css" type="text/css" rel="stylesheet">
+        
+        <script src="js/json2.js" type="text/javascript" charset="utf-8"></script>
+        <script src="http://code.jquery.com/jquery-latest.min.js"></script>
+        <script src="js/jquery.tablednd_0_5.js"></script>
+        <script src="js/video.js" type="text/javascript" charset="utf-8"></script>
+        <script type="text/javascript" src="../BBB.js"></script>
         <script type="text/javascript">
-            VideoJS.setupAllWhenReady();	
+            VideoJS.setupAllWhenReady();
             bbb.setupWhenReady({
                 playerId: "player",
                 tocId: "tblOfContents",
                 chapterStorage: "server.php",
                 statistics: true,
-                watermark: true
+                watermark: true,
+                metadataExport: {
+                  formDivId: "formDiv",
+                  cssLbl: "lblField",
+                  cssInput: "inputField",
+                  cssTitle: "frmTitle",
+                  cssBtn: "btnField"
+                }
+                
             });
 
             bbb.onChangeVideo = function(currChap) {
@@ -38,7 +44,7 @@
             }
 
             function printTime() {
-                document.getElementById('spnDisplay').innerHTML = "Chapter goes from " + bbb.chapters.getTempIn().toFixed(2) + " to " + bbb.chapters.getTempOut().toFixed(2) + " sec";
+                document.getElementById('spnDisplay').innerHTML = bbb.chapters.getFormattedRange();
             }
 
             function addElem() {
@@ -55,54 +61,54 @@
                 bbb.printTOC();
             }
         </script>
-        <link rel="stylesheet" href="css/video-js.css" type="text/css" media="screen"
-        title="Video JS">
     </head>
     
     <body onload="printTime();">
-        <div id="right" style="float:right; padding-right: 440px;">
+        <div id="right" style="float:right" class="inputForm">
             <div id="panel">
                 <b>
                     Create Chapter
                 </b>
                 <table>
                     <tr>
-                        <td>
+                        <td class="lblField">
                             Title
                         </td>
                         <td>
-                            <input type="text" id="bkmrkTitle" name="bkmrkTitle" />
+                            <input type="text" id="bkmrkTitle" name="bkmrkTitle" class="inputField" />
                         </td>
                     </tr>
                     <tr>
-                        <td>
+                        <td class="lblField">
                             Description
                         </td>
                         <td>
-                            <input type="text" id="bkmrkDescription" name="bkmrkDescription" />
+                            <input type="text" id="bkmrkDescription" name="bkmrkDescription" class="inputField" />
                         </td>
                     </tr>
                     <tr>
-                        <td>
+                        <td class="lblField">
                             Source
                         </td>
                         <td>
-                            <input type="text" id="bkmrkSrc" name="bkmrkSrc" />
+                            <input type="text" id="bkmrkSrc" name="bkmrkSrc" class="inputField" />
                         </td>
                     </tr>
                     <tr>
                         <td>
                         </td>
-                        <td>
+                        <td class="inputField">
                             <input type="button" id="bkmrkStart" name="bkmrkStart" value="Set Start"
-                            onclick="setTime(document.getElementById('player').currentTime, true);"
-                            />
-                            <input type="button" id="bkmrkEnd" name="bkmrkEnd" value="Set End" onclick="setTime(document.getElementById('player').currentTime, false);"
-                            />
+                            onclick="setTime(document.getElementById('player').currentTime, true);" />
+                            <input type="button" id="bkmrkEnd" name="bkmrkEnd" value="Set End"
+                            onclick="setTime(document.getElementById('player').currentTime, false);" />
                         </td>
                     </tr>
                     <tr>
-                        <td colspan="2">
+                        <td class="lblField">
+                            Chapter goes from
+                        </td>
+                        <td class="inputField">
                             <span id="spnDisplay" />
                         </td>
                     </tr>
@@ -116,6 +122,9 @@
                     </tr>
                 </table>
             </div>
+        </div>
+        
+        <div id="formDiv" class="inputForm">
         </div>
         <div class="video-js-box">
 <video id="player" width="400px" height="200px" style="top:0px; left:0px;" class="video-js" data-subtitles="demo-subtitles.ttxt" controls="controls" preload="auto">			
@@ -143,7 +152,8 @@
 		<input type="button" value="Check Order" onclick="bbb.checkOrder()" />
 		<input type="button" value="Change Order" onclick="bbb.changeOrder()" />
 		<input type="button" value="Test Local Storage" onclick="bbb.storage.setLocalStorage()" />
-		<input type="button" value="Fetch Local Storage" onclick="bbb.storage.getLocalStorage()" />		
+		<input type="button" value="Fetch Local Storage" onclick="bbb.storage.getLocalStorage()" />
+    
     </body>
 
 </html>

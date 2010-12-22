@@ -3,25 +3,37 @@
     <head>
         <meta charset="utf-8" />
         <title>HTML5 Video Player</title>
+        <link rel="stylesheet" href="css/video-js.css" type="text/css" media="screen" title="Video JS">
+        <link rel="stylesheet" href="bbb.css" type="text/css" rel="stylesheet">
+        
         <script src="js/json2.js" type="text/javascript" charset="utf-8"></script>
-        <script src="http://code.jquery.com/jquery-latest.min.js"></script>		
+        <script src="http://code.jquery.com/jquery-latest.min.js"></script>	
+        <script src="js/jquery.tablednd_0_5.js"></script>
         <script src="js/video.js" type="text/javascript" charset="utf-8"></script>
         <script type="text/javascript" src="../BBB.js"></script>
         <script type="text/javascript">
-        VideoJS.setupAllWhenReady();
-        bbb.setupWhenReady({playerId: "player", tocId: "tblOfContents", chapterStorage: "server.php", formDivId: "formDiv", statistics: true, watermark: true});
-        
+            VideoJS.setupAllWhenReady();
+            //bbb.setupWhenReady({playerId: "player", tocId: "tblOfContents", chapterStorage: "server.php", formDivId: "formDiv", statistics: true, watermark: false});
+            
+            bbb.setupWhenReady({
+                playerId: "player",
+                tocId: "tblOfContents",
+                chapterStorage: "server.php",
+                statistics: true,
+                watermark: false,
+                metadataExport: {
+                  formDivId: "formDiv",
+                  cssLbl: "lblField",
+                  cssInput: "inputField",
+                  cssTitle: "frmTitle",
+                  cssBtn: "btnField"
+                }
+                
+            });
         </script>
-        <style type="text/css">
-          div.rightCol {
-            float:right;
-            width: 500px;
-          }
-        </style>
-        <link rel="stylesheet" href="css/video-js.css" type="text/css" media="screen" title="Video JS">
     </head>
     <body>
-        <div id="formDiv" class="rightCol">
+        <div id="formDiv" class="inputForm">
         </div>
         
         <div class="video-js-box">
@@ -47,7 +59,7 @@
             </p>
           </div>
           
-          <div class="rightCol">
+          <div style="float: right;">
             <table id="tblOfContents"></table>
           </div>
         </div>

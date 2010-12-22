@@ -22,6 +22,8 @@ bbb = (function(){
     var _totalTime = 0;
     var _startTimeline = 0;
     var _timeLineEnabled = 0;
+    var floor = Math.floor, round = Math.round;
+    var cssInput = "", cssLabel = "";
 
     var canVideo = !! document.createElement('video').play;
     var endPoint = {
@@ -52,6 +54,40 @@ bbb = (function(){
         if (owner.addEventListener) owner.addEventListener(event, func, false); // Follow standards if possible
         else if (owner.attachEvent) owner.attachEvent(event, func); // IE
         else owner["on" + event] = func; // No DOM 2 support, go old school DOM 0
+    }
+    
+    // Formatting \\
+    // ---------- \\
+
+    function formatTime(t, opts) {
+      opts = opts || {};
+      opts.all = opts.all || 0; // 0 or 1
+      opts.pad = opts.pad /* 1 or higher */ || (1 + opts.all); // Add 1 to default if wanting all (2 padding in this case)
+      opts.decSep = opts.decSep || ".";
+      
+      var sec = floor(t);
+      var mm = floor(sec / 60);
+      var hh = floor(sec / 3600);
+      var ms = round((t-sec)*100);
+      
+      // hh:mm:ss:ms     
+      var str = "";
+      
+      if (hh || opts.all)
+        str = padNum(hh, opts.pad) + ":";
+      
+      if (mm)
+        str = padNum(mm, opts.pad) + ":"+ str;
+        
+      return str + padNum(sec % 60, opts.pad) + (ms ? (opts.decSep + padNum(ms, opts.pad)) : "");
+    }
+    function padNum(num, len) {
+        var str = '' + num;
+        for (var i = str.length; i < len; i++) {
+            str = '0' + str;
+        }
+
+        return str;
     }
 
     return {
@@ -266,7 +302,7 @@ bbb = (function(){
                 this.setTOCId(params.tocId);
 
                 // Default search directory "BBB" for callPage
-                // Careful, cross-origin issues may result if specified
+                // Careful, cross-origin issues may result if specified manually
                 endPoint.root = params.remoteServer || location.href.substring(0, location.href.lastIndexOf("/BBB/") + 5);
                 endPoint.service = params.chapterStorage || "";
 
@@ -283,9 +319,7 @@ bbb = (function(){
                     }
                 }
 
-                if (params.formDivId) {
-                    bbb.popcornGenerator.setupWhenReady(params.formDivId);
-                }
+                bbb.popcornGenerator.setupWhenReady(params.metadataExport);
 
                 if (params.timeline) {
                     _timeLineEnabled = 1;
@@ -370,6 +404,10 @@ bbb = (function(){
 
                 getTempOut: function () {
                     return tempOut;
+                },
+                
+                getFormattedRange: function() {
+                    return formatTime(tempIn) + " to " + formatTime(tempOut);
                 },
 
                 // obj contains title, description, source
@@ -499,12 +537,20 @@ bbb = (function(){
                             //tr.insertCell(0);
                             tr.insertCell(1).appendChild(srcElem);
                             tr.insertCell(2).appendChild(document.createTextNode(item.getDescription()));
-                            tr.insertCell(3).appendChild(document.createTextNode(item.getStartTime().toFixed(2)));
-                            tr.insertCell(4).appendChild(document.createTextNode(item.getEndTime().toFixed(2)));
+                            
+                            var td = tr.insertCell(3);
+                            
+                            td.className = "tocTime";
+                            td.appendChild(document.createTextNode(formatTime(item.getStartTime())));
+                            
+                            var td = tr.insertCell(4);
+                            td.appendChild(document.createTextNode(formatTime(item.getEndTime())));
+                            td.className = "tocTime";
+                            
                             //Changed delete checkboxes to links
                             tr.insertCell(5).innerHTML = '<a href="javascript:bbb.removeChapter(' + i + '); bbb.printTOC();">Delete</a>';
                         }
-
+                        
                         $("#tblOfContents tr").hover(function () {
                             $(this.cells[0]).addClass('showDragHandle');
                         }, function () {
@@ -520,7 +566,7 @@ bbb = (function(){
                         tr.insertCell(0).appendChild(srcElem);
 
                         srcElem = document.createElement('a');
-                        srcElem.href = 'javascript:bbb.playChapter(0, 1);';
+                        srcElem.href = 'javascript:bbb.playChapter(0, 1, 1);';
                         srcElem.innerHTML = 'Play All';
                         tr.insertCell(0).appendChild(srcElem);
 
@@ -534,7 +580,7 @@ bbb = (function(){
                         tr.setAttribute('class', 'nodrop nodrag');
 
                         _hasTocChanged = false;
-
+                          
                         $("#tblOfContents").tableDnD({
                             onDragClass: "myDragClass",
                             onDrop: function (table, row) {
@@ -545,9 +591,9 @@ bbb = (function(){
                 }
             }
         },
-        playChapter: function (idx, sequential) {
+        playChapter: function (idx, sequential, force) {
             if (canVideo) {
-                if (idx !== _curr && idx >= 0 && idx < _chapters.length) {
+                if (idx >= 0 && idx < _chapters.length) {
                     var vid = this._vid;
                     bbb.popcornGenerator.setActiveVideo(vid);
                     _curr = idx;
@@ -761,7 +807,7 @@ bbb = (function(){
             var doc = document;
             var formMod = 0, recMod = 0, current = 0, timeDisplay = 0, vid = 0; // DOM Elements
             var currentIn = 0, currentOut = 0; // Float
-            var floor = Math.floor, round = Math.round;
+            var cssInput = "", cssLbl = "", cssBtn = "";
             
             try {
               doc.createElement('<input type="text">'); // Will not throw IE 5-8
@@ -774,13 +820,14 @@ bbb = (function(){
             // ------------------------------------ \\
             var types = {
                 videotag: (function () {
-                    var txtTag = makeInput("text", "txtVideoTag");
+                    var txtTag = makeInput("text", "txtVideoTag", "");
 
                     return {
                         outputHTML: function () {
                             clearChildren(formMod);
                             showTimelineEntry('inthisvideo');
                             recMod.style.display = "none";
+                            txtTag.className = cssInput;
 
                             formMod.appendChild(bindLabel(txtTag, 'Tag: '));
                             //formMod.innerHTML = 'Note: <input id="footText" name="footText" type="text" /><br />';
@@ -799,13 +846,14 @@ bbb = (function(){
                     }
                 })(),
                 footnote: (function () {
-                    var txtNote = makeInput("text", "footText");
+                    var txtNote = makeInput("text", "footText", "");
 
                     return {
                         outputHTML: function () {
                             clearChildren(formMod);
                             showTimelineEntry('footnotediv');
                             recMod.style.display = "none";
+                            txtNote.className = cssInput;
 
                             formMod.appendChild(bindLabel(txtNote, 'Note: '));
                             //formMod.innerHTML = 'Note: <input id="footText" name="footText" type="text" /><br />';
@@ -824,13 +872,14 @@ bbb = (function(){
                     }
                 })(),
                 lastfm: (function () {
-                    var txtArtist = makeInput("text", "lastFMArtist");
+                    var txtArtist = makeInput("text", "lastFMArtist", "");
 
                     return {
                         outputHTML: function () {
                             clearChildren(formMod);
                             showTimelineEntry('lastfmdiv');
                             recMod.style.display = "none";
+                            txtArtist.className = cssInput;
 
                             formMod.appendChild(bindLabel(txtArtist, 'Artist: '));
                             //formMod.innerHTML = 'Artist: <input id="lastFMArtist" name="lastFMArtist" type="text" /><br />';
@@ -850,10 +899,10 @@ bbb = (function(){
                 })(),
                 twitter: (function () {
                     var controls = {
-                        title: makeInput("text", "twitterTitle"),
-                        source: makeInput("text", "twitterSource"),
-                        width: makeInput("text", "twitterWidth"),
-                        height: makeInput("text", "twitterHeight")
+                        title: makeInput("text", "twitterTitle", ""),
+                        source: makeInput("text", "twitterSource", ""),
+                        width: makeInput("text", "twitterWidth", ""),
+                        height: makeInput("text", "twitterHeight", "")
                     };
 
                     return {
@@ -861,6 +910,10 @@ bbb = (function(){
                             clearChildren(formMod);
                             showTimelineEntry('personaltwitter');
                             recMod.style.display = "none";
+                            
+                            for(var c in controls) {
+                              controls[c].className = cssInput;
+                            }
 
                             var frag = newLine(bindLabel(controls.title, 'Title: '));
                             frag.appendChild(newLine(bindLabel(controls.source, 'Source: ')));
@@ -884,13 +937,14 @@ bbb = (function(){
                     }
                 })(),
                 googlenews: (function () {
-                    var txtTopic = makeInput("text", "gNewsTopic");
+                    var txtTopic = makeInput("text", "gNewsTopic", "");
 
                     return {
                         outputHTML: function () {
                             clearChildren(formMod);
                             showTimelineEntry('googlenewsdiv');
                             recMod.style.display = "none";
+                            txtTopic.className = cssInput;
 
                             formMod.appendChild(bindLabel(txtTopic, 'Topic: '));
                             //formMod.innerHTML = 'Topic: <input id="gNewsTopic" name="gNewsTopic" type="text" /><br />';
@@ -909,7 +963,7 @@ bbb = (function(){
                     }
                 })(),
                 wiki: (function () {
-                    var txtNumWords = makeInput("number", "wikiNumWords");
+                    var txtNumWords = makeInput("number", "wikiNumWords", "");
                     txtNumWords.step = 1;
                     txtNumWords.min = 1;
 
@@ -918,6 +972,7 @@ bbb = (function(){
                             clearChildren(formMod);
                             showTimelineEntry('wikidiv');
                             recMod.style.display = "block";
+                            txtNumWords.className = cssInput;
 
                             formMod.appendChild(bindLabel(txtNumWords, 'Number of Words: '));
 
@@ -939,9 +994,9 @@ bbb = (function(){
                 })(),
                 flickr: (function () {
                     var controls = {
-                        numberofimages: makeInput("number", "flickrNumImgs"),
-                        userid: makeInput("text", "flickrUserId"),
-                        padding: makeInput("number", "flickrPadding")
+                        numberofimages: makeInput("number", "flickrNumImgs", ""),
+                        userid: makeInput("text", "flickrUserId", ""),
+                        padding: makeInput("number", "flickrPadding", "")
                     };
 
                     controls.numberofimages.step = controls.padding.step = 1;
@@ -952,6 +1007,10 @@ bbb = (function(){
                             clearChildren(formMod);
                             showTimelineEntry('personalflickr');
                             recMod.style.display = "none";
+                            
+                            for(var c in controls) {
+                              controls[c].className = cssInput;
+                            }
 
                             var frag = newLine(bindLabel(controls.numberofimages, '# Images: '));
                             frag.appendChild(newLine(bindLabel(controls.userid, 'User ID: ')));
@@ -977,24 +1036,6 @@ bbb = (function(){
                 })()
             };
 
-            // Formatting \\
-            // ---------- \\
-
-            function formatTime(t) {
-              var sec = floor(t);
-              
-              // hh:mm:ss:ms
-              return padNum(floor(sec / 3600), 2)+":"+padNum(floor(sec / 60), 2)+":"+padNum(sec, 2)+":"+padNum(round((t-sec)*100), 2);
-            }
-            function padNum(num, len) {
-                var str = '' + num;
-                for (var i = str.length; i < len; i++) {
-                    str = '0' + str;
-                }
-
-                return str;
-            }
-
             // Basic Objects \\
             // ------------- \\
 
@@ -1013,15 +1054,15 @@ bbb = (function(){
             // DOM Maniplation Functions \\
             // ------------------------- \\
 
-            function makeInput(inputType, id, value) {
+            function makeInput(inputType, id, className, value) {
               if (isQuirk === true) {
                 var input = doc.createElement('<input type="'+inputType+'">');
               } else {
                 var input = doc.createElement('input');
                 input["type"] = inputType;
               }
-              //var input = makeInputType(inputType);
               
+              input.className = className;
               input.id = input.name = id;
               
               if (value)
@@ -1037,7 +1078,7 @@ bbb = (function(){
                 lbl["for"] = input.id;
                 lbl.style.display = "block";
                 lbl.style.cssFloat = "left";
-                lbl.style.width = "200px";
+                lbl.className = cssLbl;
                 lbl.appendChild(doc.createTextNode(labelText));
 
                 frag.appendChild(lbl);
@@ -1105,8 +1146,8 @@ bbb = (function(){
 
             function showTimelineEntry(targetDiv) {
                 var frag = doc.createDocumentFragment();
-                var btnSetStart = makeInput("button", "timelineIn", "Set Start");
-                var btnSetEnd = makeInput("button", "timelineOut", "Set End");
+                var btnSetStart = makeInput("button", "timelineIn", cssBtn, "Set Start");
+                var btnSetEnd = makeInput("button", "timelineOut", cssBtn, "Set End");
                 var gen = bbb.popcornGenerator;
 
                 addEvent(btnSetStart, "click", function () {
@@ -1127,7 +1168,7 @@ bbb = (function(){
                 frag.appendChild(btnSetEnd);
                 frag.appendChild(timeDisplay);
                 frag.appendChild(doc.createElement('br'));
-                frag.appendChild(makeInput("hidden", "timelineTarget", targetDiv));
+                frag.appendChild(makeInput("hidden", "timelineTarget", "", targetDiv));
                 formMod.appendChild(frag);
 
 /*formMod.innerHTML = 'TIMELINE<br />'+
@@ -1137,15 +1178,16 @@ bbb = (function(){
             }
             
             function showStartEnd() {
-                timeDisplay.innerHTML = "Chapter from: " + currentIn.toFixed(2) + " to " + currentOut.toFixed(2);
+                //timeDisplay.innerHTML = "Chapter from: " + currentIn.toFixed(2) + " to " + currentOut.toFixed(2);
+                timeDisplay.innerHTML = "Chapter from: " + formatTime(currentIn) + " to " + formatTime(currentOut);
             }
 
             function showResourceEntry() {
                 // Output generic data entry
                 var frag = doc.createDocumentFragment();
-                frag.appendChild(newLine(bindLabel(makeInput("text", "resrcId"), "Resource ID: ")));
-                frag.appendChild(newLine(bindLabel(makeInput("text", "resrcSrc"), "URL: ")));
-                frag.appendChild(newLine(bindLabel(makeInput("text", "resrcDesc"), "Description: ")));
+                frag.appendChild(newLine(bindLabel(makeInput("text", "resrcId", cssInput), "Resource ID: ")));
+                frag.appendChild(newLine(bindLabel(makeInput("text", "resrcSrc", cssInput), "URL: ")));
+                frag.appendChild(newLine(bindLabel(makeInput("text", "resrcDesc", cssInput), "Description: ")));
                 recMod.appendChild(frag);
 
 /*doc.getElementById(mainEntryDivId).innerHTML = 'RESOURCE<br />'+
@@ -1175,12 +1217,23 @@ bbb = (function(){
                 
                 sendDataToServer(endPoint.root+SERVER, current.buildManifest(), "add");
               },
-              setupWhenReady: function(formDivId) {
+              setupWhenReady: function(metadataExport) {
+                  if (!metadataExport) return;
+                  
+                  cssInput = metadataExport.cssInput || "";
+                  cssLbl = metadataExport.cssLbl || "";
+                  cssBtn = metadataExport.cssBtn || "";
+                  
                   var self = bbb.popcornGenerator;
                   var frag = doc.createDocumentFragment();
                   var mainForm = doc.createElement('form');
-                  var btnSubmit = makeInput("button", "metadataSubmit", "ADD");
+                  var btnSubmit = makeInput("button", "metadataSubmit", cssBtn, "ADD");
+                  btnSubmit.style.cssFloat = "right";
                   var selElem = doc.createElement("select");
+                  var frmTitle = doc.createElement("span");
+                  
+                  frmTitle.appendChild(doc.createTextNode("Create Metadata"));
+                  frmTitle.className = metadataExport.cssTitle;
                   
                   mainForm.id = "metadataForm";
                   mainForm.method = "post";
@@ -1192,6 +1245,7 @@ bbb = (function(){
                   recMod = doc.createElement('div');
                   recMod.id = formMod.name = 'popMainDataEntry';
                   selElem.id = selElem.name = "selMetaType";
+                  selElem.className = cssInput;
                   
                   // Build selection box and hook in events
                   selElem.innerHTML = '<option value="wiki">Wikipedia</option>'+
@@ -1202,6 +1256,7 @@ bbb = (function(){
                     '<option value="videotag">Video Tag</option>'+
                     '<option value="footnote">Footnote</option>';
                   
+                  frag.appendChild(frmTitle);
                   frag.appendChild(bindLabel(selElem, "Type: "));
                   frag.appendChild(recMod);
                   frag.appendChild(formMod);
@@ -1219,7 +1274,7 @@ bbb = (function(){
                   addEvent(selElem, "change", function() { self.setActive(selElem.value, true); } );
                   
                   // Add to document and set active
-                  doc.getElementById(formDivId).appendChild(mainForm);
+                  doc.getElementById(metadataExport.formDivId).appendChild(mainForm);
                   self.setActive(selElem.value, true);
               }
             };

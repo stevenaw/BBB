@@ -15,10 +15,10 @@
             VideoJS.setupAllWhenReady();
 
             function init() {
-                Mgr.init("player");	
-            	Mgr.setInitialVideo({id: 1,title: 'Green Screen',description: 'Demo',duration: 24,src: 'video.ogv',rating: 'G',thumbnailSrc: 'video.jpg',tags: ['test']});
-				Mgr.printVideoInfo();
-				Mgr.trackStatistics();
+                bbb.init("player");	
+                bbb.setInitialVideo({id: 1,title: 'Green Screen',description: 'Demo',duration: 24,src: 'video.ogv',rating: 'G',thumbnailSrc: 'video.jpg',tags: ['test']});
+                bbb.printVideoInfo();
+                bbb.trackStatistics();
             }
         </script>
         <link rel="stylesheet" href="css/video-js.css" type="text/css" media="screen"
@@ -32,8 +32,7 @@
                 <source src="" type='video/webm; codecs="vp8, vorbis"' />
                 <object id="flash_fallback_1" class="vjs-flash-fallback" width="640px"
                 height="264px" type="application/x-shockwave-flash" data="http://releases.flowplayer.org/swf/flowplayer-3.2.1.swf">
-                    <param name="movie" value="http://releases.flowplayer.org/swf/flowplayer-3.2.1.swf"
-                    />
+                    <param name="movie" value="http://releases.flowplayer.org/swf/flowplayer-3.2.1.swf" />
                     <param name="allowfullscreen" value="true" />
                     <param name="flashvars" value='config={"playlist":["http://video-js.zencoder.com/oceans-clip.png", {"url": "http://video-js.zencoder.com/oceans-clip.mp4","autoPlay":false,"autoBuffering":true}]}'
                     />

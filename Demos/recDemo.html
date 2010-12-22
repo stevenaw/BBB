@@ -6,27 +6,16 @@
         <title>
             BBB Statistics/Rec Demo
         </title>		
-		<script src="http://code.jquery.com/jquery-latest.min.js"></script>		
-        <script src="js/video.js" type="text/javascript" charset="utf-8">
-        </script>
-        <script type="text/javascript" src="../BBB.js">
-        </script>
+        <script src="http://code.jquery.com/jquery-latest.min.js"></script>
+        <script src="js/video.js" type="text/javascript" charset="utf-8"></script>
+        <script type="text/javascript" src="../BBB.js"></script>
         <script type="text/javascript">
             VideoJS.setupAllWhenReady();
 
             function init() {
-<<<<<<< HEAD
-                bbb.init({playerId: "player", tocId: "tblOfContents", chapterStorage: "server.php"});
-            	bbb.setVideo({id: 1,title: 'Green Screen',description: 'Demo',duration: '0:24',src: 'video.ogv',rating: 'G',thumbnailSrc: 'video.jpg',tags: ['test']});
-				bbb.printVideoInfo(true);
-				bbb.trackStatistics();
-				bbb.displayWatermark();
-
-=======
                 bbb.init({playerId: "player", tocId: "tblOfContents", chapterStorage: "server.php", statistics: true, watermark: true});
                 bbb.setVideo({id: 1,title: 'Green Screen',description: 'Demo',duration: 24,src: 'video.ogv',rating: 'G',thumbnailSrc: 'video.jpg',tags: ['test']});
                 bbb.printVideoInfo(true);
->>>>>>> dbd3eabd02375ebeaa2907b55f25b79e9af38251
             }
 			
             function useDefaultWatermark() {
